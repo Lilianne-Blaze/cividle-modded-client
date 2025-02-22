@@ -99098,7 +99098,8 @@ function Mae({ gameState: t, xy: e }) {
                 s.jsx(te, { value: (x = o[u.sellResource]) != null ? x : 0 }),
               ],
             }),
-            [0.1, 0.25, 0.5, 1].map((T) =>
+            // ***** 2025-02-22
+            [0.01, 0.1, 0.25, 0.5, 0.90, 1].map((T) =>
               s.jsx(
                 "div",
                 {
@@ -99168,7 +99169,8 @@ function Mae({ gameState: t, xy: e }) {
               ],
             }),
             s.jsx("div", { className: "f1" }),
-            [-m, -m / 2, 0, m / 2, m].map((T) =>
+            // ***** 2025-02-22
+            [-m, -m / 2, -0.03, 0, 0.03, m / 2, m].map((T) =>
               s.jsx(
                 "div",
                 {
