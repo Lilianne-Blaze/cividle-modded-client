@@ -99015,19 +99015,23 @@ function kae({ gameState: t, xy: e }) {
         })
     : null;
 }
+
+// SOURCE src/scripts/ui/AddTradeComponent.tsx
+
 const XD = 100;
 function Mae({ gameState: t, xy: e }) {
   var x;
-  const r = fo(),
-    i = Gg(),
-    n = !jt(r) && i.filter((T) => T.fromId === r.userId).length < wJ(r),
-    a = zt(Sp(t)).filter((T) => !mo[T] && !Qn[T]),
-    o = PJ(
+  const r = fo(), // const user = useUser();
+    i = Gg(), // const trades = useTrades();
+    n /*enabled*/ =
+      !jt(r) && i.filter((T) => T.fromId === r.userId).length < wJ(r),
+    a /*buyResources*/ = zt(Sp(t)).filter((T) => !mo[T] && !Qn[T]),
+    o /*availableResources*/ = PJ(
       Array.from(N.current.playerTradeBuildings.values()).map(
         (T) => T.resources
       )
     ),
-    l = zt(o),
+    l /*sellResources*/ = zt(o),
     [u, c] = se.useState({
       buyResource: a[0],
       buyAmount: 0,
@@ -99035,8 +99039,10 @@ function Mae({ gameState: t, xy: e }) {
       sellAmount: 0,
     }),
     [p, f] = se.useState(!1),
-    m = O_(r),
-    g = kJ(u, O_(r));
+    m = O_(r), // const percentage = getUserTradePriceRange(user);
+    g = kJ(u, O_(r)); // const buyAmountRange = getBuyAmountRange(trade, getUserTradePriceRange(user));
+
+  // function isTradeValid(trade: IAddTradeRequest): boolean
   function v(T) {
     var A;
     return !(
@@ -99048,6 +99054,8 @@ function Mae({ gameState: t, xy: e }) {
       T.sellAmount > ((A = o[T.sellResource]) != null ? A : 0)
     );
   }
+
+  // if (showTrade) {
   if (p)
     return s.jsxs("fieldset", {
       children: [
@@ -99099,7 +99107,7 @@ function Mae({ gameState: t, xy: e }) {
               ],
             }),
             // ***** 2025-02-22
-            [0.01, 0.1, 0.25, 0.5, 0.90, 1].map((T) =>
+            [0.01, 0.1, 0.25, 0.5, 0.9, 1].map((T) =>
               s.jsx(
                 "div",
                 {
