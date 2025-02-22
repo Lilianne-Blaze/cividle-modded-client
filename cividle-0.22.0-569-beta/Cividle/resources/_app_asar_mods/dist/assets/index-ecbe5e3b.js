@@ -74653,6 +74653,10 @@ function tj(t) {
 function NQ(t) {
   return xJ(Ak(t, 0, t.level));
 }
+
+// ***** 2025-02-22 / b569
+// make transports randomized for each priority. priorities still work as normal
+// TODO: make it switchable
 function K_(t, e) {
   if (!Ci(mi.BuildingProductionPriority, e)) return rn;
   switch (
@@ -74662,9 +74666,9 @@ function K_(t, e) {
   ) {
     case "building":
     case "upgrading":
-      return t.constructionPriority;
+      return t.constructionPriority + (Math.random() - 0.5);
     case "completed":
-      return t.productionPriority;
+      return t.productionPriority + (Math.random() - 0.5);
     default:
       return rn;
   }
