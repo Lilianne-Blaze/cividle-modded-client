@@ -169,8 +169,9 @@ function getLocalGameSavePath() {
   );
 }
 exports.getLocalGameSavePath = getLocalGameSavePath;
-exports.MIN_WIDTH = 1136;
-exports.MIN_HEIGHT = 640;
+// ***** 2025-02-22 make min size smaller
+exports.MIN_WIDTH = 640;
+exports.MIN_HEIGHT = 480;
 var createWindow = function () {
   return __awaiter(void 0, void 0, void 0, function () {
     var steam, mainWindow_1, error_1, service_1, error_2;
