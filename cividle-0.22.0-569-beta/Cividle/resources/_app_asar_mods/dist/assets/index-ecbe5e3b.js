@@ -91641,7 +91641,7 @@ function D4({ tradeId: t, xy: e }) {
         // ***** do only partial fills
         //const F = w(L);
         const F = w(L) * 0.9;
-        
+
         if (!(F <= 0))
           if (I > F) D.set(L, F), (I -= F);
           else {
@@ -91661,6 +91661,11 @@ function D4({ tradeId: t, xy: e }) {
           ct(h(d.OperationNotAllowedError)), ze();
           return;
         }
+
+        // *****
+        // so it's visible clicking the button actually registered
+        ct("Filling trades, please wait 5-20 sec...");
+
         let I = 0,
           L = 0,
           F = 0,
@@ -109158,33 +109163,42 @@ function vue(t) {
     i = gi(), // const gs = useGameState();
     n = S.Building[r.type], // const definition = Config.Building[building.type];
     a = (o = gue[r.type]) != null ? o : Kie;
-
-    var vTile = t;
-    var vBld = r;
-    var vBldDef = n;
-  
-    //console.log("vBldDef.name() (this will be localized??, for example Hütte) =", vBldDef?.name());
-    //console.log("vBld.type (this will NOT be localized, for example Hut) =", vBld?.type);
     
-    var buildingLevel = vBld.level;
-    var buildingName = vBld?.type;
+  var vTile = t;
+  var vBld = r;
+  var vBldDef = n;
   
-    if( buildingName == "Hut" )
+  //console.log("vBldDef.name() (this will be localized??, for example Hütte) =", vBldDef?.name());
+  //console.log("vBld.type (this will NOT be localized, for example Hut) =", vBld?.type);
+    
+  var buildingLevel = vBld.level;
+  var buildingNameInt = vBld?.type; // internal name
+  var buildingNameLoc = vBldDef?.name(); // localized name
+  
+  if( buildingNameInt == "Hut" )
+  {
+    if( buildingLevel >= 100 )
     {
-      if( buildingLevel >= 100 )
-      {
-        buildingName = "You Won the Game";
-      }
-      else if( buildingLevel >= 41 )
-      {
-        buildingName = "Summer Retreat";
-      }
+      buildingNameLoc = "You Won the Game";
     }
-
+    else if( buildingLevel >= 41 )
+    {
+      buildingNameLoc = "Summer Retreat";
+    }
+  }
+  else if( buildingNameInt == "Peacekeeper" )
+  {
+    buildingNameLoc = "Nukedove";
+  }
+  else if( buildingNameInt == "YearOfTheSnake" )
+  {
+    buildingNameLoc = "Snek";
+  }
+    
   return s.jsxs("div", {
     className: "window",
     children: [
-      s.jsx(ln, { children: buildingName }),
+      s.jsx(ln, { children: buildingNameLoc }),
       s.jsx(An, {}),
       s.jsx(a, Ie(U({}, t), { gameState: i, xy: e.tile })),
     ],
@@ -109434,18 +109448,28 @@ function bue({ tile: t }) {
   console.log("vBld.type (this will NOT be localized, for example Hut) =", vBld?.type);
   
   var buildingLevel = vBld.level;
-  var buildingName = vBld?.type;
+  var buildingNameInt = vBld?.type; // internal name
+  var buildingNameLoc = vBldDef?.name(); // localized name
 
-  if( buildingName == "Hut" )
+
+  if( buildingNameInt == "Hut" )
   {
     if( buildingLevel >= 100 )
     {
-      buildingName = "You Won the Game";
+      buildingNameLoc = "You Won the Game";
     }
     else if( buildingLevel >= 41 )
     {
-      buildingName = "Summer Retreat";
+      buildingNameLoc = "Summer Retreat";
     }
+  }
+  else if( buildingNameInt == "Peacekeeper" )
+  {
+    buildingNameLoc = "Nukedove";
+  }
+  else if( buildingNameInt == "YearOfTheSnake" )
+  {
+    buildingNameLoc = "Snek";
   }
 
   return (
@@ -109454,7 +109478,7 @@ function bue({ tile: t }) {
     s.jsxs("div", {
       className: "window",
       children: [
-        s.jsx(ln, { children: buildingName }),
+        s.jsx(ln, { children: buildingNameLoc }),
         s.jsx(An, {}),
         s.jsxs("div", {
           className: "window-body",
