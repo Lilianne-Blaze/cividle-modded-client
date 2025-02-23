@@ -81043,6 +81043,11 @@ function $j() {
         switch (o.type) {
           case Uu.Chat: {
             const u = o;
+
+            // ***** 2025-02-23
+            // TODO make it toggleable
+            console.log("[ChatMessageAsJson]",JSON.stringify(u));
+
             u.flush
               ? (Io = u.chat.map((c) => Ie(U({}, c), { id: ++iS })))
               : u.chat.forEach((c) => {
