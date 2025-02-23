@@ -109060,6 +109060,9 @@ function fue({ gameState: t, xy: e }) {
     ],
   });
 }
+
+// SOURCE src/scripts/ui/BuildingPage.tsx
+
 const gue = {
   Headquarter: vae,
   Market: Pae,
@@ -109100,16 +109103,39 @@ const gue = {
 };
 function vue(t) {
   var o;
-  const { tile: e } = t;
+  const { tile: e } = t; // const { tile } = props;
   if (e.building == null) return be().routeTo(Ts, { stage: Ks.LoadSave }), null;
-  const r = e.building,
-    i = gi(),
-    n = S.Building[r.type],
+  const r = e.building, // const building = tile.building;
+    i = gi(), // const gs = useGameState();
+    n = S.Building[r.type], // const definition = Config.Building[building.type];
     a = (o = gue[r.type]) != null ? o : Kie;
+
+    var vTile = t;
+    var vBld = r;
+    var vBldDef = n;
+  
+    //console.log("vBldDef.name() (this will be localized??, for example Hütte) =", vBldDef?.name());
+    //console.log("vBld.type (this will NOT be localized, for example Hut) =", vBld?.type);
+    
+    var buildingLevel = vBld.level;
+    var buildingName = vBld?.type;
+  
+    if( buildingName == "Hut" )
+    {
+      if( buildingLevel >= 100 )
+      {
+        buildingName = "You Won the Game";
+      }
+      else if( buildingLevel >= 41 )
+      {
+        buildingName = "Summer Retreat";
+      }
+    }
+
   return s.jsxs("div", {
     className: "window",
     children: [
-      s.jsx(ln, { children: n.name() }),
+      s.jsx(ln, { children: buildingName }),
       s.jsx(An, {}),
       s.jsx(a, Ie(U({}, t), { gameState: i, xy: e.tile })),
     ],
@@ -109334,8 +109360,12 @@ function yue({ gameState: t, xy: e }) {
     ],
   });
 }
+
+// SOURCE src/scripts/ui/ConstructionPage.tsx
+
+// export function ConstructionPage({ tile }: { tile: ITileData }): React.ReactNode {
 function bue({ tile: t }) {
-  const e = t.building;
+  const e = t.building; // const building = tile.building;
   if (e == null) return null;
   const r = gi(),
     i = S.Building[e.type],
@@ -109346,13 +109376,36 @@ function bue({ tile: t }) {
     o = () => {
       yr(e.type) || (n() && (Le(), e.desiredLevel--, Ze()));
     };
+
+  var vTile = t;
+  var vBld = e;
+  var vBldDef = i;
+
+  console.log("vBldDef.name() (this will be localized??, for example Hütte) =", vBldDef?.name());
+  console.log("vBld.type (this will NOT be localized, for example Hut) =", vBld?.type);
+  
+  var buildingLevel = vBld.level;
+  var buildingName = vBld?.type;
+
+  if( buildingName == "Hut" )
+  {
+    if( buildingLevel >= 100 )
+    {
+      buildingName = "You Won the Game";
+    }
+    else if( buildingLevel >= 41 )
+    {
+      buildingName = "Summer Retreat";
+    }
+  }
+
   return (
     fn("UpgradePageIncreaseLevel", () => a(), [t]),
     fn("UpgradePageDecreaseLevel", () => o(), [t]),
     s.jsxs("div", {
       className: "window",
       children: [
-        s.jsx(ln, { children: i.name() }),
+        s.jsx(ln, { children: buildingName }),
         s.jsx(An, {}),
         s.jsxs("div", {
           className: "window-body",
