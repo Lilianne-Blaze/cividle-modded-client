@@ -99031,7 +99031,10 @@ function Mae({ gameState: t, xy: e }) {
         (T) => T.resources
       )
     ),
-    l /*sellResources*/ = zt(o),
+    // *****  fix sell resources list refreshing needlessly
+    // was: l = zt(o),
+    // is: same as buyResources
+    l /*sellResources*/ = zt(Sp(t)).filter((T) => !mo[T] && !Qn[T]),
     [u, c] = se.useState({
       buyResource: a[0],
       buyAmount: 0,
