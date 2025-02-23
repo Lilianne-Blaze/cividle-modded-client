@@ -91580,6 +91580,10 @@ function _4({ xy: t }) {
     ],
   });
 }
+
+// SOURCE src/scripts/ui/FillPlayerTradeModal.tsx
+
+// export function FillPlayerTradeModal({ tradeId, xy }: { tradeId: string; xy?: Tile }): React.ReactNode
 function D4({ tradeId: t, xy: e }) {
   const [r, i] = se.useState([]),
     n = jg(),
@@ -91587,6 +91591,10 @@ function D4({ tradeId: t, xy: e }) {
     l = Gg().find((D) => D.id === t),
     u = Lc(),
     c = N.current.playerTradeBuildings,
+
+    // *****
+    cSorted = new Map(),
+
     [p, f] = se.useState(new Map());
   se.useEffect(() => {
     if (!l) return;
@@ -91609,11 +91617,31 @@ function D4({ tradeId: t, xy: e }) {
       for (const [I, L] of D) if (!Z_(I, l.buyResource, L, a)) return !1;
       return !0;
     },
+
+    // 2025-02-23
+    // ***** calculateMaxFill
     x = () => {
       const D = new Map();
-      let I = l.buyAmount;
-      for (const L of c.keys()) {
-        const F = w(L);
+      
+      //let I = l.buyAmount;
+      let I = ( l.buyAmount < 10000000) ? l.buyAmount : l.buyAmount*0.9;
+
+      // ***** make sure only first 20 per-building trades are filled
+      var counterMax = 20;
+      var counterCurrent = 0;
+      for (const L of cSorted.keys()) {
+
+        // ***** make sure only first 20 per-building trades are filled
+        if( counterCurrent >= counterMax )
+		  {
+			break;
+		  }
+		counterCurrent++;
+
+        // ***** do only partial fills
+        //const F = w(L);
+        const F = w(L) * 0.9;
+        
         if (!(F <= 0))
           if (I > F) D.set(L, F), (I -= F);
           else {
@@ -91623,6 +91651,9 @@ function D4({ tradeId: t, xy: e }) {
       }
       return D;
     },
+
+
+    // ***** doFill
     T = (D) =>
       ae(this, null, function* () {
         var $;
@@ -91724,11 +91755,17 @@ function D4({ tradeId: t, xy: e }) {
       }
       return I;
     },
+
+    // ***** fillsAreValid
     B = (D) => {
       const I = P(D);
       return y(D) && C(D) && I > 0 && I <= l.buyAmount;
     },
+
+    // ***** isFillValid
     _ = (D, I) => Z_(D, l.buyResource, I, a) && (!k() || J_(D, A(I), a));
+
+
   return s.jsxs("div", {
     className: "window",
     style: { width: 550 },
@@ -91784,6 +91821,8 @@ function D4({ tradeId: t, xy: e }) {
                       s.jsx("th", {}),
                     ],
                   }),
+
+                  // ***** 
                   Array.from(c.entries())
                     .sort(([, D], [, I]) => {
                       var L, F;
@@ -91793,6 +91832,8 @@ function D4({ tradeId: t, xy: e }) {
                       );
                     })
                     .map(([D, I]) => {
+                      cSorted.set(D, I);
+
                       var F, W, H;
                       const L = Es(D, a);
                       return s.jsxs(
