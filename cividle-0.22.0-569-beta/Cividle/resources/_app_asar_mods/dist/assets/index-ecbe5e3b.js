@@ -90435,6 +90435,8 @@ const lg = "" + new URL("Supporter-a22f37c6.png", import.meta.url).href,
   mne = "" + new URL("AccountLevel3-e8ba9403.png", import.meta.url).href,
   fne = "" + new URL("AccountLevel4-c293b88e.png", import.meta.url).href,
   gne = "" + new URL("AccountLevel5-3ebd13b2.png", import.meta.url).href,
+  techpriest2_100px = "" + new URL("techpriest2_100px.png", import.meta.url).href,
+  admech3_100px = "" + new URL("admech3_100px.png", import.meta.url).href,
   la = {
     [it.Tribune]: () => h(d.AccountLevelTribune),
     [it.Quaestor]: () => h(d.AccountLevelQuaestor),
@@ -115045,6 +115047,8 @@ function Tce({ onChatSend: t, channel: e }) {
     ],
   });
 }
+
+// ***** ChatMessage
 function Ace({ user: t, chat: e, onImageLoaded: r }) {
   var i, n, a, o;
   return s.jsxs("div", {
@@ -115058,6 +115062,7 @@ function Ace({ user: t, chat: e, onImageLoaded: r }) {
     }),
     children: [
       e.name === (t == null ? void 0 : t.handle)
+        // me
         ? s.jsxs("div", {
             className: "row text-small text-desc",
             children: [
@@ -115106,9 +115111,19 @@ function Ace({ user: t, chat: e, onImageLoaded: r }) {
                     }),
                   })
                 : null,
+              e.name === (t == null ? void 0 : "Lilianne216")
+                ? s.jsx(Te, {
+                    content: h("Tech-Priest"),
+                    children: s.jsx("img", {
+                      src: admech3_100px,
+                      className: "player-flag",
+                    }),
+                  })
+                : null,
             ],
           })
         : s.jsxs("div", {
+            // someone else
             className: "row text-small text-desc",
             children: [
               s.jsx("div", {
@@ -115151,6 +115166,15 @@ function Ace({ user: t, chat: e, onImageLoaded: r }) {
                     content: h(d.AccountLevelMod),
                     children: s.jsx("img", {
                       src: dI,
+                      className: "player-flag",
+                    }),
+                  })
+                : null,
+              e.name === (t == null ? void 0 : "Lilianne216")
+                ? s.jsx(Te, {
+                    content: h("Tech-Priest"),
+                    children: s.jsx("img", {
+                      src: admech3_100px,
                       className: "player-flag",
                     }),
                   })
