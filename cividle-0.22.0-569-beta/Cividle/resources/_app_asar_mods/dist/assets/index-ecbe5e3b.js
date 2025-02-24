@@ -91654,10 +91654,10 @@ function D4({ tradeId: t, xy: e }) {
 
 
     // ***** doFill
-    T = (D) =>
+    T = (fills) =>
       ae(this, null, function* () {
         var $;
-        if (!B(D) || !v()) {
+        if (!B(fills) || !v()) {
           ct(h(d.OperationNotAllowedError)), ze();
           return;
         }
@@ -91666,16 +91666,22 @@ function D4({ tradeId: t, xy: e }) {
         // so it's visible clicking the button actually registered
         ct("Filling trades, please wait 5-20 sec...");
 
-        let I = 0,
-          L = 0,
-          F = 0,
-          W = 0;
-        const H = [];
-        for (const [X, q] of D) {
-          if (q <= 0) continue;
-          ++I;
-          const re = FL(l.buyResource, q, [X], a);
+        let total = 0,
+          success = 0,
+          fillAmount = 0,
+          receivedAmount = 0;
+        const errors = [];
+
+        let fillsSize = fills.size;
+
+        for (const [tile, amount] of fills) {
+          if (amount <= 0) continue;
+          ++total;
+          const re = FL(l.buyResource, amount, [tile], a);
           try {
+
+            ct("Filling trades " + total + "/" + fillsSize + "...");
+
             const V = yield qe.fillTrade({
               id: l.id,
               amount: re.amount,
@@ -91683,26 +91689,26 @@ function D4({ tradeId: t, xy: e }) {
               seaTileCost: LP(a),
             });
             Q(V, (Z, ee) => {
-              ee > 0 && (W += ee),
-                ee < 0 && (F += Math.abs(ee)),
-                Tt(c.get(X).resources, Z, ee);
+              ee > 0 && (receivedAmount += ee),
+                ee < 0 && (fillAmount += Math.abs(ee)),
+                Tt(c.get(tile).resources, Z, ee);
             }),
-              ++L;
+              ++success;
           } catch (V) {
-            H.push(String(V));
+            errors.push(String(V));
           } finally {
             re.rollback();
           }
         }
-        if (L > 0) {
+        if (success > 0) {
           Fg(),
-            H.unshift(
+            errors.unshift(
               h(d.PlayerTradeFillSuccessV2, {
-                success: L,
-                total: I,
-                fillAmount: pr(F),
+                success: success,
+                total: total,
+                fillAmount: pr(fillAmount),
                 fillResource: S.Resource[l.buyResource].name(),
-                receivedAmount: pr(W),
+                receivedAmount: pr(receivedAmount),
                 receivedResource: S.Resource[l.sellResource].name(),
               })
             );
@@ -91711,11 +91717,11 @@ function D4({ tradeId: t, xy: e }) {
             Tt(
               X.building.resources,
               "TradeValue",
-              F * (($ = S.ResourcePrice[l.buyResource]) != null ? $ : 0)
+              fillAmount * (($ = S.ResourcePrice[l.buyResource]) != null ? $ : 0)
             ),
-            ct(H.join("<br />")),
+            ct(errors.join("<br />")),
             Qt();
-        } else ze(), ct(H.join("<br />"));
+        } else ze(), ct(errors.join("<br />"));
       }),
     A = (D) =>
       We((l.sellAmount * D) / l.buyAmount - D, 0, Number.POSITIVE_INFINITY),
