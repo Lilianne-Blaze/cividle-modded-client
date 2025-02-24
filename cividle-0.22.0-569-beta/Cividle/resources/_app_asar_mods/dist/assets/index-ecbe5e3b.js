@@ -99341,23 +99341,52 @@ function Mae({ gameState: t, xy: e }) {
     })
   );
 }
-const kl = new Set(),
-  Ml = new Set();
-let vm = "",
-  ym = 0;
-const Bae = { column: 0, asc: !0 };
+
+// SOURCE src\scripts\ui\PlayerTradeComponent.tsx
+
+// ***** 2025-02-24 added new
+function nameMatchesAnyFragments(playerName, playerFragments) {
+  const fragments = playerFragments.split(/[;, \s]+/).filter(fragment => fragment.length > 0);
+
+  for (const fragment of fragments) {
+    if (fragment.endsWith('*')) {
+      // if the fragment ends with a star, remove the star to use it as a prefix.
+      const prefix = fragment.slice(0, -1);
+      if (playerName.startsWith(prefix)) {
+        return true;
+      }
+    }
+    else {
+      if (playerName.includes(fragment)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+
+const savedResourceWantFilters = new Set(),
+  savedResourceOfferFilters = new Set();
+let savedPlayerNameFilter = "",
+  savedMaxTradeAmountFilter = 0;
+const playerTradesSortingState = { column: 0, asc: !0 };
+
+// ***** PlayerTradeComponent
 function Eae({ gameState: t, xy: e }) {
   var T;
-  const r = (T = t.tiles.get(e)) == null ? void 0 : T.building,
-    [i, n] = se.useState(kl),
-    [a, o] = se.useState(Ml),
+  const building = (T = t.tiles.get(e)) == null ? void 0 : T.building,
+    [i, n] = se.useState(savedResourceWantFilters),
+    [a, o] = se.useState(savedResourceOfferFilters),
     [l, u] = se.useState(!1),
-    [c, p] = se.useState(vm),
-    [f, m] = se.useState(ym);
-  if (!r) return null;
-  const g = Gg(),
-    v = fo();
-  if (!Lc())
+    [playerNameFilter, setPlayerNameFilter] = se.useState(savedPlayerNameFilter),
+    [f, m] = se.useState(savedMaxTradeAmountFilter);
+  if (!building) return null;
+  const trades = Gg(), // useTrades()
+    user = fo(); // useUser()
+
+  if (!Lc()) // getMyMapXy()
     return s.jsx("article", {
       role: "tabpanel",
       style: { padding: "8px" },
@@ -99373,7 +99402,8 @@ function Eae({ gameState: t, xy: e }) {
         ],
       }),
     });
-  const x = zt(Sp(t)).filter((A) => !mo[A] && !Qn[A]);
+
+  const resources = zt(Sp(t)).filter((A) => !mo[A] && !Qn[A]);
   return s.jsxs("article", {
     role: "tabpanel",
     style: { padding: "8px" },
@@ -99399,7 +99429,7 @@ function Eae({ gameState: t, xy: e }) {
                       }),
                     }),
                     s.jsx("tbody", {
-                      children: x
+                      children: resources
                         .sort((A, C) =>
                           S.Resource[A].name().localeCompare(
                             S.Resource[C].name()
@@ -99415,10 +99445,10 @@ function Eae({ gameState: t, xy: e }) {
                                   style: { width: 0 },
                                   className: "text-strong",
                                   onClick: () => {
-                                    kl.has(A) ? kl.delete(A) : kl.add(A),
-                                      n(new Set(kl));
+                                    savedResourceWantFilters.has(A) ? savedResourceWantFilters.delete(A) : savedResourceWantFilters.add(A),
+                                      n(new Set(savedResourceWantFilters));
                                   },
-                                  children: kl.has(A)
+                                  children: savedResourceWantFilters.has(A)
                                     ? s.jsx("div", {
                                         className: "m-icon small text-blue",
                                         children: "check_box",
@@ -99432,10 +99462,10 @@ function Eae({ gameState: t, xy: e }) {
                                   style: { width: 0 },
                                   className: "text-strong",
                                   onClick: () => {
-                                    Ml.has(A) ? Ml.delete(A) : Ml.add(A),
-                                      o(new Set(Ml));
+                                    savedResourceOfferFilters.has(A) ? savedResourceOfferFilters.delete(A) : savedResourceOfferFilters.add(A),
+                                      o(new Set(savedResourceOfferFilters));
                                   },
-                                  children: Ml.has(A)
+                                  children: savedResourceOfferFilters.has(A)
                                     ? s.jsx("div", {
                                         className: "m-icon small text-blue",
                                         children: "check_box",
@@ -99466,9 +99496,9 @@ function Eae({ gameState: t, xy: e }) {
                     type: "text",
                     className: "f1",
                     size: 1,
-                    value: c,
+                    value: playerNameFilter,
                     onChange: (A) => {
-                      (vm = A.target.value), p(vm);
+                      (savedPlayerNameFilter = A.target.value), setPlayerNameFilter(savedPlayerNameFilter);
                     },
                     onClick: (A) => {
                       var C;
@@ -99491,7 +99521,7 @@ function Eae({ gameState: t, xy: e }) {
                     size: 1,
                     value: f,
                     onChange: (A) => {
-                      (ym = xi(A.target.value, 0)), m(ym);
+                      (savedMaxTradeAmountFilter = xi(A.target.value, 0)), m(savedMaxTradeAmountFilter);
                     },
                     onClick: (A) => {
                       var C;
@@ -99515,14 +99545,14 @@ function Eae({ gameState: t, xy: e }) {
                   s.jsx("button", {
                     className: "f1 text-center",
                     onClick: () => {
-                      kl.clear(),
-                        n(new Set(kl)),
-                        Ml.clear(),
-                        o(new Set(Ml)),
-                        (vm = ""),
-                        p(vm),
-                        (ym = 0),
-                        m(ym),
+                      savedResourceWantFilters.clear(),
+                        n(new Set(savedResourceWantFilters)),
+                        savedResourceOfferFilters.clear(),
+                        o(new Set(savedResourceOfferFilters)),
+                        (savedPlayerNameFilter = ""),
+                        setPlayerNameFilter(savedPlayerNameFilter),
+                        (savedMaxTradeAmountFilter = 0),
+                        m(savedMaxTradeAmountFilter),
                         u(!1);
                     },
                     children: h(d.PlayerTradeFiltersClear),
@@ -99546,7 +99576,7 @@ function Eae({ gameState: t, xy: e }) {
                 children: [
                   h(d.PlayerTradeFilters),
                   " (",
-                  i.size + a.size + (c.length > 0 ? 1 : 0),
+                  i.size + a.size + (playerNameFilter.length > 0 ? 1 : 0),
                   ")",
                 ],
               }),
@@ -99560,24 +99590,32 @@ function Eae({ gameState: t, xy: e }) {
           { name: h(d.PlayerTradeFrom), sortable: !0 },
           { name: "", sortable: !1 },
         ],
-        sortingState: Bae,
-        data: g.filter(
+        sortingState: playerTradesSortingState,
+
+        // ***** 2025-02-24 important, filtering trades
+        data: trades.filter(
           (A) =>
             ((i.size === 0 && a.size === 0) ||
               i.has(A.buyResource) ||
               a.has(A.sellResource)) &&
-            A.from.toLowerCase().includes(c.toLowerCase()) &&
+            
+              //A.from.toLowerCase().includes(playerNameFilter.toLowerCase()) &&
+              (
+                !playerNameFilter || playerNameFilter.trim() === "" ||
+                nameMatchesAnyFragments(A.from.toLowerCase(), playerNameFilter.toLowerCase())
+              ) &&
+
             (f === 0 || (f > 0 && A.buyAmount <= f))
         ),
         compareFunc: (A, C, P, M) => {
           if (
-            A.fromId === (v == null ? void 0 : v.userId) &&
-            C.fromId !== (v == null ? void 0 : v.userId)
+            A.fromId === (user == null ? void 0 : user.userId) &&
+            C.fromId !== (user == null ? void 0 : user.userId)
           )
             return -M;
           if (
-            A.fromId !== (v == null ? void 0 : v.userId) &&
-            C.fromId === (v == null ? void 0 : v.userId)
+            A.fromId !== (user == null ? void 0 : user.userId) &&
+            C.fromId === (user == null ? void 0 : user.userId)
           )
             return M;
           switch (P) {
@@ -99598,13 +99636,13 @@ function Eae({ gameState: t, xy: e }) {
           }
         },
         renderRow: (A) => {
-          const C = v === null || A.fromId === v.userId,
+          const C = user === null || A.fromId === user.userId,
             P = WA(A);
           return s.jsxs(
             "tr",
             {
               className: Ke({
-                blue: A.fromId === (v == null ? void 0 : v.userId),
+                blue: A.fromId === (user == null ? void 0 : user.userId),
               }),
               children: [
                 s.jsxs("td", {
@@ -99684,7 +99722,7 @@ function Eae({ gameState: t, xy: e }) {
                 }),
                 s.jsx("td", {
                   children:
-                    A.fromId === (v == null ? void 0 : v.userId)
+                    A.fromId === (user == null ? void 0 : user.userId)
                       ? s.jsx("div", {
                           className: "m-icon small text-link",
                           onClick: () => {
