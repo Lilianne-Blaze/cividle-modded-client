@@ -100016,21 +100016,26 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
   });
 }
 const Dae = { column: 1, asc: !0 };
-function H4({ gameState: t, xy: e }) {
+
+// ***** ResourceImportComponent
+function H4({ gameState: gameState, xy: xy }) {
   var p;
-  const r = (p = t.tiles.get(e)) == null ? void 0 : p.building,
-    [i, n] = se.useState(new Set());
-  if ((se.useEffect(() => n(new Set()), [e]), !r)) return null;
-  r.resourceImports || (r.resourceImports = {});
-  const a = Es(e, t),
-    o = Qh(r, 1),
-    l = da(e, "output", 1, !1, t),
-    u = zt(Sp(t)).filter((f) => !mo[f] && !Qn[f]),
-    c = Ck(e, t);
+  const building = (p = gameState.tiles.get(xy)) == null ? void 0 : p.building,
+    [selected, setSelected] = se.useState(new Set());
+
+  if ((se.useEffect(() => setSelected(new Set()), [xy]), !building)) return null;
+
+  building.resourceImports || (building.resourceImports = {});
+
+  const storage = Es(xy, gameState), // Es is getStorageFor
+    baseCapacity = Qh(building, 1),
+    capacityMultiplier = da(xy, "output", 1, !1, gameState),
+    resources = zt(Sp(gameState)).filter((f) => !mo[f] && !Qn[f]),
+    idleCapacity = Ck(xy, gameState);
   return s.jsxs("fieldset", {
     children: [
       s.jsx("legend", { children: h(d.ResourceImport) }),
-      c < 0
+      idleCapacity < 0
         ? s.jsx(Xt, {
             className: "text-small mb10",
             icon: "warning",
@@ -100053,35 +100058,35 @@ function H4({ gameState: t, xy: e }) {
           { name: "", sortable: !1 },
         ],
         sortingState: Dae,
-        data: u,
+        data: resources,
         compareFunc: (f, m, g) => {
           var v, y, x, T, A, C, P, M, k, w;
           switch (g) {
             case 2:
               return (
-                ((v = r.resources[f]) != null ? v : 0) -
-                ((y = r.resources[m]) != null ? y : 0)
+                ((v = building.resources[f]) != null ? v : 0) -
+                ((y = building.resources[m]) != null ? y : 0)
               );
             case 3:
               return (
                 ((T =
-                  (x = r.resourceImports[f]) == null ? void 0 : x.perCycle) !=
+                  (x = building.resourceImports[f]) == null ? void 0 : x.perCycle) !=
                 null
                   ? T
                   : 0) -
                 ((C =
-                  (A = r.resourceImports[m]) == null ? void 0 : A.perCycle) !=
+                  (A = building.resourceImports[m]) == null ? void 0 : A.perCycle) !=
                 null
                   ? C
                   : 0)
               );
             case 4:
               return (
-                ((M = (P = r.resourceImports[f]) == null ? void 0 : P.cap) !=
+                ((M = (P = building.resourceImports[f]) == null ? void 0 : P.cap) !=
                 null
                   ? M
                   : 0) -
-                ((w = (k = r.resourceImports[m]) == null ? void 0 : k.cap) !=
+                ((w = (k = building.resourceImports[m]) == null ? void 0 : k.cap) !=
                 null
                   ? w
                   : 0)
@@ -100092,16 +100097,16 @@ function H4({ gameState: t, xy: e }) {
         },
         renderRow: (f) => {
           var g, v, y;
-          const m = r.resourceImports[f];
+          const m = building.resourceImports[f];
           return s.jsxs(
             "tr",
             {
               children: [
                 s.jsx("td", {
                   onClick: () => {
-                    i.has(f) ? i.delete(f) : i.add(f), n(new Set(i));
+                    selected.has(f) ? selected.delete(f) : selected.add(f), setSelected(new Set(selected));
                   },
-                  children: i.has(f)
+                  children: selected.has(f)
                     ? s.jsx("div", {
                         className: "m-icon small text-blue",
                         children: "check_box",
@@ -100132,7 +100137,7 @@ function H4({ gameState: t, xy: e }) {
                 s.jsx("td", {
                   className: "text-right",
                   children: s.jsx(te, {
-                    value: (g = r.resources[f]) != null ? g : 0,
+                    value: (g = building.resources[f]) != null ? g : 0,
                   }),
                 }),
                 s.jsx("td", {
@@ -100154,9 +100159,9 @@ function H4({ gameState: t, xy: e }) {
                   onClick: () =>
                     It(
                       s.jsx(_ae, {
-                        storage: a.total,
-                        capacity: o * l,
-                        building: r,
+                        storage: storage.total,
+                        capacity: baseCapacity * capacityMultiplier,
+                        building: building,
                         resource: f,
                       })
                     ),
@@ -100176,28 +100181,28 @@ function H4({ gameState: t, xy: e }) {
         className: "row text-small",
         children: [
           s.jsx("div", {
-            className: Ke({ "text-desc": i.size === 0 }),
-            children: h(d.SelectedCount, { count: i.size }),
+            className: Ke({ "text-desc": selected.size === 0 }),
+            children: h(d.SelectedCount, { count: selected.size }),
           }),
           s.jsx("div", { className: "f1" }),
           s.jsx("div", {
             className: "text-link mr10",
-            onClick: () => n(new Set(u)),
+            onClick: () => setSelected(new Set(resources)),
             children: h(d.SelectedAll),
           }),
           s.jsx("div", {
             className: "text-link mr10",
             onClick: () => {
               const f = new Set();
-              u.forEach((m) => {
-                i.has(m) || f.add(m), n(f);
+              resources.forEach((m) => {
+                selected.has(m) || f.add(m), setSelected(f);
               });
             },
             children: h(d.InverseSelection),
           }),
           s.jsx("div", {
             className: "text-link",
-            onClick: () => n(new Set()),
+            onClick: () => setSelected(new Set()),
             children: h(d.ClearSelection),
           }),
         ],
@@ -100214,14 +100219,14 @@ function H4({ gameState: t, xy: e }) {
           s.jsx("div", {
             className: "text-link mr10",
             onClick: () => {
-              Q(r.resourceImports, (m, g) => {
+              Q(building.resourceImports, (m, g) => {
                 g.perCycle = 0;
               });
-              const f = Math.floor((o * l) / i.size);
-              i.forEach((m) => {
-                r.resourceImports[m]
-                  ? (r.resourceImports[m].perCycle = f)
-                  : (r.resourceImports[m] = { perCycle: f, cap: 0 });
+              const f = Math.floor((baseCapacity * capacityMultiplier) / selected.size);
+              selected.forEach((m) => {
+                building.resourceImports[m]
+                  ? (building.resourceImports[m].perCycle = f)
+                  : (building.resourceImports[m] = { perCycle: f, cap: 0 });
               }),
                 Ze();
             },
@@ -100230,19 +100235,43 @@ function H4({ gameState: t, xy: e }) {
           s.jsx("div", {
             className: "text-link",
             onClick: () => {
-              Q(r.resourceImports, (m, g) => {
+              Q(building.resourceImports, (m, g) => {
                 g.cap = 0;
               });
-              const f = a.total / i.size;
-              i.forEach((m) => {
-                r.resourceImports[m]
-                  ? (r.resourceImports[m].cap = f)
-                  : (r.resourceImports[m] = { perCycle: 0, cap: f });
+              const f = storage.total / selected.size;
+              selected.forEach((m) => {
+                building.resourceImports[m]
+                  ? (building.resourceImports[m].cap = f)
+                  : (building.resourceImports[m] = { perCycle: 0, cap: f });
               }),
                 Ze();
             },
             children: h(d.RedistributeAmongSelectedCap),
           }),
+
+          s.jsx("div", {
+
+            // ml10 means margin left 10
+            className: "text-link ml10",
+            onClick: () => {
+
+              // we don't want to clear other caps with MaxCap
+              //Q(building.resourceImports, (res, v) => {
+                //v.cap = 0;
+              //});
+
+              //const amount = a.total / i.size;
+              const amount = storage.total;
+              selected.forEach((m) => {
+                building.resourceImports[m]
+                  ? (building.resourceImports[m].cap = amount)
+                  : (building.resourceImports[m] = { perCycle: 0, cap: amount });
+              }),
+                Ze(); // Ze is notifyGameStateUpdate
+            },
+            children: "MaxCap",
+          }),
+
         ],
       }),
       s.jsx("div", { className: "sep5" }),
@@ -100257,8 +100286,8 @@ function H4({ gameState: t, xy: e }) {
           s.jsx("div", {
             className: "text-link mr10",
             onClick: () => {
-              Q(r.resourceImports, (f, m) => {
-                i.has(f) && (m.perCycle = 0);
+              Q(building.resourceImports, (f, m) => {
+                selected.has(f) && (m.perCycle = 0);
               }),
                 Ze();
             },
@@ -100267,8 +100296,8 @@ function H4({ gameState: t, xy: e }) {
           s.jsx("div", {
             className: "text-link",
             onClick: () => {
-              Q(r.resourceImports, (f, m) => {
-                i.has(f) && (m.cap = 0);
+              Q(building.resourceImports, (f, m) => {
+                selected.has(f) && (m.cap = 0);
               }),
                 Ze();
             },
@@ -100278,11 +100307,11 @@ function H4({ gameState: t, xy: e }) {
       }),
       s.jsx("div", { className: "sep10" }),
       s.jsx(gn, {
-        xy: e,
+        xy: xy,
         getOptions: () => ({
-          resourceImports: structuredClone(r.resourceImports),
+          resourceImports: structuredClone(building.resourceImports),
         }),
-        gameState: t,
+        gameState: gameState,
         flags: $k.NoDefault,
       }),
       s.jsx("div", { className: "separator" }),
@@ -100300,7 +100329,7 @@ function H4({ gameState: t, xy: e }) {
                   }),
                   s.jsx("div", {
                     className: "text-strong",
-                    children: s.jsx(te, { value: o * l }),
+                    children: s.jsx(te, { value: baseCapacity * capacityMultiplier }),
                   }),
                 ],
               }),
@@ -100315,7 +100344,7 @@ function H4({ gameState: t, xy: e }) {
                       }),
                       s.jsx("div", {
                         className: "text-strong",
-                        children: s.jsx(te, { value: o }),
+                        children: s.jsx(te, { value: baseCapacity }),
                       }),
                     ],
                   }),
@@ -100328,7 +100357,7 @@ function H4({ gameState: t, xy: e }) {
                       }),
                       s.jsx("div", {
                         className: "text-strong",
-                        children: s.jsx(te, { value: l }),
+                        children: s.jsx(te, { value: capacityMultiplier }),
                       }),
                     ],
                   }),
@@ -100345,7 +100374,7 @@ function H4({ gameState: t, xy: e }) {
                           s.jsx("div", { children: "1" }),
                         ],
                       }),
-                      Jh(e, t).map((f, m) =>
+                      Jh(xy, gameState).map((f, m) =>
                         f.output
                           ? s.jsxs(
                               "li",
@@ -100388,13 +100417,13 @@ function H4({ gameState: t, xy: e }) {
             className: "pointer ml20",
             onClick: () => {
               Le(),
-                (r.resourceImportOptions = dc(
-                  r.resourceImportOptions,
+                (building.resourceImportOptions = dc(
+                  building.resourceImportOptions,
                   mn.ExportBelowCap
                 )),
                 Ze();
             },
-            children: ot(r.resourceImportOptions, mn.ExportBelowCap)
+            children: ot(building.resourceImportOptions, mn.ExportBelowCap)
               ? s.jsx("div", {
                   className: "m-icon text-green",
                   children: "toggle_on",
@@ -100407,15 +100436,15 @@ function H4({ gameState: t, xy: e }) {
         ],
       }),
       s.jsx(gn, {
-        xy: e,
+        xy: xy,
         getOptions: (f) => ({
           resourceImportOptions: xh(
-            r.resourceImportOptions,
+            building.resourceImportOptions,
             f.resourceImportOptions,
             mn.ExportBelowCap
           ),
         }),
-        gameState: t,
+        gameState: gameState,
       }),
       s.jsx("div", { className: "separator" }),
       s.jsxs("div", {
@@ -100434,13 +100463,13 @@ function H4({ gameState: t, xy: e }) {
             className: "pointer ml20",
             onClick: () => {
               Le(),
-                (r.resourceImportOptions = dc(
-                  r.resourceImportOptions,
+                (building.resourceImportOptions = dc(
+                  building.resourceImportOptions,
                   mn.ExportToSameType
                 )),
                 Ze();
             },
-            children: ot(r.resourceImportOptions, mn.ExportToSameType)
+            children: ot(building.resourceImportOptions, mn.ExportToSameType)
               ? s.jsx("div", {
                   className: "m-icon text-green",
                   children: "toggle_on",
@@ -100453,15 +100482,15 @@ function H4({ gameState: t, xy: e }) {
         ],
       }),
       s.jsx(gn, {
-        xy: e,
+        xy: xy,
         getOptions: (f) => ({
           resourceImportOptions: xh(
-            r.resourceImportOptions,
+            building.resourceImportOptions,
             f.resourceImportOptions,
             mn.ExportToSameType
           ),
         }),
-        gameState: t,
+        gameState: gameState,
       }),
       s.jsx("div", { className: "separator" }),
       s.jsxs("div", {
@@ -100481,15 +100510,15 @@ function H4({ gameState: t, xy: e }) {
             onClick: () => {
               var f;
               Le(),
-                (r.resourceImportOptions = dc(
-                  r.resourceImportOptions,
+                (building.resourceImportOptions = dc(
+                  building.resourceImportOptions,
                   mn.ManagedImport
                 )),
                 (f = be().sceneManager.getCurrent(At)) == null ||
                   f.drawSelection(null, []),
                 Ze();
             },
-            children: ot(r.resourceImportOptions, mn.ManagedImport)
+            children: ot(building.resourceImportOptions, mn.ManagedImport)
               ? s.jsx("div", {
                   className: "m-icon text-green",
                   children: "toggle_on",
@@ -100502,15 +100531,15 @@ function H4({ gameState: t, xy: e }) {
         ],
       }),
       s.jsx(gn, {
-        xy: e,
+        xy: xy,
         getOptions: (f) => ({
           resourceImportOptions: xh(
-            r.resourceImportOptions,
+            building.resourceImportOptions,
             f.resourceImportOptions,
             mn.ManagedImport
           ),
         }),
-        gameState: t,
+        gameState: gameState,
       }),
     ],
   });
@@ -114412,6 +114441,8 @@ function fce() {
 function hI() {
   throw new Error("Command is only available for development");
 }
+
+
 function gce(t) {
   return ae(this, null, function* () {
     var r, i, n;
