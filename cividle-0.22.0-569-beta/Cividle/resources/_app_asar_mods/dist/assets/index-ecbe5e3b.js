@@ -99431,6 +99431,26 @@ function nameMatchesAnyFragments(playerName, playerFragments) {
   return false;
 }
 
+// SOURCE src/scripts/ui/PlayerTradeComponent.tsx
+
+// ***** 2025-02-25 added new
+
+function formatNumberTradeTable(num, binary = false, scientific = false) {
+  if (num === null || num === undefined || num == "") {
+    return "0";
+  }
+
+  if( num <= 0 ) {
+    return "0";
+  }
+
+  if (!Number.isFinite(num)) {
+    return String(num);
+  }
+
+  // __ is humanFormat, CZ is NUMBER_SUFFIX_1
+  return __(num, xZ);
+}
 
 const savedResourceWantFilters = new Set(),
   savedResourceOfferFilters = new Set();
@@ -99700,6 +99720,7 @@ function Eae({ gameState: t, xy: e }) {
               return 0;
           }
         },
+        // ***** important
         renderRow: (A) => {
           const C = user === null || A.fromId === user.userId,
             P = WA(A);
@@ -99718,8 +99739,12 @@ function Eae({ gameState: t, xy: e }) {
                     }),
                     s.jsx("div", {
                       className: "text-small text-strong text-desc",
-                      children: s.jsx(te, { value: A.buyAmount }),
+                      children: s.jsx(te, { value: "Offer: "+formatNumberTradeTable(A.buyAmount) }),
                     }),
+                    s.jsx("div", {
+                        className: "text-small text-strong text-desc",
+                        children: s.jsx(te, { value: "You: "+formatNumberTradeTable(N.current.resourceAmount.get(A.buyResource)) }),
+                    }), 
                   ],
                 }),
                 s.jsxs("td", {
@@ -99728,8 +99753,12 @@ function Eae({ gameState: t, xy: e }) {
                       children: S.Resource[A.sellResource].name(),
                     }),
                     s.jsx("div", {
+                        className: "text-small text-strong text-desc",
+                        children: s.jsx(te, { value: "Want: "+formatNumberTradeTable(A.sellAmount) }),
+                      }),
+                    s.jsx("div", {
                       className: "text-small text-strong text-desc",
-                      children: s.jsx(te, { value: A.sellAmount }),
+                      children: s.jsx(te, { value: "You: "+formatNumberTradeTable(N.current.resourceAmount.get(A.sellResource)) }),
                     }),
                   ],
                 }),
