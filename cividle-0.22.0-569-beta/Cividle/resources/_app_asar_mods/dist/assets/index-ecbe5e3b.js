@@ -91586,52 +91586,53 @@ function _4({ xy: t }) {
 // SOURCE src/scripts/ui/FillPlayerTradeModal.tsx
 
 // export function FillPlayerTradeModal({ tradeId, xy }: { tradeId: string; xy?: Tile }): React.ReactNode
-function D4({ tradeId: t, xy: e }) {
-  const [r, i] = se.useState([]),
-    n = jg(),
-    a = gi(),
-    l = Gg().find((D) => D.id === t),
-    u = Lc(),
-    c = N.current.playerTradeBuildings,
+function D4({ tradeId: tradeId, xy: xy }) {
+  const [tiles, setTiles] = se.useState([]),
+    map = jg(),
+    gs = gi(),
+    trade = Gg().find((D) => D.id === tradeId),
+    myXy = Lc(),
+    allTradeBuildings = N.current.playerTradeBuildings,
 
     // *****
     cSorted = new Map(),
 
-    [p, f] = se.useState(new Map());
+    [fills, setFills] = se.useState(new Map());
   se.useEffect(() => {
-    if (!l) return;
-    const D = dne(l.fromId);
-    if (!u || !D) return;
-    const I = M4($u(u), $u(D));
-    i(I.map((L) => uL(L)));
-  }, [l, u]);
-  const m = BJ(r, LP(a)),
+    if (!trade) return;
+    const targetXy = dne(trade.fromId);
+    if (!myXy || !targetXy) return;
+    const path = M4($u(myXy), $u(targetXy));
+    setTiles(path.map((L) => uL(L)));
+  }, [trade, myXy]);
+  const m = BJ(tiles, LP(gs)),
     g =
       m +
-      r.reduce((D, I, L) => {
-        const F = n.get(I);
-        return !F || L === 0 || L === r.length - 1 ? D : D + F.tariffRate;
+      tiles.reduce((D, I, L) => {
+        const F = map.get(I);
+        return !F || L === 0 || L === tiles.length - 1 ? D : D + F.tariffRate;
       }, 0);
-  if (!l) return Qt(), ze(), null;
-  if (!u) return Qt(), ze(), ct(h(d.PlayerTradeClaimTileFirstWarning)), null;
-  const v = () => r.length > 0,
-    y = (D) => {
-      for (const [I, L] of D) if (!Z_(I, l.buyResource, L, a)) return !1;
+  if (!trade) return Qt(), ze(), null;
+  if (!myXy) return Qt(), ze(), ct(h(d.PlayerTradeClaimTileFirstWarning)), null;
+  const hasValidPath = () => tiles.length > 0,
+    fillsHaveEnoughResource = (D) => {
+      for (const [I, L] of D) if (!Z_(I, trade.buyResource, L, gs)) return !1;
       return !0;
     },
 
     // 2025-02-23
     // ***** calculateMaxFill
     x = () => {
-      const D = new Map();
+      const result = new Map();
       
-      //let I = l.buyAmount;
-      let I = ( l.buyAmount < 10000000) ? l.buyAmount : l.buyAmount*0.9;
+      // does it really help?
+      let amountLeft = l.buyAmount;
+    //   let amountLeft = ( trade.buyAmount < 10000000) ? trade.buyAmount : trade.buyAmount*0.9;
 
       // ***** make sure only first 20 per-building trades are filled
       var counterMax = 20;
       var counterCurrent = 0;
-      for (const L of cSorted.keys()) {
+      for (const xy of cSorted.keys()) {
 
         // ***** make sure only first 20 per-building trades are filled
         if( counterCurrent >= counterMax )
@@ -91642,16 +91643,16 @@ function D4({ tradeId: t, xy: e }) {
 
         // ***** do only partial fills
         //const F = w(L);
-        const F = w(L) * 0.9;
+        const amount = w(xy) * 0.9;
 
-        if (!(F <= 0))
-          if (I > F) D.set(L, F), (I -= F);
+        if (!(amount <= 0))
+          if (amountLeft > amount) result.set(xy, amount), (amountLeft -= amount);
           else {
-            D.set(L, I), (I = 0);
+            result.set(xy, amountLeft), (amountLeft = 0);
             break;
           }
       }
-      return D;
+      return result;
     },
 
 
@@ -91659,7 +91660,7 @@ function D4({ tradeId: t, xy: e }) {
     T = (fills) =>
       ae(this, null, function* () {
         var $;
-        if (!B(fills) || !v()) {
+        if (!B(fills) || !hasValidPath()) {
           ct(h(d.OperationNotAllowedError)), ze();
           return;
         }
@@ -91679,21 +91680,21 @@ function D4({ tradeId: t, xy: e }) {
         for (const [tile, amount] of fills) {
           if (amount <= 0) continue;
           ++total;
-          const re = FL(l.buyResource, amount, [tile], a);
+          const re = FL(trade.buyResource, amount, [tile], gs);
           try {
 
             ct("Filling trades " + total + "/" + fillsSize + "...");
 
             const V = yield qe.fillTrade({
-              id: l.id,
+              id: trade.id,
               amount: re.amount,
-              path: r,
-              seaTileCost: LP(a),
+              path: tiles,
+              seaTileCost: LP(gs),
             });
             Q(V, (Z, ee) => {
               ee > 0 && (receivedAmount += ee),
                 ee < 0 && (fillAmount += Math.abs(ee)),
-                Tt(c.get(tile).resources, Z, ee);
+                Tt(allTradeBuildings.get(tile).resources, Z, ee);
             }),
               ++success;
           } catch (V) {
@@ -91709,9 +91710,9 @@ function D4({ tradeId: t, xy: e }) {
                 success: success,
                 total: total,
                 fillAmount: pr(fillAmount),
-                fillResource: S.Resource[l.buyResource].name(),
+                fillResource: S.Resource[trade.buyResource].name(),
                 receivedAmount: pr(receivedAmount),
-                receivedResource: S.Resource[l.sellResource].name(),
+                receivedResource: S.Resource[trade.sellResource].name(),
               })
             );
           const X = N.current.specialBuildings.get("EastIndiaCompany");
@@ -91719,19 +91720,19 @@ function D4({ tradeId: t, xy: e }) {
             Tt(
               X.building.resources,
               "TradeValue",
-              fillAmount * (($ = S.ResourcePrice[l.buyResource]) != null ? $ : 0)
+              fillAmount * (($ = S.ResourcePrice[trade.buyResource]) != null ? $ : 0)
             ),
             ct(errors.join("<br />")),
             Qt();
         } else ze(), ct(errors.join("<br />"));
       }),
     A = (D) =>
-      We((l.sellAmount * D) / l.buyAmount - D, 0, Number.POSITIVE_INFINITY),
+      We((trade.sellAmount * D) / trade.buyAmount - D, 0, Number.POSITIVE_INFINITY),
     C = (D) => {
       if (!k()) return !0;
       for (const [I, L] of D) {
         const F = A(L);
-        if (!J_(I, F, a)) return !1;
+        if (!J_(I, F, gs)) return !1;
       }
       return !0;
     },
@@ -91745,26 +91746,26 @@ function D4({ tradeId: t, xy: e }) {
       for (const [L, F] of D) I += A(F);
       return I;
     },
-    k = () => l.sellAmount > l.buyAmount,
+    k = () => trade.sellAmount > trade.buyAmount,
     w = (D) => {
       var L, F, W;
-      let I = l.buyAmount;
+      let I = trade.buyAmount;
       if (
         ((I = We(
           I,
           0,
           (W =
-            (F = (L = a.tiles.get(D)) == null ? void 0 : L.building) == null
+            (F = (L = gs.tiles.get(D)) == null ? void 0 : L.building) == null
               ? void 0
-              : F.resources[l.buyResource]) != null
+              : F.resources[trade.buyResource]) != null
             ? W
             : 0
         )),
-        l.sellAmount > l.buyAmount)
+        trade.sellAmount > trade.buyAmount)
       ) {
-        const H = Es(D, a),
+        const H = Es(D, gs),
           $ = We(H.total - H.used, 0, Number.POSITIVE_INFINITY);
-        I = We(I, 0, ($ * l.buyAmount) / (l.sellAmount - l.buyAmount));
+        I = We(I, 0, ($ * trade.buyAmount) / (trade.sellAmount - trade.buyAmount));
       }
       return I;
     },
@@ -91772,11 +91773,11 @@ function D4({ tradeId: t, xy: e }) {
     // ***** fillsAreValid
     B = (D) => {
       const I = P(D);
-      return y(D) && C(D) && I > 0 && I <= l.buyAmount;
+      return fillsHaveEnoughResource(D) && C(D) && I > 0 && I <= trade.buyAmount;
     },
 
     // ***** isFillValid
-    _ = (D, I) => Z_(D, l.buyResource, I, a) && (!k() || J_(D, A(I), a));
+    _ = (D, I) => Z_(D, trade.buyResource, I, gs) && (!k() || J_(D, A(I), gs));
 
 
   return s.jsxs("div", {
@@ -91799,13 +91800,13 @@ function D4({ tradeId: t, xy: e }) {
       s.jsxs("div", {
         className: "window-body",
         children: [
-          v()
+          hasValidPath()
             ? null
             : s.jsxs(s.Fragment, {
                 children: [
                   s.jsx(Xt, {
                     icon: "warning",
-                    children: h(d.PlayerTradeNoValidRoute, { name: l.from }),
+                    children: h(d.PlayerTradeNoValidRoute, { name: trade.from }),
                   }),
                   s.jsx("div", { className: "sep10" }),
                 ],
@@ -91821,7 +91822,7 @@ function D4({ tradeId: t, xy: e }) {
                       s.jsx("th", {}),
                       s.jsx("th", {
                         className: "text-right",
-                        children: S.Resource[l.buyResource].name(),
+                        children: S.Resource[trade.buyResource].name(),
                       }),
                       s.jsx("th", {
                         className: "text-right",
@@ -91836,19 +91837,19 @@ function D4({ tradeId: t, xy: e }) {
                   }),
 
                   // ***** 
-                  Array.from(c.entries())
+                  Array.from(allTradeBuildings.entries())
                     .sort(([, D], [, I]) => {
                       var L, F;
                       return (
-                        ((L = I.resources[l.buyResource]) != null ? L : 0) -
-                        ((F = D.resources[l.buyResource]) != null ? F : 0)
+                        ((L = I.resources[trade.buyResource]) != null ? L : 0) -
+                        ((F = D.resources[trade.buyResource]) != null ? F : 0)
                       );
                     })
                     .map(([D, I]) => {
                       cSorted.set(D, I);
 
                       var F, W, H;
-                      const L = Es(D, a);
+                      const L = Es(D, gs);
                       return s.jsxs(
                         "tr",
                         {
@@ -91869,14 +91870,14 @@ function D4({ tradeId: t, xy: e }) {
                               children: [
                                 s.jsx(te, {
                                   value:
-                                    (F = I.resources[l.buyResource]) != null
+                                    (F = I.resources[trade.buyResource]) != null
                                       ? F
                                       : 0,
                                 }),
                                 s.jsx("div", {
                                   className: "text-right text-small text-link",
                                   onClick: () => {
-                                    f(($) => ($.set(D, w(D)), new Map(p)));
+                                    setFills(($) => ($.set(D, w(D)), new Map(fills)));
                                   },
                                   children: h(d.PlayerTradeFillAmountMaxV2),
                                 }),
@@ -91897,9 +91898,9 @@ function D4({ tradeId: t, xy: e }) {
                               children: s.jsx("input", {
                                 type: "text",
                                 className: "text-right",
-                                value: (W = p.get(D)) != null ? W : 0,
+                                value: (W = fills.get(D)) != null ? W : 0,
                                 onChange: ($) => {
-                                  f(
+                                  setFills(
                                     (X) => (
                                       X.set(D, n1($.target.value, 0)),
                                       new Map(X)
@@ -91911,7 +91912,7 @@ function D4({ tradeId: t, xy: e }) {
                             }),
                             s.jsx("td", {
                               style: { width: 0 },
-                              children: _(D, (H = p.get(D)) != null ? H : 0)
+                              children: _(D, (H = fills.get(D)) != null ? H : 0)
                                 ? s.jsx("div", {
                                     className: "m-icon small text-green",
                                     children: "check_circle",
@@ -91937,13 +91938,13 @@ function D4({ tradeId: t, xy: e }) {
               s.jsx("div", {
                 className: "text-strong text-link mr20",
                 onClick: () => {
-                  f(() => new Map());
+                  setFills(() => new Map());
                 },
                 children: h(d.PlayerTradeClearAll),
               }),
               s.jsx("div", {
                 className: "text-strong text-link",
-                onClick: () => f(x),
+                onClick: () => setFills(x),
                 children: h(d.PlayerTradeMaxAll),
               }),
             ],
@@ -91956,29 +91957,29 @@ function D4({ tradeId: t, xy: e }) {
                 children: s.jsxs("details", {
                   children: [
                     s.jsxs("summary", {
-                      className: Ke({ row: !0, "text-strong text-red": !y(p) }),
+                      className: Ke({ row: !0, "text-strong text-red": !fillsHaveEnoughResource(fills) }),
                       children: [
                         s.jsx("div", {
                           className: "f1",
                           children: h(d.PlayerTradeYouPay, {
-                            res: S.Resource[l.buyResource].name(),
+                            res: S.Resource[trade.buyResource].name(),
                           }),
                         }),
-                        s.jsx("div", { children: s.jsx(te, { value: P(p) }) }),
+                        s.jsx("div", { children: s.jsx(te, { value: P(fills) }) }),
                       ],
                     }),
                     s.jsx("ul", {
                       children: s.jsxs("li", {
                         className: Ke({
                           "text-small row": !0,
-                          "text-strong text-red": P(p) > l.buyAmount,
+                          "text-strong text-red": P(fills) > trade.buyAmount,
                         }),
                         children: [
                           s.jsx("div", {
                             className: "f1",
                             children: h(d.PlayerTradeFillPercentage),
                           }),
-                          s.jsx("div", { children: Dt(P(p) / l.buyAmount) }),
+                          s.jsx("div", { children: Dt(P(fills) / trade.buyAmount) }),
                         ],
                       }),
                     }),
@@ -92013,9 +92014,9 @@ function D4({ tradeId: t, xy: e }) {
                               ],
                             })
                           : null,
-                        r.map((D, I) => {
-                          const L = n.get(D);
-                          return !L || I === 0 || I === r.length - 1
+                        tiles.map((D, I) => {
+                          const L = map.get(D);
+                          return !L || I === 0 || I === tiles.length - 1
                             ? null
                             : s.jsxs(
                                 "li",
@@ -92048,14 +92049,14 @@ function D4({ tradeId: t, xy: e }) {
                         s.jsx("div", {
                           className: "f1",
                           children: h(d.PlayerTradeYouGetNet, {
-                            res: S.Resource[l.sellResource].name(),
+                            res: S.Resource[trade.sellResource].name(),
                           }),
                         }),
                         s.jsx("div", {
                           className: "text-strong",
                           children: s.jsx(te, {
                             value:
-                              ((1 - g) * l.sellAmount * P(p)) / l.buyAmount,
+                              ((1 - g) * trade.sellAmount * P(fills)) / trade.buyAmount,
                           }),
                         }),
                       ],
@@ -92068,12 +92069,12 @@ function D4({ tradeId: t, xy: e }) {
                             s.jsx("div", {
                               className: "f1",
                               children: h(d.PlayerTradeYouGetGross, {
-                                res: S.Resource[l.sellResource].name(),
+                                res: S.Resource[trade.sellResource].name(),
                               }),
                             }),
                             s.jsx("div", {
                               children: s.jsx(te, {
-                                value: (P(p) * l.sellAmount) / l.buyAmount,
+                                value: (P(fills) * trade.sellAmount) / trade.buyAmount,
                               }),
                             }),
                           ],
@@ -92081,7 +92082,7 @@ function D4({ tradeId: t, xy: e }) {
                         s.jsxs("li", {
                           className: Ke({
                             "text-small row": !0,
-                            "text-strong text-red": !C(p),
+                            "text-strong text-red": !C(fills),
                           }),
                           children: [
                             s.jsx("div", {
@@ -92089,7 +92090,7 @@ function D4({ tradeId: t, xy: e }) {
                               children: h(d.PlayerTradeStorageRequired),
                             }),
                             s.jsx("div", {
-                              children: s.jsx(te, { value: M(p) }),
+                              children: s.jsx(te, { value: M(fills) }),
                             }),
                           ],
                         }),
@@ -92123,8 +92124,8 @@ function D4({ tradeId: t, xy: e }) {
               s.jsx("div", { style: { width: "6px" } }),
               s.jsx("button", {
                 className: "text-strong",
-                disabled: !B(p),
-                onClick: () => T(p),
+                disabled: !B(fills),
+                onClick: () => T(fills),
                 children: h(d.PlayerTradeFillTradeButton),
               }),
             ],
