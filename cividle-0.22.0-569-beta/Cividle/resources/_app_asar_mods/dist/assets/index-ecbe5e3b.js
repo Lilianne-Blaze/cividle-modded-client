@@ -109519,8 +109519,8 @@ function bue({ tile: t }) {
   var vBld = e;
   var vBldDef = i;
 
-  console.log("vBldDef.name() (this will be localized??, for example Hütte) =", vBldDef?.name());
-  console.log("vBld.type (this will NOT be localized, for example Hut) =", vBld?.type);
+  //console.log("vBldDef.name() (this will be localized??, for example Hütte) =", vBldDef?.name());
+  //console.log("vBld.type (this will NOT be localized, for example Hut) =", vBld?.type);
   
   var buildingLevel = vBld.level;
   var buildingNameInt = vBld?.type; // internal name
@@ -114435,22 +114435,27 @@ const dce = [
   pce = "" + new URL("chat_active-52f8aec6.png", import.meta.url).href,
   mce =
     "data:image/png;base64,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";
+
+// ***** requireOfflineRun
 function fce() {
   if (rS()) throw new Error("Command is only available for trial run");
 }
+
+// ***** requireDevelopment
 function hI() {
   throw new Error("Command is only available for development");
 }
 
 
+// handleChatCommand
 function gce(t) {
   return ae(this, null, function* () {
     var r, i, n;
-    const e = t.split(" ");
-    switch (e[0]) {
+    const parts = t.split(" ");
+    switch (parts[0]) {
       case "timetravel": {
         fce();
-        const a = We(xi(e[1], 30), 0, 60 * 4);
+        const a = We(xi(parts[1], 30), 0, 60 * 4);
         Lt(
           `Time travel ${a} minutes. This could take a while, please be patient...`
         ),
@@ -114499,7 +114504,7 @@ function gce(t) {
         break;
       }
       case "recoverprogress": {
-        if (e[1] === "confirm") {
+        if (parts[1] === "confirm") {
           const o = yield qe.doGreatPeopleRecovery();
           (we().greatPeople = {}),
             (we().greatPeopleChoicesV2 = uk(
@@ -114530,7 +114535,7 @@ function gce(t) {
         break;
       }
       case "locate": {
-        if (!e[1]) throw new Error("Invalid command format");
+        if (!parts[1]) throw new Error("Invalid command format");
         const a = Array.from(kt().tiles)
           .filter(
             ([, o]) =>
@@ -114539,44 +114544,77 @@ function gce(t) {
               S.Building[o.building.type]
                 .name()
                 .toLowerCase()
-                .includes(e[1].toLowerCase())
+                .includes(parts[1].toLowerCase())
           )
           .map(([o]) => o);
-        Lt(`Found ${a.length} building(s) that contains "${e[1]}"`),
+        Lt(`Found ${a.length} building(s) that contains "${parts[1]}"`),
           (r = be().sceneManager.getCurrent(At)) == null ||
             r.drawSelection(null, a);
         break;
       }
+
+      // ***** 2025-02-25 adapted from patch by MusicManiac
       case "find": {
-        if (!e[1]) throw new Error("Invalid command format");
-        const a = e[1].toLowerCase();
-        let o = !1;
-        for (const [l, u] of Xl())
-          if (u.handle.toLowerCase() === a) {
-            Lt(`Found player ${e[1]}, will pan camera to the tile`),
-              (i = be().sceneManager.getCurrent(ap)) == null || i.lookAt(l),
-              (o = !0);
-            break;
+        if (!parts[1]) throw new Error("Invalid command format");
+        const query = parts[1].toLowerCase();
+        let hasFound = false;
+        const matches = [];
+
+        for (const [xy, tile] of Xl()) { // Xl is getPlayerMap()
+        //   if (tile.handle.toLowerCase() === query) {
+        //     Lt(`Found player ${parts[1]}, will pan camera to the tile`),
+        //       (i = be().sceneManager.getCurrent(ap)) == null || i.lookAt(xy),
+        //       (hasFound = true);
+        //     break;
+        //   }
+          if (tile.handle.toLowerCase().includes(query)) {
+            matches.push({ xy, handle: tile.handle });
           }
-        o || Lt(`Failed to find player ${e[1]}`);
+        }
+
+        // if (!hasFound) {
+          if (matches.length === 1) {
+            const match = matches[0];
+            Lt(`Found player ${match.handle}, panning camera to the tile`);
+            be().sceneManager.getCurrent(ap)?.lookAt(match.xy);
+          } else if (matches.length > 1) {
+            const maxDisplay = 8;
+            const displayedMatches = matches
+               .slice(0, maxDisplay)
+               .map((match) => match.handle)
+               .join(", ");
+            const additionalCount = matches.length - maxDisplay;
+
+            let message = `Multiple players found: ${displayedMatches}`;
+            if (additionalCount > 0) {
+               message += `, and ${additionalCount} more. Please specify further.`;
+            } else {
+               message += ". Please specify further.";
+            }
+            Lt(message);
+          } else {
+            Lt(`Failed to find player ${parts[1]}`);
+          }
+//        }
         break;
+
       }
       case "changelevel": {
-        if (!e[1] || !e[2]) throw new Error("Invalid command format");
-        yield qe.changePlayerLevel(e[1], Number.parseInt(e[2], 10)),
+        if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
+        yield qe.changePlayerLevel(parts[1], Number.parseInt(parts[2], 10)),
           Lt("Player level has been changed");
         break;
       }
       case "setplayhour": {
-        if (!e[1] || !e[2]) throw new Error("Invalid command format");
-        const a = Number.parseInt(e[2], 10);
+        if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
+        const a = Number.parseInt(parts[2], 10);
         Lt(`Play time has been changed to ${a}h`),
-          yield qe.setPlayTime(e[1], a * 60 * 60);
+          yield qe.setPlayTime(parts[1], a * 60 * 60);
         break;
       }
       case "makemod": {
-        if (!e[1]) throw new Error("Invalid command format");
-        yield qe.makeMod(e[1], !0), Lt(`${e[1]} is now a mod`);
+        if (!parts[1]) throw new Error("Invalid command format");
+        yield qe.makeMod(parts[1], !0), Lt(`${parts[1]} is now a mod`);
         break;
       }
       case "tabulate": {
@@ -114585,17 +114623,17 @@ function gce(t) {
         break;
       }
       case "queryplayer": {
-        if (!e[1]) throw new Error("Invalid command format");
-        const a = yield qe.queryPlayer(e[1]);
+        if (!parts[1]) throw new Error("Invalid command format");
+        const a = yield qe.queryPlayer(parts[1]);
         Lt(JSON.stringify(a));
         break;
       }
       case "playersave": {
-        if (!e[1]) throw new Error("Invalid command format");
+        if (!parts[1]) throw new Error("Invalid command format");
         try {
-          const a = yield qe.queryPlayerSave(e[1]),
+          const a = yield qe.queryPlayerSave(parts[1]),
             l = yield (yield window.showSaveFilePicker({
-              suggestedName: e[1],
+              suggestedName: parts[1],
             })).createWritable();
           yield l.write(a), yield l.close();
         } catch (a) {
@@ -114604,8 +114642,8 @@ function gce(t) {
         break;
       }
       case "getplayerattr": {
-        if (!e[1]) throw new Error("Invalid command format");
-        const a = yield qe.getPlayerAttr(e[1]);
+        if (!parts[1]) throw new Error("Invalid command format");
+        const a = yield qe.getPlayerAttr(parts[1]);
         Lt(
           [
             `Flag=${a.toString(2)}`,
@@ -114620,8 +114658,8 @@ function gce(t) {
         break;
       }
       case "setplayerattr": {
-        if (!e[1] || !e[2]) throw new Error("Invalid command format");
-        const a = yield qe.setPlayerAttr(e[1], Number.parseInt(e[2], 2));
+        if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
+        const a = yield qe.setPlayerAttr(parts[1], Number.parseInt(parts[2], 2));
         Lt(
           [
             `Flag=${a.toString(2)}`,
@@ -114636,19 +114674,19 @@ function gce(t) {
         break;
       }
       case "announce": {
-        if (!e[1] || !e[2]) throw new Error("Invalid command format");
-        if (!(e[1] in Ig)) throw new Error("Invalid chat channel");
-        yield qe.announce(e[1], e.slice(2).join(" "));
+        if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
+        if (!(parts[1] in Ig)) throw new Error("Invalid chat channel");
+        yield qe.announce(parts[1], parts.slice(2).join(" "));
         break;
       }
       case "unmakemod": {
-        if (!e[1]) throw new Error("Invalid command format");
-        yield qe.makeMod(e[1], !1), Lt(`${e[1]} is no longer a mod`);
+        if (!parts[1]) throw new Error("Invalid command format");
+        yield qe.makeMod(parts[1], !1), Lt(`${parts[1]} is no longer a mod`);
         break;
       }
       case "gprank": {
-        if (!e[1]) throw new Error("Invalid command format");
-        const a = yield qe.getGreatPeopleLevelRank(xi(e[1], 10)),
+        if (!parts[1]) throw new Error("Invalid command format");
+        const a = yield qe.getGreatPeopleLevelRank(xi(parts[1], 10)),
           o = JSON.stringify(a);
         navigator.clipboard.writeText(o),
           Lt(o),
@@ -114672,8 +114710,8 @@ function gce(t) {
         break;
       }
       case "evrank": {
-        if (!e[1]) throw new Error("Invalid command format");
-        const a = yield qe.getEmpireValueRank(xi(e[1], 10)),
+        if (!parts[1]) throw new Error("Invalid command format");
+        const a = yield qe.getEmpireValueRank(xi(parts[1], 10)),
           o = JSON.stringify(a);
         navigator.clipboard.writeText(o),
           Lt(o),
@@ -114702,22 +114740,22 @@ function gce(t) {
         break;
       }
       case "muteplayer": {
-        if (!e[1] || !e[2]) throw new Error("Invalid command format");
-        const a = yield qe.mutePlayer(e[1], Number.parseInt(e[2], 10) * rk);
+        if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
+        const a = yield qe.mutePlayer(parts[1], Number.parseInt(parts[2], 10) * rk);
         Lt(
-          `Player ${e[1]} has been muted until ${new Date(a).toLocaleString()}`
+          `Player ${parts[1]} has been muted until ${new Date(a).toLocaleString()}`
         );
         break;
       }
       case "slowplayer": {
-        if (!e[1] || !e[2]) throw new Error("Invalid command format");
+        if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
         const a = yield qe.slowPlayer(
-          e[1],
-          Number.parseInt(e[2], 10) * _a,
-          Number.parseInt((n = e[3]) != null ? n : 0, 10) * Fo
+          parts[1],
+          Number.parseInt(parts[2], 10) * _a,
+          Number.parseInt((n = parts[3]) != null ? n : 0, 10) * Fo
         );
         Lt(
-          `Player ${e[1]} has been slowed until ${new Date(
+          `Player ${parts[1]} has been slowed until ${new Date(
             a.time
           ).toLocaleString()} for ${Math.ceil(a.interval / Fo)}s`
         );
@@ -114730,8 +114768,8 @@ function gce(t) {
         break;
       }
       case "removetrade": {
-        if (!e[1]) throw new Error("Invalid command format");
-        const a = yield qe.removeTrade(e[1]);
+        if (!parts[1]) throw new Error("Invalid command format");
+        const a = yield qe.removeTrade(parts[1]);
         Lt(`${a} trades has been removed`);
         break;
       }
@@ -114744,36 +114782,36 @@ function gce(t) {
         break;
       }
       case "rename": {
-        if (!e[1] || !e[2]) throw new Error("Invalid command format");
-        const a = yield qe.renamePlayer(e[1], e[2]);
-        Lt(`Player ${e[1]} renamed to ${a}`);
+        if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
+        const a = yield qe.renamePlayer(parts[1], parts[2]);
+        Lt(`Player ${parts[1]} renamed to ${a}`);
         break;
       }
       case "setgprec": {
-        if (!e[1] || !e[2]) throw new Error("Invalid command format");
-        const a = Number.parseInt(e[2], 10),
-          o = yield qe.setGreatPeopleRecovery(e[1], a);
-        Lt(`Will grant Player ${e[1]} ${o} great people`);
+        if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
+        const a = Number.parseInt(parts[2], 10),
+          o = yield qe.setGreatPeopleRecovery(parts[1], a);
+        Lt(`Will grant Player ${parts[1]} ${o} great people`);
         break;
       }
       case "getgprec": {
-        if (!e[1]) throw new Error("Invalid command format");
-        const a = yield qe.queryGreatPeopleRecovery(e[1]);
-        Lt(`Player ${e[1]} will receive ${a} great people`);
+        if (!parts[1]) throw new Error("Invalid command format");
+        const a = yield qe.queryGreatPeopleRecovery(parts[1]);
+        Lt(`Player ${parts[1]} will receive ${a} great people`);
         break;
       }
       case "clearconnection": {
-        if (!e[1]) throw new Error("Invalid command format");
-        yield qe.clearConnection(e[1]),
+        if (!parts[1]) throw new Error("Invalid command format");
+        yield qe.clearConnection(parts[1]),
           Lt("Cross Platform connections have been cleared");
         break;
       }
       case "cloudsave": {
-        if (!e[1]) throw new Error("Invalid command format");
+        if (!parts[1]) throw new Error("Invalid command format");
         try {
-          const a = yield qe.queryCloudSave(e[1]),
+          const a = yield qe.queryCloudSave(parts[1]),
             l = yield (yield window.showSaveFilePicker({
-              suggestedName: e[1],
+              suggestedName: parts[1],
             })).createWritable();
           yield l.write(a), yield l.close();
         } catch (a) {
