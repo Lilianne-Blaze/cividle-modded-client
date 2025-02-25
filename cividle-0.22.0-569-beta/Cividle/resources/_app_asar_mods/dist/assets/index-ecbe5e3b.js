@@ -91622,12 +91622,14 @@ function D4({ tradeId: tradeId, xy: xy }) {
 
     // 2025-02-23
     // ***** calculateMaxFill
-    x = () => {
+    // x = () => {
+    calculateMaxFill = () => {
       const result = new Map();
       
       // does it really help?
-      let amountLeft = l.buyAmount;
-    //   let amountLeft = ( trade.buyAmount < 10000000) ? trade.buyAmount : trade.buyAmount*0.9;
+      // yes it helps. needs more testing and tweaking
+      let amountLeft = trade.buyAmount;
+      //let amountLeft = ( trade.buyAmount < 10000000) ? trade.buyAmount : trade.buyAmount*0.9;
 
       // ***** make sure only first 20 per-building trades are filled
       var counterMax = 20;
@@ -91657,14 +91659,43 @@ function D4({ tradeId: tradeId, xy: xy }) {
 
 
     // ***** doFill
-    T = (fills) =>
+    // T = (fills) =>
+    doFill = (fills) =>
       ae(this, null, function* () {
         var $;
-        if (!B(fills) || !hasValidPath()) {
+
+        if (!hasValidPath()) {
+          Lt("hasValidPath=false");
           ct(h(d.OperationNotAllowedError)), ze();
           return;
         }
-
+        if(!fillsHaveEnoughResource(fills)) {
+          Lt("fillsHaveEnoughResource=false");
+          ct(h(d.OperationNotAllowedError)), ze();
+          return;
+        }
+        if(!fillsHaveEnoughStorage(fills)) {
+          Lt("fillsHaveEnoughStorage=false");
+          ct(h(d.OperationNotAllowedError)), ze();
+          return;
+        }
+  
+        const totalFillAmount = getTotalFillAmount(fills);
+        if(!(totalFillAmount > 0)) {
+          Lt("totalFillAmount=" + totalFillAmount + " is negative."+
+            " This shouldn't happen. Trying to proceed anyway.");
+          //ct(h(d.OperationNotAllowedError)), ze();
+          //return;
+        }
+        if(!(totalFillAmount <= trade.buyAmount)) {
+          Lt("totalFillAmount=" + totalFillAmount +
+            " is greater than trade.buyAmount="+trade.buyAmount+"."+
+            " This shouldn't happen. Trying to proceed anyway.");
+          //ct(h(d.OperationNotAllowedError)), ze();
+          //return;
+        }
+  
+  
         // *****
         // so it's visible clicking the button actually registered
         ct("Filling trades, please wait 5-20 sec...");
@@ -91683,7 +91714,8 @@ function D4({ tradeId: tradeId, xy: xy }) {
           const re = FL(trade.buyResource, amount, [tile], gs);
           try {
 
-            ct("Filling trades " + total + "/" + fillsSize + "...");
+            let tradeStr = "" + total + "/" + fillsSize;
+            ct("Filling trades " + tradeStr + "...");
 
             const V = yield qe.fillTrade({
               id: trade.id,
@@ -91698,6 +91730,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
             }),
               ++success;
           } catch (V) {
+            Lt("Error at trade "+tradeStr+": "+v);
             errors.push(String(V));
           } finally {
             re.rollback();
@@ -91728,7 +91761,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
       }),
     A = (D) =>
       We((trade.sellAmount * D) / trade.buyAmount - D, 0, Number.POSITIVE_INFINITY),
-    C = (D) => {
+    fillsHaveEnoughStorage = (D) => {
       if (!k()) return !0;
       for (const [I, L] of D) {
         const F = A(L);
@@ -91736,10 +91769,10 @@ function D4({ tradeId: tradeId, xy: xy }) {
       }
       return !0;
     },
-    P = (D) => {
-      let I = 0;
-      for (const [L, F] of D) I += F;
-      return I;
+    getTotalFillAmount = (fills) => {
+      let total = 0;
+      for (const [tile, amount] of fills) total += amount;
+      return total;
     },
     M = (D) => {
       let I = 0;
@@ -91771,9 +91804,36 @@ function D4({ tradeId: tradeId, xy: xy }) {
     },
 
     // ***** fillsAreValid
-    B = (D) => {
-      const I = P(D);
-      return fillsHaveEnoughResource(D) && C(D) && I > 0 && I <= trade.buyAmount;
+    // B = (fills) => {
+    fillsAreValid = (fills) => {
+            const fillAmount = getTotalFillAmount(fills);
+      const fillsHaveEnoughResourceOk = fillsHaveEnoughResource(fills);
+      const fillsHaveEnoughStorageOk = fillsHaveEnoughStorage(fills);
+      const fillAmountPositive = fillAmount > 0;
+      const fillAmountBelowBuyAmount = fillAmount <= trade.buyAmount;
+
+      if(fillsHaveEnoughResourceOk && fillsHaveEnoughStorageOk && fillAmountPositive && fillAmountBelowBuyAmount) {
+        return true;
+      }
+
+      /*
+      Lt("fillsAreValid() failed, enoughRes=" + fillsHaveEnoughResourceOk +
+        ", enoughStor=" + fillsHaveEnoughStorageOk +
+        ", amountPositive=" + fillAmountPositive +
+        ", amountBelowBuy=" + fillAmountBelowBuyAmount
+      );
+      */
+
+      return false;
+      /*
+      const fillAmount = getTotalFillAmount(fills);
+      return (
+         fillsHaveEnoughResource(fills) &&
+         fillsHaveEnoughStorage(fills) &&
+         fillAmount > 0 &&
+         fillAmount <= trade.buyAmount
+      );
+      */
     },
 
     // ***** isFillValid
@@ -91944,7 +92004,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
               }),
               s.jsx("div", {
                 className: "text-strong text-link",
-                onClick: () => setFills(x),
+                onClick: () => setFills(calculateMaxFill),
                 children: h(d.PlayerTradeMaxAll),
               }),
             ],
@@ -91965,21 +92025,21 @@ function D4({ tradeId: tradeId, xy: xy }) {
                             res: S.Resource[trade.buyResource].name(),
                           }),
                         }),
-                        s.jsx("div", { children: s.jsx(te, { value: P(fills) }) }),
+                        s.jsx("div", { children: s.jsx(te, { value: getTotalFillAmount(fills) }) }),
                       ],
                     }),
                     s.jsx("ul", {
                       children: s.jsxs("li", {
                         className: Ke({
                           "text-small row": !0,
-                          "text-strong text-red": P(fills) > trade.buyAmount,
+                          "text-strong text-red": getTotalFillAmount(fills) > trade.buyAmount,
                         }),
                         children: [
                           s.jsx("div", {
                             className: "f1",
                             children: h(d.PlayerTradeFillPercentage),
                           }),
-                          s.jsx("div", { children: Dt(P(fills) / trade.buyAmount) }),
+                          s.jsx("div", { children: Dt(getTotalFillAmount(fills) / trade.buyAmount) }),
                         ],
                       }),
                     }),
@@ -92056,7 +92116,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                           className: "text-strong",
                           children: s.jsx(te, {
                             value:
-                              ((1 - g) * trade.sellAmount * P(fills)) / trade.buyAmount,
+                              ((1 - g) * trade.sellAmount * getTotalFillAmount(fills)) / trade.buyAmount,
                           }),
                         }),
                       ],
@@ -92074,7 +92134,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                             }),
                             s.jsx("div", {
                               children: s.jsx(te, {
-                                value: (P(fills) * trade.sellAmount) / trade.buyAmount,
+                                value: (getTotalFillAmount(fills) * trade.sellAmount) / trade.buyAmount,
                               }),
                             }),
                           ],
@@ -92082,7 +92142,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                         s.jsxs("li", {
                           className: Ke({
                             "text-small row": !0,
-                            "text-strong text-red": !C(fills),
+                            "text-strong text-red": !fillsHaveEnoughStorage(fills),
                           }),
                           children: [
                             s.jsx("div", {
@@ -92110,11 +92170,13 @@ function D4({ tradeId: tradeId, xy: xy }) {
                 children: h(d.ChangePlayerHandleCancel),
               }),
               s.jsx("div", { className: "f1" }),
-              s.jsx("button", {
+              s.jsx("button", { // ***** Fill Max button
+                // x is calculateMaxFill
+                // T is doFill
                 onClick: () => {
-                  const D = x();
+                  const D = calculateMaxFill();
                   D.size > 0
-                    ? T(D)
+                    ? doFill(D)
                     : (ze(),
                       ct(h(d.PlayerTradeNoFillBecauseOfResources)),
                       Qt());
@@ -92124,8 +92186,8 @@ function D4({ tradeId: tradeId, xy: xy }) {
               s.jsx("div", { style: { width: "6px" } }),
               s.jsx("button", {
                 className: "text-strong",
-                disabled: !B(fills),
-                onClick: () => T(fills),
+                disabled: !fillsAreValid(fills),
+                onClick: () => doFill(fills),
                 children: h(d.PlayerTradeFillTradeButton),
               }),
             ],
