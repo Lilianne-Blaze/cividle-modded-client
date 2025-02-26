@@ -37860,7 +37860,7 @@ const UX = gp(Qw);
 var Cp,
   E_ = Qw;
 (Cp = E_.createRoot), E_.hydrateRoot;
-class or {
+class TypedEvent {
   constructor() {
     b(this, "listeners", []);
     b(this, "listenersOnce", []);
@@ -40505,7 +40505,7 @@ class yZ {
     b(this, "TradeValue", { name: () => h(d.TradeValue) });
   }
 }
-const Qn = {
+const NoPrice = {
     Worker: !0,
     Power: !0,
     Science: !0,
@@ -40516,7 +40516,7 @@ const Qn = {
     Cycle: !0,
     TradeValue: !0,
   },
-  mo = {
+  NoStorage = {
     Worker: !0,
     Power: !0,
     Science: !0,
@@ -42365,6 +42365,8 @@ const TZ = new Set([
   "YearOfTheSnake",
   "EastIndiaCompany",
 ]);
+
+// SOURCE shared/utilities/Helper.ts
 class Sa {
   constructor(e, r) {
     (this.x = e), (this.y = r);
@@ -42441,9 +42443,9 @@ class Sa {
 function lu({ x: t, y: e }) {
   return new Sa(t, e);
 }
-const AZ = 0.01,
-  Qu = AZ / 100,
-  xZ = [
+const CURRENCY_EPSILON = 0.01,
+  CURRENCY_PERCENT_EPSILON = CURRENCY_EPSILON / 100,
+  NUMBER_SUFFIX_1 = [
     "",
     "K",
     "M",
@@ -42507,12 +42509,12 @@ const AZ = 0.01,
     "NnQq",
     "Sg",
   ],
-  CZ = ["", "K", "M", "G", "T", "P", "E", "Z", "Y"],
-  Fo = 1e3,
-  rk = Fo * 60,
-  _a = 60 * rk,
-  sL = 24 * _a,
-  ik = 7 * sL;
+  NUMBER_SUFFIX_BIN = ["", "K", "M", "G", "T", "P", "E", "Z", "Y"],
+  SECOND = 1e3,
+  MINUTE = SECOND * 60,
+  HOUR = 60 * MINUTE,
+  DAY = 24 * HOUR,
+  WEEK = 7 * DAY;
 function PZ(t) {
   return t
     .toExponential(2)
@@ -42541,8 +42543,8 @@ function pr(t, e = !1, r = !1) {
     ? r
       ? PZ(t)
       : e
-      ? __(t, CZ)
-      : __(t, xZ)
+      ? __(t, NUMBER_SUFFIX_BIN)
+      : __(t, NUMBER_SUFFIX_1)
     : String(t);
 }
 var lL = ((t) => (
@@ -42559,13 +42561,13 @@ function Pp(t, e, r = 2) {
 function Dt(t, e = 2, r = 2) {
   return `${Pp(t * 100, Math.abs(t) < 0.1 ? e + 1 : e, r)}%`;
 }
-function Yh(t, e = Number.EPSILON) {
+function mathSign(t, e = Number.EPSILON) {
   return t > e ? "+" : t < -e ? "-" : "";
 }
-function zt(t) {
+function keysOf(t) {
   return Object.keys(t);
 }
-function Q(t, e) {
+function forEach(t, e) {
   for (const r in t) {
     const i = t[r];
     if (e(r, i) === !0) return;
@@ -42579,7 +42581,7 @@ function D_(t, e) {
   for (const r in t) if (e(r, t[r])) return !0;
   return !1;
 }
-function Ui(t, e, r) {
+function reduceOf(t, e, r) {
   let i = r;
   for (const n in t) {
     const a = t[n];
@@ -42592,7 +42594,7 @@ function $h(t, e, r) {
   for (const [n, a] of t) i = e(i, n, a);
   return i;
 }
-function Tt(t, e, r) {
+function safeAdd(t, e, r) {
   t[e] || (t[e] = 0), (t[e] += r);
 }
 function hr(t, e, r) {
@@ -42609,7 +42611,7 @@ function Et(t, e, r) {
 function ws(t, e, r = () => []) {
   const i = [];
   return t
-    ? (Q(t, (n, a) => {
+    ? (forEach(t, (n, a) => {
         i.push(e(n, a));
       }),
       i.length === 0 ? r() : i)
@@ -42618,7 +42620,7 @@ function ws(t, e, r = () => []) {
 function Dg(t, e) {
   const r = {};
   return (
-    Q(t, (i, n) => {
+    forEach(t, (i, n) => {
       e(i, n) && (r[i] = n);
     }),
     r
@@ -42715,7 +42717,7 @@ function n1(t, e = 0) {
 function hL(t) {
   return !/^[\x00-\x7F]*$/.test(t);
 }
-function $o(t, e) {
+function shuffle(t, e) {
   e = e != null ? e : Math.random;
   for (let r = t.length - 1; r > 0; r--) {
     const i = Math.floor(e() * (r + 1));
@@ -42729,7 +42731,7 @@ function mr(t) {
   for (const e in t) if (Object.prototype.hasOwnProperty.call(t, e)) return !1;
   return !0;
 }
-function ba(t) {
+function numberToRoman(t) {
   if (!+t) return null;
   const e = String(+t).split(""),
     r = [
@@ -42805,11 +42807,11 @@ function hb(t) {
     [e, r, i]
   );
 }
-function Ko(t, e = !1) {
+function formatHMS(t, e = !1) {
   if (!Number.isFinite(t)) return "--:--";
   t = We(t, 0, Number.POSITIVE_INFINITY);
   const r = hb(t);
-  if (r[0] === 0 && !e) return `${Fd(r[1])}:${Fd(r[2])}`;
+  if (r[0] === 0 && !e) return `${pad(r[1])}:${pad(r[2])}`;
   if (r[0] > 24 * 4) {
     const i = Math.floor(r[0] / 24);
     if (i > 30) {
@@ -42822,21 +42824,21 @@ function Ko(t, e = !1) {
     }
     return `${i}d${r[0] - 24 * i}h`;
   }
-  return `${Fd(r[0])}:${Fd(r[1])}:${Fd(r[2])}`;
+  return `${pad(r[0])}:${pad(r[1])}:${pad(r[2])}`;
 }
-function cc(t) {
+function formatHM(t) {
   t = We(t, 0, Number.POSITIVE_INFINITY);
   const e = hb(t);
   return e[0] === 0
     ? `${e[1]}m`
     : e[1] === 0
     ? `${e[0]}h`
-    : `${e[0]}h${Fd(e[1])}m`;
+    : `${e[0]}h${pad(e[1])}m`;
 }
-function Fd(t) {
+function pad(t) {
   return t < 10 ? `0${t}` : t;
 }
-function jt(t) {
+function isNullOrUndefined(t) {
   return t === null || typeof t == "undefined";
 }
 function ot(t, e) {
@@ -62369,7 +62371,7 @@ const VZ = {
     ZugspitzeDesc:
       "每解鎖一個時代，獲得一個點數，可用於為本次運行中誕生的任何偉人提供一個額外等級",
   };
-function DP() {
+function EmptyTickData() {
   return {
     electrified: new Set(),
     buildingMultipliers: new Map(),
@@ -62439,7 +62441,7 @@ const ok = {
   worker: () => h(d.WorkerCapacityMultiplier),
   storage: () => h(d.StorageMultiplier),
 };
-function fL(t) {
+function freezeTickData(t) {
   let e;
   for (e in t)
     switch (e) {
@@ -62451,7 +62453,7 @@ function fL(t) {
     }
   return Object.freeze(t);
 }
-const N = { current: fL(DP()), next: DP() },
+const Tick = { current: freezeTickData(EmptyTickData()), next: EmptyTickData() },
   iJ = ["input", "output", "worker", "storage"],
   gL = {
     output: () => h(d.ProductionMultiplier),
@@ -62459,7 +62461,7 @@ const N = { current: fL(DP()), next: DP() },
     storage: () => h(d.StorageMultiplier),
     input: () => h(d.ConsumptionMultiplier),
   },
-  vL = new or();
+  vL = new TypedEvent();
 function Ci(t, e) {
   switch (t) {
     case 0:
@@ -62841,7 +62843,10 @@ let nJ =
   b(zr, "_hex1", new _c(0, 0, 0)),
   b(zr, "_hex2", new _c(0, 0, 0)),
   zr);
-class yL {
+
+// SOURCE shared/logic/IntraTickCache.ts
+
+class IntraTickCache {
   constructor() {
     b(this, "revealedDeposits");
     b(this, "unlockedBuildings");
@@ -62857,91 +62862,91 @@ class yL {
     b(this, "globalMultipliers", new Map());
   }
 }
-let nr = new yL();
-function bL() {
-  nr = new yL();
+let _cache = new IntraTickCache();
+function clearIntraTickCache() {
+  _cache = new IntraTickCache();
 }
-function sk() {
-  return nr.fuelByTarget;
+function getFuelByTarget() {
+  return _cache.fuelByTarget;
 }
-function fi(t, e, r, i) {
+function getBuildingIO(xy, type, options, gs) {
   var u, c;
   const n =
-      (cL(t) << (br.TotalUsedBits + 1)) | (r << 1) | (e === "input" ? 1 : 0),
-    a = nr.buildingIO.get(n);
+      (cL(xy) << (br.TotalUsedBits + 1)) | (options << 1) | (type === "input" ? 1 : 0),
+    a = _cache.buildingIO.get(n);
   if (a) return a;
   const o = {},
-    l = (u = i.tiles.get(t)) == null ? void 0 : u.building;
+    l = (u = gs.tiles.get(xy)) == null ? void 0 : u.building;
   if (l) {
-    const p = U({}, S.Building[l.type][e]);
+    const p = U({}, Config.Building[l.type][type]);
     if ("sellResources" in l) {
       const f = l;
-      e === "input" &&
-        Q(f.sellResources, (m) => {
+      type === "input" &&
+        forEach(f.sellResources, (m) => {
           const g = f.availableResources[m];
           g && (p[m] = YP(m, g));
         }),
-        e === "output" &&
-          Q(f.sellResources, (m) => {
+        type === "output" &&
+          forEach(f.sellResources, (m) => {
             const g = f.availableResources[m];
-            p[g] = eg(m, YP(m, g), g, t, i);
+            p[g] = eg(m, YP(m, g), g, xy, gs);
           });
     }
-    if ("resourceImports" in l && e === "input") {
-      const f = Qh(l, da(t, "output", 1, !1, i)),
+    if ("resourceImports" in l && type === "input") {
+      const f = Qh(l, da(xy, "output", 1, !1, gs)),
         m = l,
-        g = Ui(m.resourceImports, (y, x, T) => y + T.perCycle, 0),
+        g = reduceOf(m.resourceImports, (y, x, T) => y + T.perCycle, 0),
         v = We(g > 0 ? f / g : 0, 0, 1);
       return (
-        Q(m.resourceImports, (y, x) => {
+        forEach(m.resourceImports, (y, x) => {
           x.perCycle > 0 && (o[y] = x.perCycle * v);
         }),
-        nr.buildingIO.set(n, Object.freeze(o)),
+        _cache.buildingIO.set(n, Object.freeze(o)),
         o
       );
     }
     if ("inputResource" in l) {
       const f = l;
-      if ((e === "input" && (p[f.inputResource] = 1), e === "output"))
+      if ((type === "input" && (p[f.inputResource] = 1), type === "output"))
         switch (l.type) {
           case "CloneFactory":
             p[f.inputResource] = 2;
             break;
           case "CloneLab":
             p.Science =
-              (((c = S.ResourcePrice[f.inputResource]) != null ? c : 0) * 2) /
+              (((c = Config.ResourcePrice[f.inputResource]) != null ? c : 0) * 2) /
               bb;
             break;
         }
     }
-    Q(p, (f, m) => {
+    forEach(p, (f, m) => {
       let g = m * l.level;
       if (
-        (r & br.Capacity && (g *= l.capacity),
-        r & br.Multiplier || r & br.MultiplierStableOnly)
+        (options & br.Capacity && (g *= l.capacity),
+        options & br.Multiplier || options & br.MultiplierStableOnly)
       ) {
-        const v = !!(r & br.MultiplierStableOnly);
+        const v = !!(options & br.MultiplierStableOnly);
         l.type === "Market"
-          ? (g *= da(t, "output", 1, v, i))
-          : e === "output" &&
+          ? (g *= da(xy, "output", 1, v, gs))
+          : type === "output" &&
             (l.type === "CloneFactory" || l.type === "CloneLab")
-          ? (g = g * 0.5 + g * 0.5 * da(t, "output", 1, v, i))
-          : (g *= da(t, e, 1, v, i));
+          ? (g = g * 0.5 + g * 0.5 * da(xy, "output", 1, v, gs))
+          : (g *= da(xy, type, 1, v, gs));
       }
-      Tt(o, f, g);
+      safeAdd(o, f, g);
     });
   }
-  return nr.buildingIO.set(n, Object.freeze(o)), o;
+  return _cache.buildingIO.set(n, Object.freeze(o)), o;
 }
-function aJ() {
-  if (nr.storageFullBuildings) return nr.storageFullBuildings;
+function getStorageFullBuildings() {
+  if (_cache.storageFullBuildings) return _cache.storageFullBuildings;
   const t = [];
-  for (const [e, r] of N.current.notProducingReasons)
+  for (const [e, r] of Tick.current.notProducingReasons)
     r === Jt.StorageFull && t.push(e);
-  return (nr.storageFullBuildings = t), t;
+  return (_cache.storageFullBuildings = t), t;
 }
-function Rg(t) {
-  if (nr.transportStat) return nr.transportStat;
+function getTransportStat(t) {
+  if (_cache.transportStat) return _cache.transportStat;
   let e = 0,
     r = 0,
     i = 0;
@@ -62949,10 +62954,10 @@ function Rg(t) {
     (e += a.fuelCurrentTick), ++r, a.hasEnoughFuel || ++i;
   });
   const n = { totalFuel: e, totalTransports: r, stalled: i };
-  return (nr.transportStat = n), n;
+  return (_cache.transportStat = n), n;
 }
-function Yf(t) {
-  if (nr.buildingsByType) return nr.buildingsByType;
+function getTypeBuildings(t) {
+  if (_cache.buildingsByType) return _cache.buildingsByType;
   const e = new Map();
   return (
     t.tiles.forEach((r, i) => {
@@ -62962,15 +62967,15 @@ function Yf(t) {
         (e.has(n) || e.set(n, new Map()),
         (o = e.get(n)) == null || o.set(i, r));
     }),
-    (nr.buildingsByType = e),
+    (_cache.buildingsByType = e),
     e
   );
 }
-function oa(t, e) {
-  return Yf(e).get(t);
+function getBuildingsByType(t, e) {
+  return getTypeBuildings(e).get(t);
 }
-function TL(t) {
-  if (nr.resourceIO) return nr.resourceIO;
+function getResourceIO(t) {
+  if (_cache.resourceIO) return _cache.resourceIO;
   const e = {
     theoreticalInput: new Map(),
     actualInput: new Map(),
@@ -62978,85 +62983,85 @@ function TL(t) {
     actualOutput: new Map(),
   };
   return (
-    qn(t).forEach((r, i) => {
+    getXyBuildings(t).forEach((r, i) => {
       if ("resourceImports" in r) return;
-      const n = fi(i, "input", br.Multiplier | br.Capacity, t),
-        a = fi(i, "output", br.Multiplier | br.Capacity, t);
-      N.current.notProducingReasons.has(i) ||
-        (Q(n, (o, l) => hr(e.actualInput, o, l)),
-        Q(a, (o, l) => hr(e.actualOutput, o, l))),
-        Q(n, (o, l) => hr(e.theoreticalInput, o, l)),
-        Q(a, (o, l) => hr(e.theoreticalOutput, o, l));
+      const n = getBuildingIO(i, "input", br.Multiplier | br.Capacity, t),
+        a = getBuildingIO(i, "output", br.Multiplier | br.Capacity, t);
+      Tick.current.notProducingReasons.has(i) ||
+        (forEach(n, (o, l) => hr(e.actualInput, o, l)),
+        forEach(a, (o, l) => hr(e.actualOutput, o, l))),
+        forEach(n, (o, l) => hr(e.theoreticalInput, o, l)),
+        forEach(a, (o, l) => hr(e.theoreticalOutput, o, l));
     }),
-    N.current.wonderProductions.forEach((r, i) =>
+    Tick.current.wonderProductions.forEach((r, i) =>
       hr(e.theoreticalOutput, i, r)
     ),
-    N.current.wonderProductions.forEach((r, i) => hr(e.actualOutput, i, r)),
+    Tick.current.wonderProductions.forEach((r, i) => hr(e.actualOutput, i, r)),
     e
   );
 }
-function qn(t) {
-  if (nr.buildingsByXy) return nr.buildingsByXy;
+function getXyBuildings(t) {
+  if (_cache.buildingsByXy) return _cache.buildingsByXy;
   const e = new Map();
   return (
     t.tiles.forEach((r, i) => {
       r.building && e.set(i, r.building);
     }),
-    (nr.buildingsByXy = e),
+    (_cache.buildingsByXy = e),
     e
   );
 }
-function lk(t) {
+function unlockedBuildings(t) {
   return (
-    nr.unlockedBuildings ||
-      ((nr.unlockedBuildings = {}),
-      Q(t.unlockedTech, (e) => {
+    _cache.unlockedBuildings ||
+      ((_cache.unlockedBuildings = {}),
+      forEach(t.unlockedTech, (e) => {
         var r;
-        (r = S.Tech[e].unlockBuilding) == null ||
+        (r = Config.Tech[e].unlockBuilding) == null ||
           r.forEach((i) => {
-            nr.unlockedBuildings[i] = !0;
+            _cache.unlockedBuildings[i] = !0;
           });
       }),
-      Q(t.unlockedUpgrades, (e) => {
+      forEach(t.unlockedUpgrades, (e) => {
         var r;
-        (r = S.Upgrade[e].unlockBuilding) == null ||
+        (r = Config.Upgrade[e].unlockBuilding) == null ||
           r.forEach((i) => {
-            nr.unlockedBuildings[i] = !0;
+            _cache.unlockedBuildings[i] = !0;
           });
       })),
-    nr.unlockedBuildings
+    _cache.unlockedBuildings
   );
 }
-function Sp(t) {
+function unlockedResources(t) {
   return (
-    nr.unlockedResources ||
-      ((nr.unlockedResources = {}),
-      Q(lk(t), (e) => {
-        Q(S.Building[e].output, (r) => {
-          nr.unlockedResources[r] = !0;
+    _cache.unlockedResources ||
+      ((_cache.unlockedResources = {}),
+      forEach(unlockedBuildings(t), (e) => {
+        forEach(Config.Building[e].output, (r) => {
+          _cache.unlockedResources[r] = !0;
         });
       })),
-    nr.unlockedResources
+    _cache.unlockedResources
   );
 }
 let Ad = null;
 function Mt(t) {
-  const e = S.City[t.city].size;
+  const e = Config.City[t.city].size;
   return (
-    (Ad === null || Ad.maxX !== e || Ad.maxY !== e || Ad.size !== HP) &&
-      (Ad = new nJ(e, e, HP)),
+    (Ad === null || Ad.maxX !== e || Ad.maxY !== e || Ad.size !== TILE_SIZE) &&
+      (Ad = new nJ(e, e, TILE_SIZE)),
     Ad
   );
 }
 function oJ(t) {
-  const e = nr.globalMultipliers.get(t);
+  const e = _cache.globalMultipliers.get(t);
   if (e) return e;
   const r = [];
   return (
-    N.current.globalMultipliers[t].forEach((i) => {
+    Tick.current.globalMultipliers[t].forEach((i) => {
       r.push({ source: i.source, [t]: i.value, unstable: i.unstable });
     }),
-    nr.globalMultipliers.set(t, r),
+    _cache.globalMultipliers.set(t, r),
     r
   );
 }
@@ -63103,7 +63108,7 @@ const hc = new Map([
   [7, "#e84393"],
 ]);
 var xL = ((t) => ((t[(t.Multipliers = 0)] = "Multipliers"), t))(xL || {});
-const sJ = 4 * _a,
+const sJ = 4 * HOUR,
   ao = 200,
   a1 = 100,
   Ig = {
@@ -63134,7 +63139,7 @@ var it = ((t) => (
   ))($s || {});
 const Ld = { 0: 1, 1: 7, 2: 14, 3: 21, 4: 28 },
   lJ = { 0: 200, 1: 800, 2: 800, 3: 800, 4: 800 },
-  xd = { 0: 0, 1: 48 * _a, 2: 200 * _a, 3: 500 * _a, 4: 1e3 * _a },
+  xd = { 0: 0, 1: 48 * HOUR, 2: 200 * HOUR, 3: 500 * HOUR, 4: 1e3 * HOUR },
   ty = { 0: 0, 1: 0, 2: 200, 3: 500, 4: 1e3 };
 var nh = ((t) => (
   (t[(t.Ok = 0)] = "Ok"),
@@ -63146,7 +63151,7 @@ var nh = ((t) => (
 ))(nh || {});
 function wp() {
   return We(
-    Math.floor(Math.cbrt(N.current.totalValue / 1e6) / 4),
+    Math.floor(Math.cbrt(Tick.current.totalValue / 1e6) / 4),
     0,
     Number.POSITIVE_INFINITY
   );
@@ -63159,7 +63164,7 @@ function kp(t) {
   for (let r = 1; r <= t; ++r) e += 1 / r;
   return Math.round(e * 100) / 100;
 }
-function xa(t, e = kt(), r = we()) {
+function xa(t, e = getGameState(), r = getGameOptions()) {
   var i, n, a;
   return (
     kp((i = e.greatPeople[t]) != null ? i : 0) +
@@ -63169,7 +63174,7 @@ function xa(t, e = kt(), r = we()) {
 function uJ() {
   const t = wp(),
     e = RP(t);
-  return (N.current.totalValue - e) / (RP(t + 1) - e);
+  return (Tick.current.totalValue - e) / (RP(t + 1) - e);
 }
 function $f(t, e) {
   return t === "Fibonacci" ? CL(e) : Math.pow(2, e - 1);
@@ -63205,43 +63210,43 @@ function cJ(t) {
   }
 }
 function dJ() {
-  const t = kt();
-  Q(t.greatPeople, (e, r) => {
+  const t = getGameState();
+  forEach(t.greatPeople, (e, r) => {
     C0(e, r);
   });
 }
 function C0(t, e) {
-  const r = we(),
+  const r = getGameOptions(),
     i = r.greatPeople[t];
   i
     ? (i.amount += e)
     : (r.greatPeople[t] =
-        S.GreatPerson[t].type === ga.Normal
+        Config.GreatPerson[t].type === ga.Normal
           ? { level: 1, amount: e - 1 }
           : { level: 0, amount: e });
 }
 function hJ(t) {
-  Q(t.greatPeople, (e, r) => {
-    if (S.GreatPerson[e].type === ga.Normal)
+  forEach(t.greatPeople, (e, r) => {
+    if (Config.GreatPerson[e].type === ga.Normal)
       for (; r.amount >= $f(e, r.level + 1); )
         (r.amount -= $f(e, r.level + 1)), ++r.level;
   });
 }
 function uk(t, e, r, i, n) {
   const a = [],
-    o = S.TechAge[i].idx,
-    l = zt(
+    o = Config.TechAge[i].idx,
+    l = keysOf(
       Dg(
-        S.GreatPerson,
-        (p, f) => (jt(f.city) || f.city === n) && S.TechAge[f.age].idx <= o + 1
+        Config.GreatPerson,
+        (p, f) => (isNullOrUndefined(f.city) || f.city === n) && Config.TechAge[f.age].idx <= o + 1
       )
     );
   let u = t,
-    c = $o([...l]);
+    c = shuffle([...l]);
   for (; u > 0; ) {
     const p = [];
     for (let m = 0; m < r; m++)
-      c.length === 0 && (c = $o([...l])), p.push(c.pop());
+      c.length === 0 && (c = shuffle([...l])), p.push(c.pop());
     const f = We(e, 0, u);
     (u -= f), a.push({ choices: p, amount: f });
   }
@@ -63249,11 +63254,11 @@ function uk(t, e, r, i, n) {
 }
 function In(t, e, r) {
   const i = [],
-    n = $o(
-      zt(
+    n = shuffle(
+      keysOf(
         Dg(
-          S.GreatPerson,
-          (a, o) => (jt(o.city) || o.city === e) && t.has(o.age)
+          Config.GreatPerson,
+          (a, o) => (isNullOrUndefined(o.city) || o.city === e) && t.has(o.age)
         )
       )
     );
@@ -63263,23 +63268,23 @@ function In(t, e, r) {
 }
 const IP = 3;
 function Yn(t) {
-  return N.current.specialBuildings.get("YellowCraneTower") ? 1 + IP : IP;
+  return Tick.current.specialBuildings.get("YellowCraneTower") ? 1 + IP : IP;
 }
 function Xf(t) {
-  return Ui(
+  return reduceOf(
     t.greatPeople,
     (e, r, i) => {
       var n;
       return (
-        e + i.level + ((n = t.ageWisdom[S.GreatPerson[r].age]) != null ? n : 0)
+        e + i.level + ((n = t.ageWisdom[Config.GreatPerson[r].age]) != null ? n : 0)
       );
     },
     0
   );
 }
 function pJ() {
-  return Ui(
-    we().greatPeople,
+  return reduceOf(
+    getGameOptions().greatPeople,
     (t, e, r) => {
       let i = t + Kf(e, r.level) + r.amount;
       return P0(e) && (i += mJ(e)), i;
@@ -63289,30 +63294,30 @@ function pJ() {
 }
 function PL(t, e) {
   var r;
-  return Qn[t] ? 0 : e * ((r = S.ResourcePrice[t]) != null ? r : 0);
+  return NoPrice[t] ? 0 : e * ((r = Config.ResourcePrice[t]) != null ? r : 0);
 }
 function SL(t, e) {
-  const r = S.GreatPerson[t],
-    i = S.GreatPerson[e],
-    n = S.TechAge[r.age].idx - S.TechAge[i.age].idx;
+  const r = Config.GreatPerson[t],
+    i = Config.GreatPerson[e],
+    n = Config.TechAge[r.age].idx - Config.TechAge[i.age].idx;
   return n !== 0 ? n : r.name().localeCompare(i.name());
 }
 function jA() {
   const t = [];
-  Q(S.City, (r, i) => {
+  forEach(Config.City, (r, i) => {
     i.requireSupporterPack && t.push(r);
   });
-  const e = Math.floor(Date.now() / ik);
+  const e = Math.floor(Date.now() / WEEK);
   return t[e % t.length];
 }
 function P0(t) {
-  const e = S.GreatPerson[t];
+  const e = Config.GreatPerson[t];
   return e.type === ga.Normal && !e.city;
 }
 function S0(t) {
   const e = [];
   return (
-    Q(S.GreatPerson, (r, i) => {
+    forEach(Config.GreatPerson, (r, i) => {
       i.age === t && P0(r) && e.push(r);
     }),
     e
@@ -63320,20 +63325,20 @@ function S0(t) {
 }
 function w0(t) {
   var n;
-  const e = S.GreatPerson[t],
-    i = 1 + ((n = we().ageWisdom[e.age]) != null ? n : 0);
+  const e = Config.GreatPerson[t],
+    i = 1 + ((n = getGameOptions().ageWisdom[e.age]) != null ? n : 0);
   return Kf(t, i);
 }
 function mJ(t) {
   var a;
-  const e = S.GreatPerson[t],
-    i = (a = we().ageWisdom[e.age]) != null ? a : 0;
+  const e = Config.GreatPerson[t],
+    i = (a = getGameOptions().ageWisdom[e.age]) != null ? a : 0;
   let n = 0;
   if (i >= 1) for (let o = 1; o <= i; o++) n += Kf(t, o);
   return n;
 }
 function L_(t) {
-  const e = we(),
+  const e = getGameOptions(),
     r = new Map();
   return (
     S0(t).forEach((i) => {
@@ -63420,20 +63425,20 @@ function Do(t) {
       const r = e;
       r.sellResources || (r.sellResources = {}),
         r.availableResources || (r.availableResources = {}),
-        jt(r.marketOptions) && (r.marketOptions = 0);
+        isNullOrUndefined(r.marketOptions) && (r.marketOptions = 0);
       break;
     }
     case "Caravansary": {
       const r = e;
       r.resourceImports || (r.resourceImports = {}),
-        jt(r.resourceImportOptions) && (r.resourceImportOptions = 0);
+        isNullOrUndefined(r.resourceImportOptions) && (r.resourceImportOptions = 0);
       break;
     }
     case "Warehouse": {
       const r = e;
       r.resourceImports || (r.resourceImports = {}),
-        jt(r.warehouseOptions) && (r.warehouseOptions = 0),
-        jt(r.resourceImportOptions) && (r.resourceImportOptions = 0);
+        isNullOrUndefined(r.warehouseOptions) && (r.warehouseOptions = 0),
+        isNullOrUndefined(r.resourceImportOptions) && (r.resourceImportOptions = 0);
       break;
     }
     case "ChoghaZanbil": {
@@ -63479,34 +63484,34 @@ function Do(t) {
   );
 }
 function BL(t, e) {
-  const r = S.City[e.city],
+  const r = Config.City[e.city],
     i = r.size * r.size;
   return Math.round(i * r.deposits[t]);
 }
-const EL = new or(),
-  fk = new or(),
-  _L = new or(),
-  DL = new or(),
-  o1 = new or(),
-  jm = new or(),
-  RL = new or(),
-  IL = new or();
+const EL = new TypedEvent(),
+  fk = new TypedEvent(),
+  _L = new TypedEvent(),
+  DL = new TypedEvent(),
+  o1 = new TypedEvent(),
+  jm = new TypedEvent(),
+  RL = new TypedEvent(),
+  IL = new TypedEvent();
 function Gm(t, e, r) {
   var i, n;
   (i = t.unlockBuilding) == null ||
     i.forEach((a) => {
-      N.next.unlockedBuildings.add(a);
+      Tick.next.unlockedBuildings.add(a);
     }),
-    Q(t.buildingMultiplier, (a, o) => {
+    forEach(t.buildingMultiplier, (a, o) => {
       st(a, o, e);
     }),
-    Q(t.globalMultiplier, (a, o) => {
-      N.next.globalMultipliers[a].push({ value: o, source: e });
+    forEach(t.globalMultiplier, (a, o) => {
+      Tick.next.globalMultipliers[a].push({ value: o, source: e });
     }),
     (n = t.tick) == null || n.call(t, r);
 }
 function fJ(t) {
-  const e = N.current.specialBuildings.get("MausoleumAtHalicarnassus"),
+  const e = Tick.current.specialBuildings.get("MausoleumAtHalicarnassus"),
     r = Mt(t),
     i = e ? r.xyToPosition(e.tile) : null;
   LZ(t.transportationV2, (n) => {
@@ -63515,7 +63520,7 @@ function fJ(t) {
       const l = (o = t.tiles.get(n.toXy)) == null ? void 0 : o.building;
       if (
         l &&
-        (Tt(l.resources, n.resource, n.amount), l.type === "CloneFactory")
+        (safeAdd(l.resources, n.resource, n.amount), l.type === "CloneFactory")
       ) {
         const u = l;
         u.transportedAmount += n.amount;
@@ -63524,9 +63529,9 @@ function fJ(t) {
     }
     const a = PL(n.resource, n.amount);
     return (
-      hr(N.next.resourceValues, n.resource, a),
-      hr(N.next.amountInTransit, gk(n.toXy, n.resource), n.amount),
-      (N.next.totalValue += a),
+      hr(Tick.next.resourceValues, n.resource, a),
+      hr(Tick.next.amountInTransit, gk(n.toXy, n.resource), n.amount),
+      (Tick.next.totalValue += a),
       !0
     );
   });
@@ -63545,7 +63550,7 @@ function gJ(t, e, r) {
           (t.fuelCurrentTick = 0)),
       uu(t.fuel) >= t.fuelCurrentTick
         ? (cf(t.fuel, t.fuelCurrentTick, null),
-          hr(sk(), t.toXy, t.fuelCurrentTick),
+          hr(getFuelByTarget(), t.toXy, t.fuelCurrentTick),
           t.ticksSpent++,
           (t.hasEnoughFuel = !0))
         : (t.hasEnoughFuel = !1),
@@ -63553,27 +63558,27 @@ function gJ(t, e, r) {
 }
 function vJ(t) {
   const e = Mt(t);
-  console.assert(N.next.powerGrid.size === 0),
-    N.next.powerPlants.forEach((i) => {
-      for (const n of e.getNeighbors(xe(i))) N.next.powerGrid.add(Se(n));
+  console.assert(Tick.next.powerGrid.size === 0),
+    Tick.next.powerPlants.forEach((i) => {
+      for (const n of e.getNeighbors(xe(i))) Tick.next.powerGrid.add(Se(n));
     });
   let r = 0;
   do
-    (r = N.next.powerGrid.size),
-      N.next.powerBuildings.forEach((i) => {
-        if (N.next.powerGrid.has(i))
-          for (const n of e.getNeighbors(xe(i))) N.next.powerGrid.add(Se(n));
+    (r = Tick.next.powerGrid.size),
+      Tick.next.powerBuildings.forEach((i) => {
+        if (Tick.next.powerGrid.has(i))
+          for (const n of e.getNeighbors(xe(i))) Tick.next.powerGrid.add(Se(n));
       });
-  while (r !== N.next.powerGrid.size);
+  while (r !== Tick.next.powerGrid.size);
 }
 function yJ(t) {
-  return Array.from(qn(t)).sort(([e, r], [i, n]) => {
+  return Array.from(getXyBuildings(t)).sort(([e, r], [i, n]) => {
     var l, u;
     const a = K_(n, t) - K_(r, t);
     return a !== 0
       ? a
-      : ((l = S.BuildingTier[r.type]) != null ? l : 0) -
-          ((u = S.BuildingTier[n.type]) != null ? u : 0);
+      : ((l = Config.BuildingTier[r.type]) != null ? l : 0) -
+          ((u = Config.BuildingTier[n.type]) != null ? u : 0);
   });
 }
 const GA = new Set();
@@ -63583,56 +63588,56 @@ function NP(t, e, r, i) {
   if (!n) return;
   const a = n.building;
   if (!a || (Mp(a.type) && !n.explored)) return;
-  const o = i || we().enableTransportSourceCache;
+  const o = i || getGameOptions().enableTransportSourceCache;
   s1 || Kh(),
     a.desiredLevel > a.level
       ? (a.status = a.level > 0 ? "upgrading" : "building")
       : (a.desiredLevel = a.level);
   const l = NQ(a);
-  hr(N.next.buildingValueByTile, t, l),
-    hr(N.next.buildingValues, a.type, l),
-    (N.next.totalValue += l);
+  hr(Tick.next.buildingValueByTile, t, l),
+    hr(Tick.next.buildingValues, a.type, l),
+    (Tick.next.totalValue += l);
   const { total: u, used: c } = Es(t, r),
-    p = fi(t, "output", br.Multiplier | br.Capacity, r),
+    p = getBuildingIO(t, "output", br.Multiplier | br.Capacity, r),
     f = "resourceImports" in a;
   if (
     (GA.clear(),
-    Q(a.resources, (B, _) => {
+    forEach(a.resources, (B, _) => {
       if (!Number.isFinite(_)) return;
       if (_ === 0) {
         delete a.resources[B];
         return;
       }
       const D = PL(B, _);
-      (N.next.totalValue += D),
-        hr(N.next.resourceValueByTile, t, D),
-        hr(N.next.resourceValues, B, D),
-        a.status === "completed" && hr(N.next.resourceAmount, B, _),
+      (Tick.next.totalValue += D),
+        hr(Tick.next.resourceValueByTile, t, D),
+        hr(Tick.next.resourceValues, B, D),
+        a.status === "completed" && hr(Tick.next.resourceAmount, B, _),
         f ||
           (GA.add(B),
-          Et(N.next.resourcesByTile, B, {
+          Et(Tick.next.resourcesByTile, B, {
             tile: t,
             amount: _,
             usedStoragePercentage: u === 0 ? 1 : c / u,
           }));
     }),
-    Q(p, (B) => {
+    forEach(p, (B) => {
       GA.has(B) ||
-        Et(N.next.resourcesByTile, B, {
+        Et(Tick.next.resourcesByTile, B, {
           tile: t,
           amount: 0,
           usedStoragePercentage: c / u,
         });
     }),
     f &&
-      N.next.resourceImportBuildings.set(t, {
+      Tick.next.resourceImportBuildings.set(t, {
         building: a,
         tile: t,
         usedStoragePercentage: c / u,
       }),
     (a.status === "completed" || a.status === "upgrading") &&
       yr(a.type) &&
-      N.next.specialBuildings.set(a.type, n),
+      Tick.next.specialBuildings.set(a.type, n),
     a.status === "building" || a.status === "upgrading")
   ) {
     const B = Ns(a),
@@ -63641,11 +63646,11 @@ function NP(t, e, r, i) {
       I = new Map();
     let L = !0;
     if (
-      (Q(B, function (W, H) {
+      (forEach(B, function (W, H) {
         var V, Z;
         const $ = (V = a.resources[W]) != null ? V : 0,
           X = G_(t, W),
-          q = we().greedyTransport ? ((Z = _[W]) != null ? Z : 0) : H;
+          q = getGameOptions().greedyTransport ? ((Z = _[W]) != null ? Z : 0) : H;
         if ((L && $ < H && (L = !1), $ >= q)) {
           a.suspendedInput.set(W, gb.AutoSuspended);
           return;
@@ -63664,8 +63669,8 @@ function NP(t, e, r, i) {
     a.status === "upgrading" && on(a.type) && o1.emit({ xy: t, offline: i }),
       L &&
         (a.level++,
-        Q(B, (F, W) => {
-          Tt(a.resources, F, -W);
+        forEach(B, (F, W) => {
+          safeAdd(a.resources, F, -W);
         }),
         a.suspendedInput.clear(),
         a.status === "building" &&
@@ -63680,19 +63685,19 @@ function NP(t, e, r, i) {
   if (
     (r.unlockedTech.Banking &&
       a.level >= 10 &&
-      Et(N.next.tileMultipliers, t, {
+      Et(Tick.next.tileMultipliers, t, {
         storage: 1,
         source: h(d.SourceResearch, { tech: h(d.Banking) }),
       }),
     a.type === "Caravansary" &&
-      (N.next.playerTradeBuildings.set(t, a), Ci(mi.WarehouseExtension, r)))
+      (Tick.next.playerTradeBuildings.set(t, a), Ci(mi.WarehouseExtension, r)))
   )
     for (const B of Mt(r).getNeighbors(xe(t))) {
       const _ = Se(B),
         D = (M = r.tiles.get(_)) == null ? void 0 : M.building;
       (D == null ? void 0 : D.type) === "Warehouse" &&
         D.status === "completed" &&
-        N.next.playerTradeBuildings.set(_, D);
+        Tick.next.playerTradeBuildings.set(_, D);
     }
   if ("resourceImports" in a) {
     const B = a;
@@ -63704,7 +63709,7 @@ function NP(t, e, r, i) {
       for (const F of Mt(r).getRange(xe(t), B0)) {
         const W = Se(F);
         Ei(W, r) &&
-          Q(HA(fi(W, "output", br.Capacity | br.Multiplier, r)), ($, X) => {
+          forEach(HA(getBuildingIO(W, "output", br.Capacity | br.Multiplier, r)), ($, X) => {
             hr(I, $, X), (L += X);
           });
       }
@@ -63722,24 +63727,24 @@ function NP(t, e, r, i) {
     }
   }
   if (
-    (N.current.totalValue > 0 &&
+    (Tick.current.totalValue > 0 &&
       u > 0 &&
-      N.next.storagePercentages.set(t, c / u),
-    !sj(S.Building[a.type].deposit, t, r))
+      Tick.next.storagePercentages.set(t, c / u),
+    !sj(Config.Building[a.type].deposit, t, r))
   ) {
-    N.next.notProducingReasons.set(t, Jt.NotOnDeposit);
+    Tick.next.notProducingReasons.set(t, Jt.NotOnDeposit);
     return;
   }
   if (a.capacity <= 0) {
-    N.next.notProducingReasons.set(t, Jt.TurnedOff);
+    Tick.next.notProducingReasons.set(t, Jt.TurnedOff);
     return;
   }
-  const m = HA(fi(t, "input", br.Multiplier | br.Capacity, r)),
+  const m = HA(getBuildingIO(t, "input", br.Multiplier | br.Capacity, r)),
     g = UP(t, r),
     v = da(t, "worker", 1, !1, r);
   let y = !1;
   if (
-    (Q(m, function (_, D) {
+    (forEach(m, function (_, D) {
       var H, $, X;
       let I = D * qP(a);
       if (I <= 0 || c + (Dc(_) ? I : 0) > u) return;
@@ -63761,18 +63766,18 @@ function NP(t, e, r, i) {
       let W = X_(a, r);
       if ("resourceImports" in a) {
         const re = a.resourceImports[_];
-        re && !jt(re.inputMode) && (W = re.inputMode);
+        re && !isNullOrUndefined(re.inputMode) && (W = re.inputMode);
       }
       s1(_, I, v, t, r, W, o), (y = !0);
     }),
     "resourceImports" in a &&
       !y &&
-      N.next.notProducingReasons.set(t, Jt.NoActiveTransports),
+      Tick.next.notProducingReasons.set(t, Jt.NoActiveTransports),
     a.type === "Market")
   ) {
     const B = a;
     let _ = 0;
-    Q(B.sellResources, function (I) {
+    forEach(B.sellResources, function (I) {
       var H;
       const L = B.availableResources[I];
       if (!L) {
@@ -63786,10 +63791,10 @@ function NP(t, e, r, i) {
         ),
         W = eg(I, F, L, t, r);
       if (c - F + W > u) {
-        N.next.notProducingReasons.set(t, Jt.StorageFull);
+        Tick.next.notProducingReasons.set(t, Jt.StorageFull);
         return;
       }
-      Tt(a.resources, I, -F),
+      safeAdd(a.resources, I, -F),
         e.push({ xy: t, resource: L, amount: W }),
         (_ += W);
     }),
@@ -63812,22 +63817,22 @@ function NP(t, e, r, i) {
         (w = a.resources[B.inputResource]) != null ? w : 0
       ) < _
     ) {
-      N.next.notProducingReasons.set(t, Jt.NotEnoughResources);
+      Tick.next.notProducingReasons.set(t, Jt.NotEnoughResources);
       return;
     }
     B.transportedAmount -= _;
   }
-  const x = S.Building[a.type].power;
-  if (!(!x || N.current.powerGrid.has(t))) {
-    N.next.notProducingReasons.set(t, Jt.NoPower);
+  const x = Config.Building[a.type].power;
+  if (!(!x || Tick.current.powerGrid.has(t))) {
+    Tick.next.notProducingReasons.set(t, Jt.NoPower);
     return;
   }
-  if ((x && N.next.powerBuildings.add(t), !(uu("Worker") >= g.output))) {
-    N.next.notProducingReasons.set(t, Jt.NotEnoughWorkers);
+  if ((x && Tick.next.powerBuildings.add(t), !(uu("Worker") >= g.output))) {
+    Tick.next.notProducingReasons.set(t, Jt.NotEnoughWorkers);
     return;
   }
   if (!BQ(a.resources, m)) {
-    N.next.notProducingReasons.set(t, Jt.NotEnoughResources);
+    Tick.next.notProducingReasons.set(t, Jt.NotEnoughResources);
     return;
   }
   if (!(mr(p) || c + Y_(p) + Y_(m) * qP(a) <= u)) {
@@ -63836,23 +63841,23 @@ function NP(t, e, r, i) {
       const _ = UP(t, r);
       cf("Worker", _.output, t),
         q_(a.resources, m),
-        Q(B, (D, I) => {
+        forEach(B, (D, I) => {
           var L;
           if (D === "Science") {
             const F =
-              (L = N.current.specialBuildings.get("Headquarter")) == null
+              (L = Tick.current.specialBuildings.get("Headquarter")) == null
                 ? void 0
                 : L.building.resources;
             F &&
               (jm.emit({ xy: t, amount: I }),
-              Tt(F, D, I),
-              N.next.scienceProduced.set(t, I));
+              safeAdd(F, D, I),
+              Tick.next.scienceProduced.set(t, I));
           } else
-            D === "Power" && N.next.powerPlants.add(t),
-              hr(N.next.workersAvailable, D, I);
+            D === "Power" && Tick.next.powerPlants.add(t),
+              hr(Tick.next.workersAvailable, D, I);
         }),
-        mr(HA(p)) || N.next.notProducingReasons.set(t, Jt.StorageFull);
-    } else N.next.notProducingReasons.set(t, Jt.StorageFull);
+        mr(HA(p)) || Tick.next.notProducingReasons.set(t, Jt.StorageFull);
+    } else Tick.next.notProducingReasons.set(t, Jt.StorageFull);
     return;
   }
   if (Ci(mi.Electricity, r) && Sk(a.type) && a.electrification > 0) {
@@ -63861,35 +63866,35 @@ function NP(t, e, r, i) {
     const _ = aj(a);
     uu("Power") >= _ &&
       (cf("Power", _, t),
-      Et(N.next.tileMultipliers, t, {
+      Et(Tick.next.tileMultipliers, t, {
         source: h(d.Electrification),
         input: B * uj(a.type),
         output: B,
         unstable: !0,
       }),
-      N.next.electrified.add(t));
+      Tick.next.electrified.add(t));
   }
   cf("Worker", g.output, t),
     q_(a.resources, m),
-    Q(p, (B, _) => {
+    forEach(p, (B, _) => {
       var D;
-      if ((B === "Power" && N.next.powerPlants.add(t), Dc(B))) {
+      if ((B === "Power" && Tick.next.powerPlants.add(t), Dc(B))) {
         e.push({ xy: t, resource: B, amount: _ }),
           jm.emit({ xy: t, amount: _ });
         return;
       }
       if (B === "Science") {
         const I =
-          (D = N.current.specialBuildings.get("Headquarter")) == null
+          (D = Tick.current.specialBuildings.get("Headquarter")) == null
             ? void 0
             : D.building.resources;
         I &&
-          (Tt(I, B, _),
-          N.next.scienceProduced.set(t, _),
+          (safeAdd(I, B, _),
+          Tick.next.scienceProduced.set(t, _),
           jm.emit({ xy: t, amount: _ }));
         return;
       }
-      hr(N.next.workersAvailable, B, _);
+      hr(Tick.next.workersAvailable, B, _);
     }),
     o1.emit({ xy: t, offline: i });
 }
@@ -63900,7 +63905,7 @@ function bJ(t, e, r, i) {
   const a = da(e, "worker", 1, !1, i),
     o =
       a +
-      N.current.globalMultipliers.transportCapacity.reduce(
+      Tick.current.globalMultipliers.transportCapacity.reduce(
         (m, g) => m + g.value,
         0
       );
@@ -63909,18 +63914,18 @@ function bJ(t, e, r, i) {
   if (((n = We(n, 0, l - u)), n <= 0)) return;
   const c = new Set();
   ot(t.warehouseOptions, fs.AutopilotRespectCap) &&
-    Q(t.resourceImports, (m, g) => {
+    forEach(t.resourceImports, (m, g) => {
       var v;
       ((v = t.resources[m]) != null ? v : 0) < g.cap ? c.add(m) : c.delete(m);
     });
-  const p = aJ().sort(
+  const p = getStorageFullBuildings().sort(
     (m, g) => Mt(i).distanceTile(m, e) - Mt(i).distanceTile(g, e)
   );
   for (const m of p) {
     const g = (f = i.tiles.get(m)) == null ? void 0 : f.building;
     if (!g || m === e) continue;
-    const v = fi(m, "output", br.None, i),
-      y = zt(g.resources)
+    const v = getBuildingIO(m, "output", br.None, i),
+      y = keysOf(g.resources)
         .filter((x) =>
           ot(t.warehouseOptions, fs.AutopilotRespectCap)
             ? c.has(x) && v[x]
@@ -63935,13 +63940,13 @@ function bJ(t, e, r, i) {
         });
     for (const x of y) {
       const T = s1(x, n, a, e, i, $l.Distance, r, [m]);
-      if ((T < n && N.next.notProducingReasons.delete(e), (n = T), n <= 0))
+      if ((T < n && Tick.next.notProducingReasons.delete(e), (n = T), n <= 0))
         return;
     }
   }
 }
 function gk(t, e) {
-  return (cL(t) << 12) | S.ResourceHash[e];
+  return (cL(t) << 12) | Config.ResourceHash[e];
 }
 const FP = new Map();
 function Kh() {
@@ -63961,11 +63966,11 @@ function s1(t, e, r, i, n, a, o, l = void 0) {
   if ((l && (g = l), !g && m && (g = FP.get(m)), !g)) {
     const k =
       (x =
-        (y = N.current.resourcesByTile.get(t)) == null ? void 0 : y.slice()) !=
+        (y = Tick.current.resourcesByTile.get(t)) == null ? void 0 : y.slice()) !=
       null
         ? x
         : [];
-    N.current.resourceImportBuildings.forEach((w, B) => {
+    Tick.current.resourceImportBuildings.forEach((w, B) => {
       var _;
       k.push({
         tile: B,
@@ -63996,7 +64001,7 @@ function s1(t, e, r, i, n, a, o, l = void 0) {
       w === i ||
       ((f == null ? void 0 : f.type) === "CloneFactory" &&
         (f == null ? void 0 : f.status) === "completed" &&
-        !S.Building[B.type].output[t])
+        !Config.Building[B.type].output[t])
     )
       continue;
     const _ = FQ(f, n);
@@ -64005,7 +64010,7 @@ function s1(t, e, r, i, n, a, o, l = void 0) {
     if (D <= 0) continue;
     let I =
       r +
-      N.current.globalMultipliers.transportCapacity.reduce(
+      Tick.current.globalMultipliers.transportCapacity.reduce(
         (X, q) => X + q.value,
         0
       );
@@ -64026,7 +64031,7 @@ function s1(t, e, r, i, n, a, o, l = void 0) {
       }
     }
     if (
-      (F && S.Building[F].output.Worker && (I = Number.POSITIVE_INFINITY),
+      (F && Config.Building[F].output.Worker && (I = Number.POSITIVE_INFINITY),
       D >= u)
     ) {
       const X = Math.ceil(u / I),
@@ -64051,26 +64056,26 @@ function s1(t, e, r, i, n, a, o, l = void 0) {
   return u;
 }
 function st(t, e, r) {
-  let i = N.next.buildingMultipliers.get(t);
+  let i = Tick.next.buildingMultipliers.get(t);
   i == null && (i = []),
     i.push(Ie(U({}, e), { source: r })),
-    N.next.buildingMultipliers.set(t, i);
+    Tick.next.buildingMultipliers.set(t, i);
 }
 function TJ() {
-  return Math.floor(Date.now() / _a);
+  return Math.floor(Date.now() / HOUR);
 }
 function NL(t) {
-  return t * _a;
+  return t * HOUR;
 }
 function AJ(t) {
   var o;
   const e = TJ();
   let r = !1;
   t.lastPriceUpdated !== e && ((r = !0), (t.lastPriceUpdated = e), EL.emit(t));
-  const i = Dg(Sp(t), (l) => !Qn[l] && !mo[l]),
+  const i = Dg(unlockedResources(t), (l) => !NoPrice[l] && !NoStorage[l]),
     n = Kn("GrandBazaar", t),
     a = Mt(t);
-  (o = oa("Market", t)) == null ||
+  (o = getBuildingsByType("Market", t)) == null ||
     o.forEach((l, u) => {
       var f;
       const c = (f = t.tiles.get(u)) == null ? void 0 : f.building;
@@ -64082,8 +64087,8 @@ function AJ(t) {
             a.distanceTile(n.tile, u) <= 1
               ? `${e},${u}`
               : `${e}`,
-          v = $o(zt(i), mb(g)),
-          y = $o(zt(i), mb(g));
+          v = shuffle(keysOf(i), mb(g)),
+          y = shuffle(keysOf(i), mb(g));
         p.availableResources = {};
         let x = 0;
         for (const T of y) {
@@ -64092,7 +64097,7 @@ function AJ(t) {
         }
         ot(p.marketOptions, sf.ClearAfterUpdate)
           ? (p.sellResources = {})
-          : Q(p.sellResources, (T) => {
+          : forEach(p.sellResources, (T) => {
               p.availableResources[T] || delete p.sellResources[T];
             });
       }
@@ -64100,14 +64105,14 @@ function AJ(t) {
 }
 function OA(t) {
   var e;
-  return (e = N.current.resourceAmount.get(t)) != null ? e : 0;
+  return (e = Tick.current.resourceAmount.get(t)) != null ? e : 0;
 }
 function G_(t, e) {
   var r;
-  return (r = N.current.amountInTransit.get(gk(t, e))) != null ? r : 0;
+  return (r = Tick.current.amountInTransit.get(gk(t, e))) != null ? r : 0;
 }
 function xJ(t) {
-  return Ui(t, (e, r, i) => e + (Qn[r] ? 0 : S.ResourcePrice[r] * i), 0);
+  return reduceOf(t, (e, r, i) => e + (NoPrice[r] ? 0 : Config.ResourcePrice[r] * i), 0);
 }
 function FL(t, e, r, i) {
   var o, l;
@@ -64154,18 +64159,18 @@ function LL(t, e, r, i) {
       m = p - f;
     if (m >= a) {
       const v = a;
-      Tt(c, t, v),
+      safeAdd(c, t, v),
         n.push(() => {
-          Tt(c, t, -v);
+          safeAdd(c, t, -v);
         }),
         (a = 0);
       break;
     }
     const g = m;
     (a -= g),
-      Tt(c, t, g),
+      safeAdd(c, t, g),
       n.push(() => {
-        Tt(c, t, -g);
+        safeAdd(c, t, -g);
       });
   }
   return {
@@ -64184,7 +64189,7 @@ function jL(t, e) {
 function Ng(t) {
   const e = [];
   return (
-    Q(S.Building, (r, i) => {
+    forEach(Config.Building, (r, i) => {
       i.output[t] && e.push(r);
     }),
     e
@@ -64193,19 +64198,19 @@ function Ng(t) {
 function CJ(t) {
   const e = [];
   return (
-    Q(t.unlockedTech, (r) => {
+    forEach(t.unlockedTech, (r) => {
       var i;
-      (i = S.Tech[r].revealDeposit) == null || i.forEach((n) => e.push(n));
+      (i = Config.Tech[r].revealDeposit) == null || i.forEach((n) => e.push(n));
     }),
     e
   );
 }
-function PJ(t) {
+function combineResources(t) {
   const e = {};
   return (
     t.forEach((r) => {
-      Q(r, (i, n) => {
-        Tt(e, i, n);
+      forEach(r, (i, n) => {
+        safeAdd(e, i, n);
       });
     }),
     e
@@ -70141,7 +70146,7 @@ const k0 = {
     "200,19": !0,
   },
   SJ = k0;
-function O_(t) {
+function getUserTradePriceRange(t) {
   if (!t) return 0.05;
   switch (t.level) {
     case it.Quaestor:
@@ -70170,11 +70175,11 @@ function wJ(t) {
       return 2;
   }
 }
-function kJ(t, e) {
+function getBuyAmountRange(t, e) {
   var i, n;
   const r =
-    (t.sellAmount * ((i = S.ResourcePrice[t.sellResource]) != null ? i : 0)) /
-    ((n = S.ResourcePrice[t.buyResource]) != null ? n : 0);
+    (t.sellAmount * ((i = Config.ResourcePrice[t.sellResource]) != null ? i : 0)) /
+    ((n = Config.ResourcePrice[t.buyResource]) != null ? n : 0);
   return {
     min: Math.round(r * (1 - e)),
     max: Math.round(r * (1 + e)),
@@ -70183,12 +70188,12 @@ function kJ(t, e) {
 }
 function WA(t) {
   const e =
-    (t.sellAmount * S.ResourcePrice[t.sellResource]) /
-    S.ResourcePrice[t.buyResource];
+    (t.sellAmount * Config.ResourcePrice[t.sellResource]) /
+    Config.ResourcePrice[t.buyResource];
   return -(t.buyAmount - e) / e;
 }
 function GL(t) {
-  return Date.now() - t.lastSeenAt <= Ld[t.level] * sL;
+  return Date.now() - t.lastSeenAt <= Ld[t.level] * DAY;
 }
 function l1(t) {
   return t >= ao / 2 ? t - ao / 2 : t + ao / 2;
@@ -70212,16 +70217,16 @@ function BJ(t, e) {
   if (r > 0 && e < 0) throw new Error("You cannot trade across the sea");
   return r * e;
 }
-const UL = new or();
+const UL = new TypedEvent();
 function zL() {
-  return Math.floor(Date.now() / ik);
+  return Math.floor(Date.now() / WEEK);
 }
 function EJ() {
-  return (zL() + 1) * ik - Date.now();
+  return (zL() + 1) * WEEK - Date.now();
 }
 function _J(t) {
   var e;
-  for (const [r, i] of N.current.playerTradeBuildings)
+  for (const [r, i] of Tick.current.playerTradeBuildings)
     if (((e = i.resources[t]) != null ? e : 0) > 0) return !0;
   return !1;
 }
@@ -70229,8 +70234,8 @@ function ks(t) {
   const e = wa(t);
   let r = 0;
   return (
-    e && (r = S.TechAge[e].idx),
-    Math.pow(5, r) * Math.pow(1.5, S.Tech[t].column) * 5e3
+    e && (r = Config.TechAge[e].idx),
+    Math.pow(5, r) * Math.pow(1.5, Config.Tech[t].column) * 5e3
   );
 }
 function W_(t, e) {
@@ -70240,14 +70245,14 @@ function W_(t, e) {
     LJ(t).forEach((n) => {
       e.unlockedTech[n] || (r.push(n), (i += ks(n)));
     }),
-    r.sort((n, a) => S.Tech[n].column - S.Tech[a].column),
+    r.sort((n, a) => Config.Tech[n].column - Config.Tech[a].column),
     { prerequisites: r, totalScience: i }
   );
 }
 function vk(t) {
   var e, r;
   return (r =
-    (e = N.current.specialBuildings.get("Headquarter")) == null
+    (e = Tick.current.specialBuildings.get("Headquarter")) == null
       ? void 0
       : e.building.resources.Science) != null
     ? r
@@ -70256,7 +70261,7 @@ function vk(t) {
 function DJ(t, e) {
   var i;
   const r =
-    (i = N.current.specialBuildings.get("Headquarter")) == null
+    (i = Tick.current.specialBuildings.get("Headquarter")) == null
       ? void 0
       : i.building.resources;
   return !r || !r.Science ? !1 : r.Science >= t ? ((r.Science -= t), !0) : !1;
@@ -70265,8 +70270,8 @@ function M0(t) {
   let e = 0,
     r = null;
   return (
-    Q(t.unlockedTech, (i) => {
-      S.Tech[i].column >= e && ((e = S.Tech[i].column), (r = i));
+    forEach(t.unlockedTech, (i) => {
+      Config.Tech[i].column >= e && ((e = Config.Tech[i].column), (r = i));
     }),
     r
   );
@@ -70276,24 +70281,24 @@ function RJ(t) {
     r = Sr(t);
   return (
     r &&
-      Q(S.TechAge, (i, n) => {
-        n.idx <= S.TechAge[r].idx && e.add(i);
+      forEach(Config.TechAge, (i, n) => {
+        n.idx <= Config.TechAge[r].idx && e.add(i);
       }),
     e
   );
 }
 function yk(t) {
-  const e = S.BuildingTech[t];
+  const e = Config.BuildingTech[t];
   if (e) return e;
   let r;
-  for (r in S.City) {
-    const n = S.City[r].uniqueBuildings[t];
+  for (r in Config.City) {
+    const n = Config.City[r].uniqueBuildings[t];
     if (n) return n;
   }
   throw new Error(`Cannot find tech for building: ${t}`);
 }
 function H_(t) {
-  const e = S.BuildingTechAge[t];
+  const e = Config.BuildingTechAge[t];
   if (e) return e;
   const r = yk(t);
   if (r) return wa(r);
@@ -70301,32 +70306,32 @@ function H_(t) {
 }
 function Sr(t) {
   const e = M0(t);
-  return e ? wa(e) : qf(S.TechAge);
+  return e ? wa(e) : qf(Config.TechAge);
 }
 function IJ(t, e) {
   const r = M0(e);
-  return r ? S.Tech[r].column >= S.TechAge[t].from : !1;
+  return r ? Config.Tech[r].column >= Config.TechAge[t].from : !1;
 }
 function wa(t) {
-  const e = S.Tech[t].column;
+  const e = Config.Tech[t].column;
   let r;
-  for (r in S.TechAge) {
-    const i = S.TechAge[r];
+  for (r in Config.TechAge) {
+    const i = Config.TechAge[r];
     if (e >= i.from && e <= i.to) return r;
   }
   throw new Error(`Cannot find age for tech: ${t}`);
 }
 function NJ(t) {
-  const e = S.TechAge[t].idx + 1;
-  for (t in S.TechAge) if (S.TechAge[t].idx === e) return t;
+  const e = Config.TechAge[t].idx + 1;
+  for (t in Config.TechAge) if (Config.TechAge[t].idx === e) return t;
   return null;
 }
 function FJ(t, e) {
-  const r = S.TechAge[t].from,
-    i = S.TechAge[t].to;
+  const r = Config.TechAge[t].from,
+    i = Config.TechAge[t].to;
   let n;
-  for (n in S.Tech)
-    if (S.Tech[n].column >= r && S.Tech[n].column <= i && !e.unlockedTech[n])
+  for (n in Config.Tech)
+    if (Config.Tech[n].column >= r && Config.Tech[n].column <= i && !e.unlockedTech[n])
       return !1;
   return !0;
 }
@@ -70334,22 +70339,22 @@ function VL(t, e, r) {
   var n, a;
   if (r.unlockedTech[t]) return;
   r.unlockedTech[t] = !0;
-  const i = S.Tech[t];
+  const i = Config.Tech[t];
   (n = i.revealDeposit) == null ||
     n.forEach((o) => {
       const l = BL(o, r),
-        u = $o(
+        u = shuffle(
           Array.from(r.tiles.entries()).filter(([p, f]) => {
             var g;
             if (Tr(f.deposit) >= 2) return !1;
             const m = (g = f.building) == null ? void 0 : g.type;
-            return m ? !!jt(S.Building[m].special) : !0;
+            return m ? !!isNullOrUndefined(Config.Building[m].special) : !0;
           })
         ).slice(0, l),
         c = Object.values(r.tiles).filter(
           (p) => p.explored && !p.building && mr(p.deposit)
         );
-      u.every(([p, f]) => !f.explored) && c.length > 0 && (u[0] = $o(c)[0].xy),
+      u.every(([p, f]) => !f.explored) && c.length > 0 && (u[0] = shuffle(c)[0].xy),
         u.forEach(([p, f]) => {
           vb(p, o, e, r);
         });
@@ -70358,7 +70363,7 @@ function VL(t, e, r) {
     t in u1 && UL.emit(),
     DL.emit(t);
 }
-const Zf = new or();
+const Zf = new TypedEvent();
 function vb(t, e, r, i) {
   const n = i.tiles.get(t);
   n && ((n.deposit[e] = !0), r && Zf.emit(t));
@@ -70366,7 +70371,7 @@ function vb(t, e, r, i) {
 function qL(t) {
   const e = [];
   return (
-    Q(S.Tech, (r, i) => {
+    forEach(Config.Tech, (r, i) => {
       t.unlockedTech[r] ||
         (i.requireTech.every((n) => t.unlockedTech[n]) && e.push(r));
     }),
@@ -70375,18 +70380,18 @@ function qL(t) {
 }
 function LJ(t) {
   const e = new Set();
-  let r = S.Tech[t].requireTech;
+  let r = Config.Tech[t].requireTech;
   for (; r.length > 0; )
-    r = r.flatMap((i) => (e.has(i) ? [] : (e.add(i), S.Tech[i].requireTech)));
+    r = r.flatMap((i) => (e.has(i) ? [] : (e.add(i), Config.Tech[i].requireTech)));
   return e;
 }
 function yb(t) {
   let e = Number.POSITIVE_INFINITY,
     r = 0;
-  const i = S.TechAge[t].from,
-    n = S.TechAge[t].to;
+  const i = Config.TechAge[t].from,
+    n = Config.TechAge[t].to;
   return (
-    Q(S.Tech, (a, o) => {
+    forEach(Config.Tech, (a, o) => {
       if (o.column >= i && o.column <= n) {
         const l = ks(a);
         (r = Math.max(l, r)), (e = Math.min(l, e));
@@ -70396,21 +70401,21 @@ function yb(t) {
   );
 }
 function jJ(t, e) {
-  if (!N.current.specialBuildings.has("ItsukushimaShrine")) return;
+  if (!Tick.current.specialBuildings.has("ItsukushimaShrine")) return;
   const r = wa(t);
   if (!FJ(r, e)) return;
   const i = NJ(r);
   if (!i) return;
   const [n, a] = yb(i),
-    o = N.current.specialBuildings.get("Headquarter");
-  o && Tt(o.building.resources, "Science", n);
+    o = Tick.current.specialBuildings.get("Headquarter");
+  o && safeAdd(o.building.resources, "Science", n);
 }
 function U_(t) {
   const e = [],
-    r = S.TechAge[t].idx;
+    r = Config.TechAge[t].idx;
   return (
-    Q(S.BuildingTechAge, (i, n) => {
-      S.TechAge[n].idx < r && e.push(i);
+    forEach(Config.BuildingTechAge, (i, n) => {
+      Config.TechAge[n].idx < r && e.push(i);
     }),
     e
   );
@@ -70438,45 +70443,45 @@ const GJ = 1,
   Tb = 3600,
   OP = 2e3;
 function YJ(t) {
-  Q(aL, (v) => {
-    S.ResourceTier[v] = 1;
+  forEach(aL, (v) => {
+    Config.ResourceTier[v] = 1;
     const y = $J(v);
-    S.ResourcePrice[v] = Math.round(
-      S.Tech[y].column + Math.pow(S.TechAge[wa(y)].idx, 2)
+    Config.ResourcePrice[v] = Math.round(
+      Config.Tech[y].column + Math.pow(Config.TechAge[wa(y)].idx, 2)
     );
   });
   const e = [];
   let r = 0;
-  Q(S.Building, (v, y) => {
+  forEach(Config.Building, (v, y) => {
     var C;
-    (S.BuildingHash[v] = r++),
+    (Config.BuildingHash[v] = r++),
       mr(y.input) &&
-        (Q(y.output, (P) => {
+        (forEach(y.output, (P) => {
           if (
-            (S.ResourceTier[P] || (S.ResourceTier[P] = 1), !S.ResourcePrice[P])
+            (Config.ResourceTier[P] || (Config.ResourceTier[P] = 1), !Config.ResourcePrice[P])
           ) {
             const M = jl(v);
             M
-              ? (S.ResourcePrice[P] = 1 + S.Tech[M].column)
-              : (S.ResourcePrice[P] = 1);
+              ? (Config.ResourcePrice[P] = 1 + Config.Tech[M].column)
+              : (Config.ResourcePrice[P] = 1);
           }
         }),
-        S.BuildingTier[v] || (S.BuildingTier[v] = 1)),
+        Config.BuildingTier[v] || (Config.BuildingTier[v] = 1)),
       (!mr(y.input) || !mr(y.output)) &&
         e.push({ building: v, input: y.input, output: y.output });
     const x = jl(v);
     x
-      ? (Q(y.input, (P) => {
+      ? (forEach(y.input, (P) => {
           const M = z_(P);
           console.assert(
-            M.some((k) => k === x || S.Tech[k].column < S.Tech[x].column),
+            M.some((k) => k === x || Config.Tech[k].column < Config.Tech[x].column),
             `${v} (Input: ${P}): Expect ${M.join(", ")} to be before ${x}`
           );
         }),
-        Q(y.construction, (P) => {
+        forEach(y.construction, (P) => {
           const M = z_(P);
           console.assert(
-            M.some((k) => k === x || S.Tech[k].column <= S.Tech[x].column),
+            M.some((k) => k === x || Config.Tech[k].column <= Config.Tech[x].column),
             `${v} (Construction: ${P}): Expect ${M.join(
               ", "
             )} to be before ${x}`
@@ -70487,52 +70492,52 @@ function YJ(t) {
         console.error(`Building: ${v} is not unlocked by any tech!`);
     let T;
     const A = [];
-    for (T in S.Tech)
-      (C = S.Tech[T].unlockBuilding) != null && C.includes(v) && A.push(T);
+    for (T in Config.Tech)
+      (C = Config.Tech[T].unlockBuilding) != null && C.includes(v) && A.push(T);
     console.assert(
       A.length <= 1,
       `Building ${v} should only be unlocked by one tech (${A.join(",")})`
     );
   }),
-    Q(S.Tech, (v, y) => {
+    forEach(Config.Tech, (v, y) => {
       var x;
       (x = y.unlockBuilding) == null ||
         x.forEach((T) => {
           const A = y.column + 1;
-          if (S.BuildingTech[T])
+          if (Config.BuildingTech[T])
             throw new Error(
-              `A building is unlocked by two techs: ${S.BuildingTech[T]}, ${v}`
+              `A building is unlocked by two techs: ${Config.BuildingTech[T]}, ${v}`
             );
-          (S.BuildingTech[T] = v),
-            (S.BuildingTechAge[T] = wa(v)),
-            Q(S.Building[T].output, (C) => {
-              (S.ResourceTech[C] && S.ResourceTech[C] > A) ||
-                (S.ResourceTech[C] = A);
+          (Config.BuildingTech[T] = v),
+            (Config.BuildingTechAge[T] = wa(v)),
+            forEach(Config.Building[T].output, (C) => {
+              (Config.ResourceTech[C] && Config.ResourceTech[C] > A) ||
+                (Config.ResourceTech[C] = A);
             }),
-            Q(S.City, (C, P) => {
+            forEach(Config.City, (C, P) => {
               P.uniqueBuildings[T] &&
                 console.error(
                   `${C}'s unique building ${T} should not be unlocked by ${v}`
                 );
             }),
             console.assert(
-              !mr(S.Building[T].input) || !mr(S.Building[T].construction),
+              !mr(Config.Building[T].input) || !mr(Config.Building[T].construction),
               `${T}: A building should have either 'input' or 'construction' defined`
             );
         });
     }),
-    Q(S.City, (v, y) => {
-      Q(y.uniqueBuildings, (x, T) => {
-        (S.BuildingTech[x] = T), (S.BuildingTechAge[x] = wa(T));
+    forEach(Config.City, (v, y) => {
+      forEach(y.uniqueBuildings, (x, T) => {
+        (Config.BuildingTech[x] = T), (Config.BuildingTechAge[x] = wa(T));
       });
     }),
-    Q(S.Upgrade, (v, y) => {
+    forEach(Config.Upgrade, (v, y) => {
       var x;
       (x = y.unlockBuilding) == null ||
         x.forEach((T) => {
           y.tech
-            ? ((S.BuildingTech[T] = y.tech),
-              (S.BuildingTechAge[T] = wa(y.tech)))
+            ? ((Config.BuildingTech[T] = y.tech),
+              (Config.BuildingTechAge[T] = wa(y.tech)))
             : console.error(
                 `${v} contains unlockBuilding but does not contain tech!`
               );
@@ -70543,21 +70548,21 @@ function YJ(t) {
             `${v} does not contain unlockBuilding but contains tech!`
           );
     }),
-    Q(tk, (v, y) => {
-      S.BuildingTech[v] = y.tech;
+    forEach(tk, (v, y) => {
+      Config.BuildingTech[v] = y.tech;
     });
   const i = {},
     n = {};
-  for (; Tr(S.BuildingTier) < Tr(S.Building); )
+  for (; Tr(Config.BuildingTier) < Tr(Config.Building); )
     e.forEach(({ building: v, input: y, output: x }) => {
       let T = 0,
         A = 0,
         C = null;
       if (
-        zt(y).every((M) => {
+        keysOf(y).every((M) => {
           var B;
-          const k = S.ResourceTier[M],
-            w = S.ResourcePrice[M];
+          const k = Config.ResourceTier[M],
+            w = Config.ResourcePrice[M];
           return (
             k && k > T && ((T = k), (C = M)),
             w && (A += w * ((B = y[M]) != null ? B : 0)),
@@ -70568,19 +70573,19 @@ function YJ(t) {
         const M = T + 1;
         let k = 0,
           w = 0;
-        Q(x, (_, D) => {
+        forEach(x, (_, D) => {
           if (_ === "Science") {
             w += D * bb;
             return;
           }
-          if (!S.ResourceTier[_] || M < S.ResourceTier[_]) {
-            const I = S.ResourceTier[_];
-            (S.ResourceTier[_] = M),
+          if (!Config.ResourceTier[_] || M < Config.ResourceTier[_]) {
+            const I = Config.ResourceTier[_];
+            (Config.ResourceTier[_] = M),
               C && (i[_] = C),
-              Q(i, (L, F) => {
+              forEach(i, (L, F) => {
                 F === _ &&
                   (delete i[L],
-                  delete S.ResourceTier[L],
+                  delete Config.ResourceTier[L],
                   t == null ||
                     t(
                       `Resource Tier of ${L} is decided by ${_}, but its tier has changed from ${
@@ -70588,10 +70593,10 @@ function YJ(t) {
                       } to ${M}`
                     ));
               }),
-              Q(n, (L, F) => {
+              forEach(n, (L, F) => {
                 F === _ &&
                   (delete n[L],
-                  delete S.BuildingTier[L],
+                  delete Config.BuildingTier[L],
                   t == null ||
                     t(
                       `Building Tier of ${L} is decided by ${_}, but its tier has changed from ${
@@ -70602,52 +70607,52 @@ function YJ(t) {
           }
           k += D;
         }),
-          (!S.BuildingTier[v] || M > S.BuildingTier[v]) &&
-            (S.BuildingTier[v] = M);
+          (!Config.BuildingTier[v] || M > Config.BuildingTier[v]) &&
+            (Config.BuildingTier[v] = M);
         const B = 1.5 + 0.25 * Tr(y);
-        Q(x, (_) => {
+        forEach(x, (_) => {
           const D = Math.round((B * A - w) / k);
           if (Number.isFinite(D)) {
-            if (!S.ResourcePrice[_]) {
-              S.ResourcePrice[_] = D;
+            if (!Config.ResourcePrice[_]) {
+              Config.ResourcePrice[_] = D;
               return;
             }
-            D > S.ResourcePrice[_] &&
+            D > Config.ResourcePrice[_] &&
               (t == null ||
                 t(
-                  `Price of ${_} changed from ${S.ResourcePrice[_]} to ${D} by ${v}`
+                  `Price of ${_} changed from ${Config.ResourcePrice[_]} to ${D} by ${v}`
                 ),
-              (S.ResourcePrice[_] = D));
+              (Config.ResourcePrice[_] = D));
           }
         });
       }
     });
-  Q(S.BuildingTier, (v) => {
-    yr(v) && (S.BuildingTier[v] = 0);
+  forEach(Config.BuildingTier, (v) => {
+    yr(v) && (Config.BuildingTier[v] = 0);
   }),
-    (S.BuildingTechAge.LivestockFarm = "BronzeAge"),
-    (S.BuildingTier.CloneFactory = 8),
-    (S.BuildingTier.CloneLab = 8);
+    (Config.BuildingTechAge.LivestockFarm = "BronzeAge"),
+    (Config.BuildingTier.CloneFactory = 8),
+    (Config.BuildingTier.CloneLab = 8);
   let a = 0;
-  Q(S.Resource, (v) => {
-    (S.ResourceHash[v] = a++),
-      Qn[v]
-        ? ((S.ResourcePrice[v] = 1), (S.ResourceTier[v] = 1))
+  forEach(Config.Resource, (v) => {
+    (Config.ResourceHash[v] = a++),
+      NoPrice[v]
+        ? ((Config.ResourcePrice[v] = 1), (Config.ResourceTier[v] = 1))
         : (console.assert(
-            !!S.ResourceTier[v],
+            !!Config.ResourceTier[v],
             `Resource = ${v} does not have a tier`
           ),
           console.assert(
-            !!S.ResourcePrice[v],
+            !!Config.ResourcePrice[v],
             `Resource = ${v} does not have a price`
           ));
   });
   const o = new Map();
-  Q(S.Building, (v, y) => {
+  forEach(Config.Building, (v, y) => {
     if ((y.special === tl.NaturalWonder || y.special === tl.HQ) && y.max !== 0)
       throw new Error(`Natural Wonder: ${v} should have max = 0`);
     if (
-      (Q(y.input, (x) => {
+      (forEach(y.input, (x) => {
         hr(o, x, 1);
       }),
       y.output.Science)
@@ -70655,17 +70660,17 @@ function YJ(t) {
       const x = 1.5 + 0.25 * Tr(y.input),
         T = Math.round(
           x *
-            Ui(
+            reduceOf(
               y.input,
               (C, P, M) => {
                 var k;
-                return C + ((k = S.ResourcePrice[P]) != null ? k : 0) * M;
+                return C + ((k = Config.ResourcePrice[P]) != null ? k : 0) * M;
               },
               0
             )
         ),
         A = Math.round(
-          Ui(
+          reduceOf(
             y.output,
             (C, P, M) => {
               var k;
@@ -70673,7 +70678,7 @@ function YJ(t) {
                 C +
                 (P === "Science"
                   ? bb
-                  : (k = S.ResourcePrice[P]) != null
+                  : (k = Config.ResourcePrice[P]) != null
                   ? k
                   : 0) *
                   M
@@ -70689,8 +70694,8 @@ function YJ(t) {
     }
   });
   const l = {};
-  Q(S.City, (v, y) => {
-    Q(y.uniqueBuildings, (x, T) => {
+  forEach(Config.City, (v, y) => {
+    forEach(y.uniqueBuildings, (x, T) => {
       if (l[x]) {
         console.error(
           `Duplicated unique buildings ${x} found in ${l[x]} and ${v}`
@@ -70702,12 +70707,12 @@ function YJ(t) {
   });
   const u = [],
     c = new Map();
-  zt(S.Building)
+  keysOf(Config.Building)
     .filter((v) => on(v))
     .sort((v, y) => {
       const x = jl(v),
         T = jl(y);
-      return x && T ? S.Tech[x].column - S.Tech[T].column : 0;
+      return x && T ? Config.Tech[x].column - Config.Tech[T].column : 0;
     })
     .forEach((v) => {
       let y = 0,
@@ -70715,31 +70720,31 @@ function YJ(t) {
         T = 0;
       const A = tj(v),
         C = wa(jl(v));
-      Q(Ns({ type: v, level: 0 }), (P, M) => {
+      forEach(Ns({ type: v, level: 0 }), (P, M) => {
         hr(c, P, 1);
         const k = KJ(P),
           w = wa(k[0]);
         T += M;
-        const B = S.TechAge[C].idx - S.TechAge[w].idx,
+        const B = Config.TechAge[C].idx - Config.TechAge[w].idx,
           _ = [];
         for (let D = 0; D < B; D++) _.push("*");
-        (x += `${_.join("")}${P}: ${pr(M)}, `), (y += S.ResourcePrice[P] * M);
+        (x += `${_.join("")}${P}: ${pr(M)}, `), (y += Config.ResourcePrice[P] * M);
       }),
-        (x = `${v.padEnd(25)} ${pr(y, !1, !0).padEnd(15)}${Ko(
+        (x = `${v.padEnd(25)} ${pr(y, !1, !0).padEnd(15)}${formatHMS(
           (1e3 * T) / A,
           !0
         ).padEnd(10)}${x}`),
         u.push(x);
     });
   const p = [];
-  zt(S.Resource)
-    .sort((v, y) => S.ResourceTier[v] - S.ResourceTier[y])
-    .filter((v) => !Qn[v])
+  keysOf(Config.Resource)
+    .sort((v, y) => Config.ResourceTier[v] - Config.ResourceTier[y])
+    .filter((v) => !NoPrice[v])
     .forEach((v) => {
       var y, x;
       p.push(
-        `${v.padEnd(20)}${ba(S.ResourceTier[v]).padEnd(10)}${String(
-          S.ResourcePrice[v]
+        `${v.padEnd(20)}${numberToRoman(Config.ResourceTier[v]).padEnd(10)}${String(
+          Config.ResourcePrice[v]
         ).padEnd(10)}${String((y = c.get(v)) != null ? y : "0*").padEnd(10)}${
           (x = o.get(v)) != null ? x : "0*"
         }`
@@ -70747,7 +70752,7 @@ function YJ(t) {
     });
   const f = new Set(),
     m = [];
-  Q(S.GreatPerson, (v, y) => {
+  forEach(Config.GreatPerson, (v, y) => {
     var x;
     (x = y.boost) == null ||
       x.buildings.forEach((T) => {
@@ -70755,10 +70760,10 @@ function YJ(t) {
       });
   });
   const g = [];
-  zt(S.Building)
-    .sort((v, y) => S.BuildingTier[v] - S.BuildingTier[y])
+  keysOf(Config.Building)
+    .sort((v, y) => Config.BuildingTier[v] - Config.BuildingTier[y])
     .forEach((v) => {
-      const y = S.Building[v];
+      const y = Config.Building[v];
       if (yr(v)) return;
       if (!f.has(v)) {
         const C = jl(v),
@@ -70766,18 +70771,18 @@ function YJ(t) {
         m.push({ building: v, tech: C, age: P });
       }
       let x = 0;
-      Q(y.input, (C, P) => {
-        x += S.ResourcePrice[C] * P;
+      forEach(y.input, (C, P) => {
+        x += Config.ResourcePrice[C] * P;
       });
       let T = 0;
-      Q(y.construction, (C, P) => {
-        T += S.ResourcePrice[C] * P;
+      forEach(y.construction, (C, P) => {
+        T += Config.ResourcePrice[C] * P;
       });
       let A = "";
       T > 0 && ((A = String(T).padStart(10)), T !== x && (A += "*")),
         x > 0 &&
           g.push(
-            `${y.name().padEnd(30)}${ba(S.BuildingTier[v]).padStart(10)}${Pp(
+            `${y.name().padEnd(30)}${numberToRoman(Config.BuildingTier[v]).padStart(10)}${Pp(
               x,
               2
             )
@@ -70785,7 +70790,7 @@ function YJ(t) {
               .padStart(10)}${A}`
           );
     }),
-    m.sort((v, y) => S.Tech[v.tech].column - S.Tech[y.tech].column),
+    m.sort((v, y) => Config.Tech[v.tech].column - Config.Tech[y.tech].column),
     t == null ||
       t(`>>>>>>>>>> ResourcePrice <<<<<<<<<<
 ${p.join(`
@@ -70807,16 +70812,16 @@ function jl(t) {
   var a, o;
   if (t === "LivestockFarm") return "Herding";
   let e;
-  for (e in S.Tech)
-    if ((a = S.Tech[e].unlockBuilding) != null && a.includes(t)) return e;
+  for (e in Config.Tech)
+    if ((a = Config.Tech[e].unlockBuilding) != null && a.includes(t)) return e;
   let r;
-  for (r in S.City) {
-    const l = S.City[r];
+  for (r in Config.City) {
+    const l = Config.City[r];
     if (l.uniqueBuildings[t]) return l.uniqueBuildings[t];
   }
   let i;
-  for (i in S.Upgrade) {
-    const l = S.Upgrade[i];
+  for (i in Config.Upgrade) {
+    const l = Config.Upgrade[i];
     if (l.tech && (o = l.unlockBuilding) != null && o.includes(t))
       return l.tech;
   }
@@ -70829,13 +70834,13 @@ function z_(t) {
       const i = jl(r);
       return i ? [i] : [];
     })
-    .sort((r, i) => S.Tech[r].column - S.Tech[i].column);
+    .sort((r, i) => Config.Tech[r].column - Config.Tech[i].column);
 }
 function $J(t) {
   var r;
   let e;
-  for (e in S.Tech)
-    if ((r = S.Tech[e].revealDeposit) != null && r.includes(t)) return e;
+  for (e in Config.Tech)
+    if ((r = Config.Tech[e].revealDeposit) != null && r.includes(t)) return e;
   throw new Error(
     `Deposit ${t} is not revealed by any technology, check TechDefinitions`
   );
@@ -70846,7 +70851,7 @@ function KJ(t) {
     return n ? [n] : [];
   });
   return Array.from(new Set(e)).sort(
-    (i, n) => S.Tech[i].column - S.Tech[n].column
+    (i, n) => Config.Tech[i].column - Config.Tech[n].column
   );
 }
 var uf = ((t) => ((t[(t.EmpireValue = 0)] = "EmpireValue"), t))(uf || {});
@@ -70873,7 +70878,7 @@ class $L {
     b(this, "speedUp", 1);
   }
 }
-class XJ {
+class SavedGame {
   constructor() {
     b(this, "current", new $L());
     b(this, "options", new rQ());
@@ -70892,13 +70897,13 @@ const KL = {
   ResearchHighlightColor: "#ffff99",
 };
 function ZJ() {
-  (we().themeColors = U({}, KL)), ut();
+  (getGameOptions().themeColors = U({}, KL)), ut();
 }
 function JJ() {
-  (we().buildingColors = {}), ut();
+  (getGameOptions().buildingColors = {}), ut();
 }
 function QJ() {
-  (we().resourceColors = {}), ut();
+  (getGameOptions().resourceColors = {}), ut();
 }
 const V_ = {
     WorldBackground: () => h(d.ThemeColorWorldBackground),
@@ -70982,7 +70987,7 @@ let XL = 1;
 function ZL(t) {
   let e = 0,
     r = 0;
-  Q(ek, (i, n) => {
+  forEach(ek, (i, n) => {
     ++e, t[i] && t[i] !== n && ++r;
   }),
     (XL = r / e),
@@ -70999,22 +71004,25 @@ function nQ(t) {
   for (let r = 0; r < e; r++) lm.push(r);
   return lm;
 }
-const Wi = new XJ(),
-  HP = 64,
-  Zh = new or(),
-  Jf = new or();
-function kt() {
-  return Wi.current;
+
+// SOURCE shared/logic/GameStateLogic.ts
+
+const savedGame = new SavedGame(),
+  TILE_SIZE = 64,
+  GameStateChanged = new TypedEvent(),
+  GameOptionsChanged = new TypedEvent();
+function getGameState() {
+  return savedGame.current;
 }
-function we() {
-  return Wi.options;
+function getGameOptions() {
+  return savedGame.options;
 }
-function aQ(t = Wi) {
+function aQ(t = savedGame) {
   t.options.checksum = null;
   const e = ak(E0(t), BigInt(0)).toString(16);
   return (t.options.checksum = e), JSON.stringify(t, JL);
 }
-function E0(t = Wi) {
+function E0(t = savedGame) {
   const e = t.current.transportationV2;
   t.current.transportationV2 = [];
   const r = JSON.stringify(t, JL);
@@ -71034,32 +71042,32 @@ function oQ(t) {
   );
 }
 function Ze(t) {
-  Zh.emit(t != null ? t : kt());
+  GameStateChanged.emit(t != null ? t : getGameState());
 }
 function ut(t) {
-  Jf.emit(t != null ? t : we());
+  GameOptionsChanged.emit(t != null ? t : getGameOptions());
 }
 function sQ(t) {
-  t(kt());
+  t(getGameState());
   function e(r) {
     t(r);
   }
   return (
-    Zh.on(e),
+    GameStateChanged.on(e),
     () => {
-      Zh.off(e);
+      GameStateChanged.off(e);
     }
   );
 }
 function lQ(t) {
-  t(we());
+  t(getGameOptions());
   function e(r) {
     t(r);
   }
   return (
-    Jf.on(e),
+    GameOptionsChanged.on(e),
     () => {
-      Jf.off(e);
+      GameOptionsChanged.off(e);
     }
   );
 }
@@ -71102,7 +71110,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "BronzeAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.builderCapacity.push({
+        Tick.next.globalMultipliers.builderCapacity.push({
           value: e.value(r),
           source: i,
         });
@@ -71117,7 +71125,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "BronzeAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerIdleWorker.push({
+        Tick.next.globalMultipliers.sciencePerIdleWorker.push({
           value: e.value(r),
           source: i,
         });
@@ -71313,7 +71321,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "ClassicalAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerBusyWorker.push({
+        Tick.next.globalMultipliers.sciencePerBusyWorker.push({
           value: e.value(r),
           source: i,
         });
@@ -71328,7 +71336,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "ClassicalAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.happiness.push({
+        Tick.next.globalMultipliers.happiness.push({
           value: e.value(r),
           source: i,
         });
@@ -71503,7 +71511,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "MiddleAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.builderCapacity.push({
+        Tick.next.globalMultipliers.builderCapacity.push({
           value: e.value(r),
           source: i,
         });
@@ -71548,7 +71556,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "MiddleAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.transportCapacity.push({
+        Tick.next.globalMultipliers.transportCapacity.push({
           value: e.value(r),
           source: i,
         });
@@ -71578,7 +71586,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "MiddleAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.happiness.push({
+        Tick.next.globalMultipliers.happiness.push({
           value: e.value(r),
           source: i,
         });
@@ -71594,11 +71602,11 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "MiddleAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerIdleWorker.push({
+        Tick.next.globalMultipliers.sciencePerIdleWorker.push({
           value: e.value(r) / 2,
           source: i,
         }),
-          N.next.globalMultipliers.sciencePerBusyWorker.push({
+          Tick.next.globalMultipliers.sciencePerBusyWorker.push({
             value: e.value(r),
             source: i,
           });
@@ -71663,7 +71671,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "RenaissanceAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerIdleWorker.push({
+        Tick.next.globalMultipliers.sciencePerIdleWorker.push({
           value: e.value(r),
           source: i,
         });
@@ -71875,7 +71883,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "IndustrialAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.builderCapacity.push({
+        Tick.next.globalMultipliers.builderCapacity.push({
           value: e.value(r),
           source: i,
         });
@@ -71935,7 +71943,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "IndustrialAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerBusyWorker.push({
+        Tick.next.globalMultipliers.sciencePerBusyWorker.push({
           value: e.value(r),
           source: i,
         });
@@ -71954,11 +71962,11 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "IndustrialAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerIdleWorker.push({
+        Tick.next.globalMultipliers.sciencePerIdleWorker.push({
           value: 0.5 * e.value(r),
           source: i,
         }),
-          N.next.globalMultipliers.sciencePerBusyWorker.push({
+          Tick.next.globalMultipliers.sciencePerBusyWorker.push({
             value: 1.5 * e.value(r),
             source: i,
           });
@@ -71973,7 +71981,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "IndustrialAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.happiness.push({
+        Tick.next.globalMultipliers.happiness.push({
           value: e.value(r),
           source: i,
         });
@@ -72173,7 +72181,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "WorldWarAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerIdleWorker.push({
+        Tick.next.globalMultipliers.sciencePerIdleWorker.push({
           value: e.value(r),
           source: i,
         });
@@ -72266,7 +72274,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "WorldWarAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerBusyWorker.push({
+        Tick.next.globalMultipliers.sciencePerBusyWorker.push({
           value: e.value(r),
           source: i,
         });
@@ -72281,7 +72289,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "WorldWarAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.happiness.push({
+        Tick.next.globalMultipliers.happiness.push({
           value: e.value(r),
           source: i,
         });
@@ -72296,7 +72304,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "WorldWarAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.builderCapacity.push({
+        Tick.next.globalMultipliers.builderCapacity.push({
           value: e.value(r),
           source: i,
         });
@@ -72461,7 +72469,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "ColdWarAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerBusyWorker.push({
+        Tick.next.globalMultipliers.sciencePerBusyWorker.push({
           value: e.value(r),
           source: i,
         });
@@ -72488,7 +72496,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "ColdWarAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerIdleWorker.push({
+        Tick.next.globalMultipliers.sciencePerIdleWorker.push({
           value: e.value(r),
           source: i,
         });
@@ -72503,7 +72511,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "ColdWarAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.builderCapacity.push({
+        Tick.next.globalMultipliers.builderCapacity.push({
           value: e.value(r),
           source: i,
         });
@@ -72518,7 +72526,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "ColdWarAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.happiness.push({
+        Tick.next.globalMultipliers.happiness.push({
           value: e.value(r),
           source: i,
         });
@@ -72698,7 +72706,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "InformationAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.builderCapacity.push({
+        Tick.next.globalMultipliers.builderCapacity.push({
           value: e.value(r),
           source: i,
         });
@@ -72713,7 +72721,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "InformationAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerBusyWorker.push({
+        Tick.next.globalMultipliers.sciencePerBusyWorker.push({
           value: e.value(r),
           source: i,
         });
@@ -72728,7 +72736,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "InformationAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.happiness.push({
+        Tick.next.globalMultipliers.happiness.push({
           value: e.value(r),
           source: i,
         });
@@ -72743,7 +72751,7 @@ class cQ {
       maxLevel: Number.POSITIVE_INFINITY,
       age: "InformationAge",
       tick: (e, r, i) => {
-        N.next.globalMultipliers.sciencePerIdleWorker.push({
+        Tick.next.globalMultipliers.sciencePerIdleWorker.push({
           value: e.value(r),
           source: i,
         });
@@ -72764,7 +72772,7 @@ function dQ(t, e) {
   return h(d.BoostDescription, {
     value: t.value(e),
     multipliers: t.boost.multipliers.map((r) => gL[r]()).join(", "),
-    buildings: t.boost.buildings.map((r) => S.Building[r].name()).join(", "),
+    buildings: t.boost.buildings.map((r) => Config.Building[r].name()).join(", "),
   });
 }
 function hQ(t, e, r, i) {
@@ -72798,16 +72806,16 @@ function Me(t) {
   };
 }
 function iy(t, e) {
-  const r = kt(),
+  const r = getGameState(),
     { workersBusy: i, workersAfterHappiness: n } = Pu(),
-    a = Rg(r);
+    a = getTransportStat(r);
   i >= 0.5 * n &&
     a.totalFuel <= 0.5 * i &&
-    (N.next.globalMultipliers.sciencePerBusyWorker.push({
+    (Tick.next.globalMultipliers.sciencePerBusyWorker.push({
       value: t,
       source: e,
     }),
-    N.next.globalMultipliers.sciencePerIdleWorker.push({
+    Tick.next.globalMultipliers.sciencePerIdleWorker.push({
       value: t,
       source: e,
     }));
@@ -73849,7 +73857,7 @@ class TQ {
       tick: (e) => {
         const r = xa("ZhengHe", e);
         if (r > 0) {
-          const i = S.GreatPerson.ZhengHe;
+          const i = Config.GreatPerson.ZhengHe;
           i.tick(i, r, h(d.ExpansionLevelX, { level: "IV" }), Li.None);
         }
       },
@@ -73963,12 +73971,12 @@ class TQ {
         Museum: { output: 1 },
       },
       onUnlocked: (e) => {
-        const r = S.TechAge.IndustrialAge.to;
+        const r = Config.TechAge.IndustrialAge.to;
         let i;
-        for (i in S.Tech)
-          if (S.Tech[i].column === r) {
+        for (i in Config.Tech)
+          if (Config.Tech[i].column === r) {
             const n = Kn("Headquarter", e);
-            n && Tt(n.building.resources, "Science", ks(i));
+            n && safeAdd(n.building.resources, "Science", ks(i));
             return;
           }
       },
@@ -74080,7 +74088,7 @@ class TQ {
         Caravansary: { storage: 1 },
       },
       tick: () => {
-        Q(S.Building, (e, r) => {
+        forEach(Config.Building, (e, r) => {
           r.output.Power &&
             st(e, { output: 1 }, h(d.LiberalismLevelX, { level: "IV" }));
         });
@@ -74171,7 +74179,7 @@ class TQ {
       onUnlocked: (e) => {
         const [r, i] = yb("WorldWarAge"),
           n = Kn("Headquarter", e);
-        n && Tt(n.building.resources, "Science", r);
+        n && safeAdd(n.building.resources, "Science", r);
       },
       additionalUpgrades: () => [h(d.SocialismLevel4DescHTMLV2)],
     });
@@ -74186,7 +74194,7 @@ class TQ {
       onUnlocked: (e) => {
         const [r, i] = yb("ColdWarAge"),
           n = Kn("Headquarter", e);
-        n && Tt(n.building.resources, "Science", r);
+        n && safeAdd(n.building.resources, "Science", r);
       },
       additionalUpgrades: () => [h(d.SocialismLevel5DescHTMLV2)],
     });
@@ -74260,7 +74268,7 @@ const AQ = {},
   wQ = {},
   kQ = {},
   MQ = {},
-  S = {
+  Config = {
     Building: new oL(),
     Resource: qa(new yZ()),
     GreatPerson: qa(new cQ()),
@@ -74297,13 +74305,13 @@ function da(t, e, r, i, n) {
 }
 function Tk(t, e, r, i) {
   var a, o, l;
-  (a = N.current.tileMultipliers.get(t)) == null ||
+  (a = Tick.current.tileMultipliers.get(t)) == null ||
     a.forEach((u) => {
       (r && u.unstable) || e(u);
     });
   const n = (o = i.tiles.get(t)) == null ? void 0 : o.building;
   n &&
-    ((l = N.current.buildingMultipliers.get(n.type)) == null ||
+    ((l = Tick.current.buildingMultipliers.get(n.type)) == null ||
       l.forEach((u) => {
         (r && u.unstable) || e(u);
       })),
@@ -74353,12 +74361,12 @@ function UP(t, e) {
     i = (n = e.tiles.get(t)) == null ? void 0 : n.building;
   return (
     i &&
-      !S.Building[i.type].output.Worker &&
-      (Q(fi(t, "input", 4, e), (a, o) => {
-        Qn[a] || (r.rawOutput += o);
+      !Config.Building[i.type].output.Worker &&
+      (forEach(getBuildingIO(t, "input", 4, e), (a, o) => {
+        NoPrice[a] || (r.rawOutput += o);
       }),
-      Q(fi(t, "output", 4, e), (a, o) => {
-        Qn[a] || (r.rawOutput += o);
+      forEach(getBuildingIO(t, "output", 4, e), (a, o) => {
+        NoPrice[a] || (r.rawOutput += o);
       })),
     (r.multiplier = da(t, "worker", 1, !1, e)),
     (r.output = Math.ceil(r.rawOutput / r.multiplier)),
@@ -74375,11 +74383,11 @@ function zP(t, e) {
         return n + (((l = o.building) == null ? void 0 : l.type) === t ? 1 : 0);
       },
       0
-    ) < ((i = S.Building[t].max) != null ? i : Number.POSITIVE_INFINITY)
+    ) < ((i = Config.Building[t].max) != null ? i : Number.POSITIVE_INFINITY)
   );
 }
 function Dc(t) {
-  return !mo[t] && !Qn[t];
+  return !NoStorage[t] && !NoPrice[t];
 }
 function QL(t) {
   return 3600 * t.level;
@@ -74395,9 +74403,9 @@ function Qf(t) {
   const i = Kn("Petra", t);
   if (i) {
     (r += QL(i.building)),
-      (r += 3600 * S.GreatPerson.Zenobia.value(xa("Zenobia")));
-    const a = (n = we().ageWisdom[S.GreatPerson.Zenobia.age]) != null ? n : 0;
-    r += 3600 * S.GreatPerson.Zenobia.value(a);
+      (r += 3600 * Config.GreatPerson.Zenobia.value(xa("Zenobia")));
+    const a = (n = getGameOptions().ageWisdom[Config.GreatPerson.Zenobia.age]) != null ? n : 0;
+    r += 3600 * Config.GreatPerson.Zenobia.value(a);
     const o = Kn("MountFuji", t);
     o && Mt(t).distanceTile(o.tile, i.tile) <= 1 && (r += 3600 * 8);
   }
@@ -74406,9 +74414,9 @@ function Qf(t) {
 const ny = 3600;
 function Es(t, e) {
   var l, u;
-  const r = (c, p, f) => (mo[p] ? c : c + f),
+  const r = (c, p, f) => (NoStorage[p] ? c : c + f),
     i = (l = e.tiles.get(t)) == null ? void 0 : l.building;
-  let n = Ui(i == null ? void 0 : i.resources, r, 0),
+  let n = reduceOf(i == null ? void 0 : i.resources, r, 0),
     a = da(t, "storage", 1, !0, e),
     o = 0;
   switch (i == null ? void 0 : i.type) {
@@ -74434,7 +74442,7 @@ function Es(t, e) {
       let c = 0;
       Ng("Faith").forEach((p) => {
         var f;
-        (f = oa(p, e)) == null ||
+        (f = getBuildingsByType(p, e)) == null ||
           f.forEach((m, g) => {
             m.building.status === "completed" && (c += m.building.level);
           });
@@ -74445,8 +74453,8 @@ function Es(t, e) {
     }
     default: {
       o =
-        60 * Ui(fi(t, "input", 4, e), r, 0) +
-        ny * Ui(fi(t, "output", 4, e), r, 0);
+        60 * reduceOf(getBuildingIO(t, "input", 4, e), r, 0) +
+        ny * reduceOf(getBuildingIO(t, "output", 4, e), r, 0);
       break;
     }
   }
@@ -74455,7 +74463,7 @@ function Es(t, e) {
 function Y_(t) {
   let e = 0;
   return (
-    Q(t, (r, i) => {
+    forEach(t, (r, i) => {
       Dc(r) && (e += i);
     }),
     e
@@ -74468,23 +74476,23 @@ function cf(t, e, r) {
     );
     return;
   }
-  if ((hr(N.next.workersUsed, t, e), !jt(r)))
+  if ((hr(Tick.next.workersUsed, t, e), !isNullOrUndefined(r)))
     switch (t) {
       case "Worker": {
-        hr(N.next.workersAssignment, r, e);
+        hr(Tick.next.workersAssignment, r, e);
         break;
       }
     }
 }
 function uu(t) {
   var n, a, o, l;
-  const e = (n = N.current.workersAvailable.get(t)) != null ? n : 0,
-    r = (a = N.next.workersUsed.get(t)) != null ? a : 0;
+  const e = (n = Tick.current.workersAvailable.get(t)) != null ? n : 0,
+    r = (a = Tick.next.workersUsed.get(t)) != null ? a : 0;
   let i = 1;
   return (
     t === "Worker" &&
       (i =
-        (l = (o = N.current.happiness) == null ? void 0 : o.workerPercentage) !=
+        (l = (o = Tick.current.happiness) == null ? void 0 : o.workerPercentage) !=
         null
           ? l
           : 1),
@@ -74492,7 +74500,7 @@ function uu(t) {
   );
 }
 function EQ(t) {
-  return S.Resource[t].name();
+  return Config.Resource[t].name();
 }
 function _Q(t, e) {
   var i, n;
@@ -74500,7 +74508,7 @@ function _Q(t, e) {
     (n = (i = e.tiles.get(t)) == null ? void 0 : i.building) == null
       ? void 0
       : n.type;
-  return r ? S.Building[r].name() : "";
+  return r ? Config.Building[r].name() : "";
 }
 function DQ(t) {
   const e = {};
@@ -74509,14 +74517,14 @@ function DQ(t) {
   return e;
 }
 function ej(t) {
-  return Ci(mi.BuildingStockpileMode, kt())
+  return Ci(mi.BuildingStockpileMode, getGameState())
     ? t.stockpileMax === 0
       ? Number.POSITIVE_INFINITY
       : t.stockpileMax
     : ML;
 }
 function qP(t) {
-  return Ci(mi.BuildingStockpileMode, kt()) ? t.stockpileCapacity : kL;
+  return Ci(mi.BuildingStockpileMode, getGameState()) ? t.stockpileCapacity : kL;
 }
 function ay(t, e, r, i, n, a, o) {
   const l = Mt(o),
@@ -74542,18 +74550,18 @@ function ay(t, e, r, i, n, a, o) {
 function Pu(t) {
   var p, f, m, g;
   const e = Math.floor(
-      (p = N.current.workersAvailable.get("Worker")) != null ? p : 0
+      (p = Tick.current.workersAvailable.get("Worker")) != null ? p : 0
     ),
     r =
-      (m = (f = N.current.happiness) == null ? void 0 : f.workerPercentage) !=
+      (m = (f = Tick.current.happiness) == null ? void 0 : f.workerPercentage) !=
       null
         ? m
         : 1,
     i = Math.floor(e * r),
-    n = (g = N.current.workersUsed.get("Worker")) != null ? g : 0,
-    a = db(N.current.globalMultipliers.sciencePerIdleWorker, "value"),
+    n = (g = Tick.current.workersUsed.get("Worker")) != null ? g : 0,
+    a = db(Tick.current.globalMultipliers.sciencePerIdleWorker, "value"),
     o = a * We(i - n, 0, Number.POSITIVE_INFINITY),
-    l = db(N.current.globalMultipliers.sciencePerBusyWorker, "value"),
+    l = db(Tick.current.globalMultipliers.sciencePerBusyWorker, "value"),
     u = l * n,
     c = u + o;
   return {
@@ -74569,36 +74577,36 @@ function Pu(t) {
   };
 }
 function RQ() {
-  return $h(N.current.scienceProduced, (t, e, r) => t + r, 0);
+  return $h(Tick.current.scienceProduced, (t, e, r) => t + r, 0);
 }
 function Ns(t) {
   const e = t.type,
     r = t.level;
-  let i = U({}, S.Building[e].construction);
-  if ((mr(i) && (i = U({}, S.Building[e].input)), mr(i))) return {};
+  let i = U({}, Config.Building[e].construction);
+  if ((mr(i) && (i = U({}, Config.Building[e].input)), mr(i))) return {};
   if (on(e)) {
     const n = IQ(e);
     if (t.tradition && t.level > 0) {
-      const a = S.Tradition[t.tradition].content[t.level];
-      (i = structuredClone(S.Upgrade[a].requireResources)),
-        Q(i, (o, l) => {
+      const a = Config.Tradition[t.tradition].content[t.level];
+      (i = structuredClone(Config.Upgrade[a].requireResources)),
+        forEach(i, (o, l) => {
           i[o] = l * 100 * Math.pow(2, t.level);
         });
     }
     if (t.religion && t.level > 0) {
-      const a = S.Religion[t.religion].content[t.level];
-      (i = structuredClone(S.Upgrade[a].requireResources)),
-        Q(i, (o, l) => {
+      const a = Config.Religion[t.religion].content[t.level];
+      (i = structuredClone(Config.Upgrade[a].requireResources)),
+        forEach(i, (o, l) => {
           i[o] = l * 100 * Math.pow(2, t.level);
         });
     }
-    zt(i).forEach((a) => {
+    keysOf(i).forEach((a) => {
       var l;
-      const o = (l = S.ResourcePrice[a]) != null ? l : 1;
+      const o = (l = Config.ResourcePrice[a]) != null ? l : 1;
       i[a] = (Math.pow(1.5, t.level) * n * i[a]) / o;
     });
   } else
-    zt(i).forEach((a) => {
+    keysOf(i).forEach((a) => {
       i[a] = Math.pow(1.5, r) * 10 * i[a];
     });
   return i;
@@ -74606,7 +74614,7 @@ function Ns(t) {
 const $_ = new Map();
 function Ak(t, e, r) {
   console.assert(e <= r);
-  const i = (S.BuildingHash[t.type] << 22) + (e << 11) + r,
+  const i = (Config.BuildingHash[t.type] << 22) + (e << 11) + r,
     n = $_.get(i);
   if (n) return n;
   const a = {
@@ -74618,7 +74626,7 @@ function Ak(t, e, r) {
     o = {};
   for (; a.level < r; ) {
     const l = Ns(a);
-    Q(l, (u, c) => Tt(o, u, c)), ++a.level;
+    forEach(l, (u, c) => safeAdd(o, u, c)), ++a.level;
   }
   return $_.set(i, Object.freeze(o)), o;
 }
@@ -74627,9 +74635,9 @@ function IQ(t) {
   let r = 0,
     i = 0;
   if (e) {
-    r = S.Tech[e].column;
+    r = Config.Tech[e].column;
     const a = wa(e);
-    a && (i = S.TechAge[a].idx);
+    a && (i = Config.TechAge[a].idx);
   }
   return Math.round(
     300 +
@@ -74640,13 +74648,13 @@ function IQ(t) {
 function tj(t) {
   console.assert(on(t), "This only works for World Wonders!");
   const e = yk(t),
-    r = Ui(Ns({ type: t, level: 0 }), (o, l, u) => o + u, 0);
+    r = reduceOf(Ns({ type: t, level: 0 }), (o, l, u) => o + u, 0);
   let i = 0,
     n = 0;
   if (e) {
-    i = S.Tech[e].column;
+    i = Config.Tech[e].column;
     const o = wa(e);
-    o && (n = S.TechAge[o].idx);
+    o && (n = Config.TechAge[o].idx);
   }
   return r / (500 * (Math.pow(n, 1.5) + 3) + 50 * Math.pow(i, 1.5));
 }
@@ -74696,7 +74704,7 @@ function rj(t, e) {
   let a = 0,
     o = 0;
   return (
-    Q(n, (u, c) => {
+    forEach(n, (u, c) => {
       var p;
       (a += c), (o += We((p = r.resources[u]) != null ? p : 0, 0, c));
     }),
@@ -74706,7 +74714,7 @@ function rj(t, e) {
 function UA(t) {
   return TZ.has(t.type)
     ? String(t.level)
-    : S.Building[t.type].special === tl.HQ || xk(t.type)
+    : Config.Building[t.type].special === tl.HQ || xk(t.type)
     ? ""
     : String(t.level);
 }
@@ -74718,13 +74726,13 @@ function jQ(t) {
   return [t.level + 1, e, e + 5, e + 10, e + 15];
 }
 function yr(t) {
-  return t ? !jt(S.Building[t].special) : !1;
+  return t ? !isNullOrUndefined(Config.Building[t].special) : !1;
 }
 function Mp(t) {
-  return t ? S.Building[t].special === tl.NaturalWonder : !1;
+  return t ? Config.Building[t].special === tl.NaturalWonder : !1;
 }
 function on(t) {
-  return t ? S.Building[t].special === tl.WorldWonder : !1;
+  return t ? Config.Building[t].special === tl.WorldWonder : !1;
 }
 function xk(t) {
   return Mp(t) || on(t);
@@ -74739,12 +74747,12 @@ function Ck(t, e) {
   const i = r;
   return (
     Qh(i, da(t, "output", 1, !1, e)) -
-    Ui(i.resourceImports, (a, o, l) => a + l.perCycle, 0)
+    reduceOf(i.resourceImports, (a, o, l) => a + l.perCycle, 0)
   );
 }
 function Pk(t, e, r) {
   const i =
-    db(N.current.globalMultipliers.builderCapacity, "value") +
+    db(Tick.current.globalMultipliers.builderCapacity, "value") +
     da(e, "worker", 0, !1, r);
   let n = We(t.level, 1, Number.POSITIVE_INFINITY);
   return (
@@ -74755,7 +74763,7 @@ function ij(t, e, r) {
   var n;
   let i = 0;
   return (
-    (n = oa(t, r)) == null ||
+    (n = getBuildingsByType(t, r)) == null ||
       n.forEach((a, o) => {
         Object.assign(a.building, e(a.building)), ++i;
       }),
@@ -74766,9 +74774,9 @@ function YP(t, e) {
   var r, i, n;
   return (
     Math.sqrt(
-      ((r = S.ResourcePrice[t]) != null ? r : 0) *
-        ((i = S.ResourcePrice[e]) != null ? i : 0)
-    ) / ((n = S.ResourcePrice[t]) != null ? n : 1)
+      ((r = Config.ResourcePrice[t]) != null ? r : 0) *
+        ((i = Config.ResourcePrice[e]) != null ? i : 0)
+    ) / ((n = Config.ResourcePrice[t]) != null ? n : 1)
   );
 }
 function Ab(t, e, r) {
@@ -74784,25 +74792,25 @@ function eg(t, e, r, i, n) {
     o =
       1 +
       (1 +
-        ((l = S.ResourceTier[r]) != null ? l : 0) -
-        ((u = S.ResourceTier[t]) != null ? u : 0)) *
+        ((l = Config.ResourceTier[r]) != null ? l : 0) -
+        ((u = Config.ResourceTier[t]) != null ? u : 0)) *
         a() *
         0.1;
   return (
-    (((c = S.ResourcePrice[t]) != null ? c : 0) * e * o) /
-    ((p = S.ResourcePrice[r]) != null ? p : 0)
+    (((c = Config.ResourcePrice[t]) != null ? c : 0) * e * o) /
+    ((p = Config.ResourcePrice[r]) != null ? p : 0)
   );
 }
 function GQ(t, e, r, i) {
   var u, c;
-  const n = qn(i).get(t);
+  const n = getXyBuildings(i).get(t);
   if (!n) return 0;
   const a = n.resources[r];
   if (!a) return 0;
   if ("resourceImports" in n) {
     const p = n;
     if (
-      n.type === ((u = qn(i).get(e)) == null ? void 0 : u.type) &&
+      n.type === ((u = getXyBuildings(i).get(e)) == null ? void 0 : u.type) &&
       !ot(p.resourceImportOptions, mn.ExportToSameType)
     )
       return 0;
@@ -74811,7 +74819,7 @@ function GQ(t, e, r, i) {
       ? We(a - ((c = f.cap) != null ? c : 0), 0, Number.POSITIVE_INFINITY)
       : a;
   }
-  const l = fi(t, "input", 3, i)[r];
+  const l = getBuildingIO(t, "input", 3, i)[r];
   if (l) {
     const p = (ej(n) + qP(n)) * l;
     return We(a - p, 0, Number.POSITIVE_INFINITY);
@@ -74822,12 +74830,12 @@ function Rc(t, e) {
   const r = e.tiles.get(t);
   r && !r.explored && ((r.explored = !0), nj.emit(t));
 }
-const nj = new or(),
+const nj = new TypedEvent(),
   OQ = 10 * 60 * 60;
 function aj(t) {
   return t.electrification <= 0
     ? 0
-    : S.Building[t.type].power
+    : Config.Building[t.type].power
     ? Math.round(CL(t.electrification) * 10)
     : Math.round(Math.pow(2, t.electrification - 1) * 10);
 }
@@ -74835,16 +74843,16 @@ function Sk(t) {
   if (yr(t)) return !1;
   if (
     t === "CloneFactory" ||
-    (t === "CloneLab" && N.current.specialBuildings.has("OsakaCastle"))
+    (t === "CloneLab" && Tick.current.specialBuildings.has("OsakaCastle"))
   )
     return !0;
-  const e = S.Building[t].output;
+  const e = Config.Building[t].output;
   if (Tr(e) <= 0) return !1;
   let r;
   for (r in e)
     if (
-      !(r === "Science" && N.current.specialBuildings.has("OsakaCastle")) &&
-      mo[r]
+      !(r === "Science" && Tick.current.specialBuildings.has("OsakaCastle")) &&
+      NoStorage[r]
     )
       return !1;
   return !0;
@@ -74860,16 +74868,16 @@ function oj(t, e) {
   return !r ||
     !Sk(r.type) ||
     r.electrification <= 0 ||
-    N.current.notProducingReasons.has(t)
+    Tick.current.notProducingReasons.has(t)
     ? "NotActive"
-    : N.current.electrified.has(t)
+    : Tick.current.electrified.has(t)
     ? "Active"
     : "NoPower";
 }
 function sj(t, e, r) {
   if (!t || Tr(t) === 0) return !0;
   const i = [e];
-  if (N.current.specialBuildings.has("SaintBasilsCathedral"))
+  if (Tick.current.specialBuildings.has("SaintBasilsCathedral"))
     for (const a of Mt(r).getNeighbors(xe(e))) i.push(Se(a));
   let n;
   for (n in t) if (!HQ(n, i, r)) return !1;
@@ -74905,27 +74913,27 @@ function HQ(t, e, r) {
 function UQ(t) {
   var r;
   let e;
-  for (e in S.Building)
-    if ((r = S.Building[e].deposit) != null && r[t]) return e;
+  for (e in Config.Building)
+    if ((r = Config.Building[e].deposit) != null && r[t]) return e;
   return null;
 }
 function zQ() {
-  return N.current.specialBuildings.has("GreatMosqueOfSamarra") ? 1 : 0;
+  return Tick.current.specialBuildings.has("GreatMosqueOfSamarra") ? 1 : 0;
 }
 function Kl(t, e) {
   const r = e.buildingDefaults[t.type];
   r &&
-    Q(r, (n, a) => {
-      jt(a) && delete r[n];
+    forEach(r, (n, a) => {
+      isNullOrUndefined(a) && delete r[n];
     });
   const i = r ? U({}, r) : {};
   return (
-    jt(i.stockpileCapacity) &&
+    isNullOrUndefined(i.stockpileCapacity) &&
       (i.stockpileCapacity = e.defaultStockpileCapacity),
-    jt(i.stockpileMax) && (i.stockpileMax = e.defaultStockpileMax),
-    jt(i.constructionPriority) &&
+    isNullOrUndefined(i.stockpileMax) && (i.stockpileMax = e.defaultStockpileMax),
+    isNullOrUndefined(i.constructionPriority) &&
       (i.constructionPriority = e.defaultConstructionPriority),
-    jt(i.productionPriority) &&
+    isNullOrUndefined(i.productionPriority) &&
       (i.productionPriority = e.defaultProductionPriority),
     yr(t.type) || (i.desiredLevel = e.defaultBuildingLevel),
     Object.assign(t, i)
@@ -74940,18 +74948,18 @@ function lj(t, e) {
   return r
     ? !yr(r.type) &&
         r.status === "completed" &&
-        (!N.current.notProducingReasons.has(t) ||
-          N.current.notProducingReasons.get(t) === Jt.StorageFull ||
-          N.current.notProducingReasons.get(t) === Jt.NotEnoughWorkers)
+        (!Tick.current.notProducingReasons.has(t) ||
+          Tick.current.notProducingReasons.get(t) === Jt.StorageFull ||
+          Tick.current.notProducingReasons.get(t) === Jt.NotEnoughWorkers)
     : !1;
 }
 function uj(t) {
-  return S.Building[t].power ? 0.5 : 1;
+  return Config.Building[t].power ? 0.5 : 1;
 }
 function Kn(t, e) {
   var i;
   if (!yr(t)) return null;
-  const r = N.current.specialBuildings.get(t);
+  const r = Tick.current.specialBuildings.get(t);
   if (r) return r;
   for (const n of e.tiles.values())
     if (((i = n.building) == null ? void 0 : i.type) === t) return n;
@@ -74995,14 +75003,14 @@ function hj(t, e) {
 }
 function $P(t) {
   var i;
-  const e = S.Building[t],
+  const e = Config.Building[t],
     r = (i = e.desc) == null ? void 0 : i.call(e);
   return (
     r ||
     [
-      ws(e.input, (n, a) => `${S.Resource[n].name()} x${a}`).join(" + "),
+      ws(e.input, (n, a) => `${Config.Resource[n].name()} x${a}`).join(" + "),
       " => ",
-      ws(e.output, (n, a) => `${S.Resource[n].name()} x${a}`).join(" + "),
+      ws(e.output, (n, a) => `${Config.Resource[n].name()} x${a}`).join(" + "),
     ].join("")
   );
 }
@@ -75010,7 +75018,7 @@ function VQ(t) {
   return ws(t.globalMultiplier, (e, r) => `+${r} ${ok[e]()}`)
     .concat(
       ws(t.buildingMultiplier, (e, r) =>
-        ws(r, (i, n) => `${S.Building[e].name()} +${n} ${gL[i]()}`)
+        ws(r, (i, n) => `${Config.Building[e].name()} +${n} ${gL[i]()}`)
       ).flat()
     )
     .join(", ");
@@ -75018,26 +75026,26 @@ function VQ(t) {
 function oy(t, e, r) {
   var n, a;
   const i =
-    (n = N.current.specialBuildings.get("Headquarter")) == null
+    (n = Tick.current.specialBuildings.get("Headquarter")) == null
       ? void 0
       : n.building.resources;
   if (i) {
     let o = 0;
-    (a = oa(e, r)) == null ||
+    (a = getBuildingsByType(e, r)) == null ||
       a.forEach((l, u) => {
         var c, p;
         if (
           ((c = l.building) == null ? void 0 : c.status) === "completed" &&
-          !N.current.notProducingReasons.has(u)
+          !Tick.current.notProducingReasons.has(u)
         ) {
-          const f = fi(u, "output", 3, r);
+          const f = getBuildingIO(u, "output", 3, r);
           o += (p = f.Faith) != null ? p : 0;
         }
       }),
       (o *= 10),
-      Tt(i, "Science", o),
-      hr(N.next.wonderProductions, "Science", o),
-      N.next.scienceProduced.set(t, o);
+      safeAdd(i, "Science", o),
+      hr(Tick.next.wonderProductions, "Science", o),
+      Tick.next.scienceProduced.set(t, o);
   }
 }
 function qQ(t) {
@@ -75052,9 +75060,9 @@ function qQ(t) {
 function YQ(t) {
   const e = [];
   return (
-    Q(S.City, (r, i) => {
+    forEach(Config.City, (r, i) => {
       r !== t &&
-        Q(i.uniqueBuildings, (n, a) => {
+        forEach(i.uniqueBuildings, (n, a) => {
           on(n) && e.push(n);
         });
     }),
@@ -75083,7 +75091,7 @@ function KP(t, e, r) {
   const o = new Set();
   Rc(t, r), o.add(t);
   const l =
-    (c = (u = S.Building[a.type]) == null ? void 0 : u.vision) != null
+    (c = (u = Config.Building[a.type]) == null ? void 0 : u.vision) != null
       ? c
       : bZ + e;
   return (
@@ -75124,7 +75132,7 @@ function pj(t, e) {
     Do({ type: "Headquarter", level: 1, status: "completed" }),
     a
   )),
-    Q(S.Tech, (m, g) => {
+    forEach(Config.Tech, (m, g) => {
       g.column === 0 && VL(m, !1, t);
     });
   const o = zA((m) => !!m.deposit.Wood && !m.building, i, r, t);
@@ -75148,12 +75156,12 @@ function pj(t, e) {
     t.tiles.forEach((m, g) => {
       m.building && KP(g, 0, t);
     });
-  const c = zt(S.City[t.city].naturalWonders),
+  const c = keysOf(Config.City[t.city].naturalWonders),
     p = wk();
   p &&
     new Date(p).getMonth() === 11 &&
     (c.push("Lapland"), c.push("RockefellerCenterChristmasTree"));
-  const f = $o(Array.from(t.tiles.keys()));
+  const f = shuffle(Array.from(t.tiles.keys()));
   for (let m = 0; m < f.length; m++) {
     const g = f[m],
       v = t.tiles.get(g);
@@ -75173,7 +75181,7 @@ function KQ(t) {
       r.unshift(n);
       continue;
     }
-    Tt(e, n.channel, 1), e[n.channel] <= OJ && r.unshift(n);
+    safeAdd(e, n.channel, 1), e[n.channel] <= OJ && r.unshift(n);
   }
   return r;
 }
@@ -75847,20 +75855,20 @@ const yj = Bp("Preferences", {
       name: () => h(d.PlayerMapPageGoBackToCity),
     },
   },
-  D0 = new or();
+  D0 = new TypedEvent();
 document.addEventListener("keydown", D0.emit);
 const Ch = {};
 function cee() {
   return Ch;
 }
 function dee() {
-  Q(Ch, (t, e) => {
+  forEach(Ch, (t, e) => {
     Ch[t] = void 0;
   });
 }
 D0.on((t) => {
   t.target instanceof HTMLInputElement ||
-    Q(we().shortcuts, (e, r) => {
+    forEach(getGameOptions().shortcuts, (e, r) => {
       var i;
       Tj(r, Aj(t)) && ((i = Ch[e]) == null || i.call(Ch));
     });
@@ -75930,7 +75938,7 @@ function hee(t) {
         ) {
           const a = Kn("Headquarter", t.current);
           a &&
-            Tt(
+            safeAdd(
               a.building.resources,
               "Warp",
               (n = r.building.resources.Warp) != null ? n : 0
@@ -75940,27 +75948,27 @@ function hee(t) {
         if (
           (r.building.disabledInput && delete r.building.disabledInput,
           (r.tile = i),
-          jt(r.building.suspendedInput) &&
+          isNullOrUndefined(r.building.suspendedInput) &&
             (r.building.suspendedInput = new Map()),
-          jt(r.building.inputMode) && (r.building.inputMode = $l.Distance),
-          jt(r.building.maxInputDistance) &&
+          isNullOrUndefined(r.building.inputMode) && (r.building.inputMode = $l.Distance),
+          isNullOrUndefined(r.building.maxInputDistance) &&
             (r.building.maxInputDistance = Number.POSITIVE_INFINITY),
-          jt(r.building.productionPriority) &&
+          isNullOrUndefined(r.building.productionPriority) &&
             (r.building.productionPriority = sI(r.building.priority)),
-          jt(r.building.constructionPriority) &&
+          isNullOrUndefined(r.building.constructionPriority) &&
             (r.building.constructionPriority = lI(r.building.priority)),
           delete r.building.priority,
           "resourceImports" in r.building &&
             !("resourceImportOptions" in r.building) &&
             (r.building.resourceImportOptions = mn.None),
-          !S.Building[r.building.type])
+          !Config.Building[r.building.type])
         ) {
           delete r.building;
           return;
         }
         (r.building = Do(r.building)),
-          Q(r.building.resources, (a, o) => {
-            (!S.Resource[a] || !Number.isFinite(o)) &&
+          forEach(r.building.resources, (a, o) => {
+            (!Config.Resource[a] || !Number.isFinite(o)) &&
               delete r.building.resources[a];
           });
       }
@@ -75987,32 +75995,32 @@ function hee(t) {
         });
       }),
       delete t.current.transportation),
-    jt(t.options.defaultProductionPriority) &&
+    isNullOrUndefined(t.options.defaultProductionPriority) &&
       (t.options.defaultProductionPriority = sI(t.options.defaultPriority)),
-    jt(t.options.defaultConstructionPriority) &&
+    isNullOrUndefined(t.options.defaultConstructionPriority) &&
       (t.options.defaultConstructionPriority = lI(t.options.defaultPriority)),
-    (jt(t.options.chatChannels) || t.options.chatChannels.size === 0) &&
+    (isNullOrUndefined(t.options.chatChannels) || t.options.chatChannels.size === 0) &&
       ((t.options.chatChannels = new Set()),
       t.options.chatSendChannel
         ? t.options.chatChannels.add(t.options.chatSendChannel)
         : t.options.chatChannels.add("en")),
     delete t.options.buildingColors.Cathedral,
     delete t.options.buildingDefaults.Cathedral,
-    Q(t.options.greatPeople, (r, i) => {
-      S.GreatPerson[r] || delete t.options.greatPeople[r];
+    forEach(t.options.greatPeople, (r, i) => {
+      Config.GreatPerson[r] || delete t.options.greatPeople[r];
     }),
-    Q(t.options.shortcuts, (r) => {
+    forEach(t.options.shortcuts, (r) => {
       r in ah || delete t.options.shortcuts[r];
     }),
     delete t.options.chatSendChannel,
     delete t.options.chatReceiveChannel,
     delete t.options.defaultPriority,
-    Q(t.options.buildingDefaults, (r, i) => {
-      Q(i, (n, a) => {
-        jt(a) && delete i[n];
+    forEach(t.options.buildingDefaults, (r, i) => {
+      forEach(i, (n, a) => {
+        isNullOrUndefined(a) && delete i[n];
       });
     }),
-    jt(t.options.greatPeopleChoicesV2) && (t.options.greatPeopleChoicesV2 = []),
+    isNullOrUndefined(t.options.greatPeopleChoicesV2) && (t.options.greatPeopleChoicesV2 = []),
     "greatPeopleChoices" in t.options &&
       (t.options.greatPeopleChoices.forEach((r) => {
         t.options.greatPeopleChoicesV2.push({ choices: r, amount: 1 });
@@ -76037,7 +76045,7 @@ const pee = Bp("App", {
       condition: (t) => {
         var e, r;
         return (
-          ((r = (e = N.current.happiness) == null ? void 0 : e.value) != null
+          ((r = (e = Tick.current.happiness) == null ? void 0 : e.value) != null
             ? r
             : Number.POSITIVE_INFINITY) <= 5
         );
@@ -76053,7 +76061,7 @@ const pee = Bp("App", {
       content: () => h(d.AdvisorScienceContent),
       condition: (t) => {
         var r;
-        const e = N.current.specialBuildings.get("Headquarter");
+        const e = Tick.current.specialBuildings.get("Headquarter");
         return (
           ((r = e == null ? void 0 : e.building.resources.Science) != null
             ? r
@@ -76065,7 +76073,7 @@ const pee = Bp("App", {
       title: () => h(d.AdvisorWorkerTitle),
       content: () => h(d.AdvisorWorkerContent),
       condition: (t) => {
-        for (const [e, r] of N.current.notProducingReasons)
+        for (const [e, r] of Tick.current.notProducingReasons)
           return r === Jt.NotEnoughWorkers;
         return !1;
       },
@@ -76074,7 +76082,7 @@ const pee = Bp("App", {
       title: () => h(d.AdvisorStorageTitle),
       content: () => h(d.AdvisorStorageContent),
       condition: (t) => {
-        for (const [e, r] of N.current.notProducingReasons)
+        for (const [e, r] of Tick.current.notProducingReasons)
           return r === Jt.StorageFull;
         return !1;
       },
@@ -76083,9 +76091,9 @@ const pee = Bp("App", {
       title: () => h(d.AdvisorTraditionTitle),
       content: () => h(d.AdvisorTraditionContent),
       condition: (t) =>
-        N.current.specialBuildings.has("ChoghaZanbil") ||
-        N.current.specialBuildings.has("LuxorTemple") ||
-        N.current.specialBuildings.has("BigBen"),
+        Tick.current.specialBuildings.has("ChoghaZanbil") ||
+        Tick.current.specialBuildings.has("LuxorTemple") ||
+        Tick.current.specialBuildings.has("BigBen"),
     },
     Electricity: {
       title: () => h(d.AdvisorElectricityTitle),
@@ -76125,29 +76133,29 @@ const pee = Bp("App", {
 function mee(t) {
   const e = Tr(t.unlockedTech),
     r = Sr(t),
-    i = Yf(t);
+    i = getTypeBuildings(t);
   let n = 0;
-  r && (n = 10 * (S.TechAge[r].idx + 1));
+  r && (n = 10 * (Config.TechAge[r].idx + 1));
   let a = 0,
     o = 0,
     l = 0;
-  qn(t).forEach((x, T) => {
+  getXyBuildings(t).forEach((x, T) => {
     var A;
     if (x.status === "completed") {
       if (!yr(x.type)) {
-        if (!N.current.notProducingReasons.has(T)) {
-          const P = (A = S.BuildingTier[x.type]) != null ? A : 0;
+        if (!Tick.current.notProducingReasons.has(T)) {
+          const P = (A = Config.BuildingTier[x.type]) != null ? A : 0;
           P > l && (l = P);
         }
         const C = Kn("HagiaSophia", t);
         (x.capacity <= 0 && C && C.building.status === "completed") ||
-          N.current.happinessExemptions.has(T) ||
+          Tick.current.happinessExemptions.has(T) ||
           ++a;
       }
       on(x.type) && ++o, Mp(x.type) && t.tiles.get(T).explored && ++o;
     }
   });
-  const u = N.current.specialBuildings.get("ZigguratOfUr");
+  const u = Tick.current.specialBuildings.get("ZigguratOfUr");
   u && u.building.capacity > 0 && (o = 0);
   const c = $h(i, (x, T, A) => (mr(kZ(A, (C, P) => lj(C, t))) ? x : x + 1), 0),
     p = {
@@ -76159,9 +76167,9 @@ function mee(t) {
     },
     f = { fromBuildings: a },
     m =
-      Ui(p, (x, T, A) => x + A, 0) +
-      db(N.current.globalMultipliers.happiness, "value") -
-      Ui(f, (x, T, A) => x + A, 0),
+      reduceOf(p, (x, T, A) => x + A, 0) +
+      db(Tick.current.globalMultipliers.happiness, "value") -
+      reduceOf(f, (x, T, A) => x + A, 0),
     g = We(m, -50, 50),
     v = (100 + g * xj) / 100,
     y = (g + 50) / 100;
@@ -79334,8 +79342,8 @@ function mt({ html: t, className: e, style: r }) {
     dangerouslySetInnerHTML: { __html: t },
   });
 }
-const Dj = new or(),
-  Rj = new or();
+const Dj = new TypedEvent(),
+  Rj = new TypedEvent();
 function It(t) {
   Dj.emit(t);
 }
@@ -79358,8 +79366,8 @@ function tte() {
     t ? s.jsx("div", { className: "overlay", children: t }) : null
   );
 }
-const Ij = new or(),
-  Nj = new or();
+const Ij = new TypedEvent(),
+  Nj = new TypedEvent();
 function ct(t, e = 5e3) {
   Ij.emit({ content: t, timeout: e });
 }
@@ -80859,31 +80867,31 @@ Si.add("ding", Tte).singleInstance = !0;
 Si.add("success", Ste).singleInstance = !0;
 Si.add("upgrade", wte).singleInstance = !0;
 function Le() {
-  we().soundEffect && Si.play("click");
+  getGameOptions().soundEffect && Si.play("click");
 }
 function ze() {
-  we().soundEffect && Si.play("error");
+  getGameOptions().soundEffect && Si.play("error");
 }
 function Fg() {
-  we().soundEffect && Si.play("kaching");
+  getGameOptions().soundEffect && Si.play("kaching");
 }
 function Da() {
-  we().soundEffect && Si.play("ageup");
+  getGameOptions().soundEffect && Si.play("ageup");
 }
 function Dk() {
-  we().soundEffect && Si.play("levelup");
+  getGameOptions().soundEffect && Si.play("levelup");
 }
 function Rk() {
-  we().soundEffect && Si.play("bubble");
+  getGameOptions().soundEffect && Si.play("bubble");
 }
 function kte() {
-  we().soundEffect && Si.play("ding");
+  getGameOptions().soundEffect && Si.play("ding");
 }
 function Lg() {
-  we().soundEffect && Si.play("upgrade");
+  getGameOptions().soundEffect && Si.play("upgrade");
 }
 function pc() {
-  we().soundEffect && Si.play("success");
+  getGameOptions().soundEffect && Si.play("success");
 }
 function oi() {
   return typeof IPCBridge != "undefined";
@@ -80904,13 +80912,13 @@ typeof IPCBridge != "undefined" &&
   });
 let Ca = null,
   eS = null;
-const Nc = new or(),
-  Uj = new or(),
-  R0 = new or(),
-  Ik = new or(),
-  Nk = new or(),
-  zj = new or(),
-  Vj = new or(),
+const Nc = new TypedEvent(),
+  Uj = new TypedEvent(),
+  R0 = new TypedEvent(),
+  Ik = new TypedEvent(),
+  Nk = new TypedEvent(),
+  zj = new TypedEvent(),
+  Vj = new TypedEvent(),
   Mte = Bp("PlayGames"),
   Bte = Bp("GameCenter");
 let Io = [];
@@ -80935,13 +80943,13 @@ function cy() {
 }
 function kb() {
   return Array.from(tS.values()).filter(
-    (t) => !!(S.Resource[t.buyResource] && S.Resource[t.sellResource])
+    (t) => !!(Config.Resource[t.buyResource] && Config.Resource[t.sellResource])
   );
 }
 const jg = Fs(Nk, () => hf),
   qj = Fs(R0, () => Io),
-  Gg = Fs(Ik, kb),
-  fo = Fs(Nc, I0),
+  useTrades = Fs(Ik, kb),
+  useUser = Fs(Nc, I0),
   Yj = Fs(Uj, Ete);
 function I0() {
   return Ca;
@@ -80955,14 +80963,14 @@ function cu() {
     ((t = Ca == null ? void 0 : Ca.level) != null ? t : it.Tribune) > it.Tribune
   );
 }
-function rS() {
-  return cu() ? (kt().isOffline = !1) : (kt().isOffline = !0), !0;
+function canEarnGreatPeopleFromReborn() {
+  return cu() ? (getGameState().isOffline = !1) : (getGameState().isOffline = !0), !0;
 }
 let iS = 0;
-function Lt(t) {
+function addSystemMessage(t) {
   Io.push({ id: ++iS, message: t }), R0.emit(Io);
 }
-function _te() {
+function clearSystemMessages() {
   (Io = Io.filter((t) => "channel" in t)), R0.emit(Io);
 }
 const sD = "CIVIDLE_CLIENT_ID";
@@ -80976,19 +80984,19 @@ function $j() {
     var i, n;
     const t = Ic.getPlatform();
     if (oi()) {
-      (!dy || Date.now() - lD > 30 * Fo) &&
+      (!dy || Date.now() - lD > 30 * SECOND) &&
         ((dy = yield ht.getAuthSessionTicket()), (lD = Date.now()));
       const a = yield ht.getSteamId();
-      we().userId || (we().userId = `steam:${a}`);
+      getGameOptions().userId || (getGameOptions().userId = `steam:${a}`);
       const o = [
         `appId=${yield ht.getAppId()}`,
         `ticket=${dy}`,
         "platform=steam",
         `steamId=${a}`,
-        `userId=${we().userId}`,
+        `userId=${getGameOptions().userId}`,
         `version=${Om()}`,
         `build=${ec()}`,
-        `gameId=${kt().id}`,
+        `gameId=${getGameState().id}`,
         `checksum=${Ya.expected}${Ya.actual}`,
       ];
       pn = new WebSocket(`${cy()}/?${o.join("&")}`);
@@ -81000,8 +81008,8 @@ function $j() {
         "platform=android",
         `version=${Om()}`,
         `build=${ec()}`,
-        `userId=${(i = we().userId) != null ? i : ""}`,
-        `gameId=${kt().id}`,
+        `userId=${(i = getGameOptions().userId) != null ? i : ""}`,
+        `gameId=${getGameState().id}`,
         `checksum=${Ya.expected}${Ya.actual}`,
       ];
       pn = new WebSocket(`${cy()}/?${o.join("&")}`);
@@ -81011,13 +81019,13 @@ function $j() {
         "platform=ios",
         `version=${Om()}`,
         `build=${ec()}`,
-        `userId=${(n = we().userId) != null ? n : ""}`,
-        `gameId=${kt().id}`,
+        `userId=${(n = getGameOptions().userId) != null ? n : ""}`,
+        `gameId=${getGameState().id}`,
         `checksum=${Ya.expected}${Ya.actual}`,
       ];
       pn = new WebSocket(`${cy()}/?${o.join("&")}`);
     } else {
-      we().userId || (we().userId = `web:${pb()}`);
+      getGameOptions().userId || (getGameOptions().userId = `web:${pb()}`);
       let a = yield Ek(sD);
       a || ((a = pb()), yield _k(sD, a));
       const o = [
@@ -81025,8 +81033,8 @@ function $j() {
         "platform=web",
         `version=${Om()}`,
         `build=${ec()}`,
-        `userId=${we().userId}`,
-        `gameId=${kt().id}`,
+        `userId=${getGameOptions().userId}`,
+        `gameId=${getGameState().id}`,
         `checksum=${Ya.expected}${Ya.actual}`,
       ];
       pn = new WebSocket(`${cy()}/?${o.join("&")}`);
@@ -81067,13 +81075,13 @@ function $j() {
           case Uu.Welcome: {
             const u = o;
             Ca = u.user;
-            const c = we();
+            const c = getGameOptions();
             c.userId || (c.userId = Ca.userId),
               Jn().catch(console.error),
               Nc.emit(Ca),
               (eS = u.platformInfo),
               Uj.emit(eS);
-            const p = kt().tick,
+            const p = getGameState().tick,
               f = We(
                 u.lastGameTick + u.offlineTime - p,
                 0,
@@ -81112,7 +81120,7 @@ function $j() {
             const u = o;
             zj.emit(u),
               u.upsert &&
-                Q(u.upsert, (c, p) => {
+                forEach(u.upsert, (c, p) => {
                   hf.set(c, p);
                 }),
               u.remove &&
@@ -81126,7 +81134,7 @@ function $j() {
             const u = o;
             Ca &&
               u.claims[Ca.userId] &&
-              (we().tradeFilledSound && Fg(),
+              (getGameOptions().tradeFilledSound && Fg(),
               ct(
                 h(d.PlayerTradeClaimAvailable, { count: u.claims[Ca.userId] })
               ),
@@ -81173,7 +81181,7 @@ function Kj() {
   pn || $j().then(Ite);
 }
 function uD() {
-  setTimeout(Kj, Math.min(Math.pow(2, Fk++) * Fo, 16 * Fo));
+  setTimeout(Kj, Math.min(Math.pow(2, Fk++) * SECOND, 16 * SECOND));
 }
 function Ite(t) {
   const { offlineTime: e } = t;
@@ -81181,7 +81189,7 @@ function Ite(t) {
     e >= 60 &&
       (Rk(),
       ct(h(d.PetraOfflineTimeReconciliation, { count: e })),
-      cj(e, kt()));
+      cj(e, getGameState()));
 }
 function Nte(t) {
   if (!t || !t.id) throw new Error(`Invalid RPC Response received: ${t}`);
@@ -86129,7 +86137,7 @@ const Ke = gp(Nie);
 function Bt(t, e, r = () => null) {
   const i = [];
   return (
-    Q(t, (n, a) => {
+    forEach(t, (n, a) => {
       const o = e(n, a);
       o && (Array.isArray(o) ? o.forEach((l) => i.push(l)) : i.push(o));
     }),
@@ -86170,7 +86178,7 @@ function li({ gameState: t, xy: e }) {
     i = r == null ? void 0 : r.building;
   if (!i) return null;
   const n = ki(),
-    a = S.Building[i.type],
+    a = Config.Building[i.type],
     o = (l = n.buildingColors[i.type]) != null ? l : "#ffffff";
   return s.jsxs("fieldset", {
     children: [
@@ -86236,10 +86244,10 @@ function li({ gameState: t, xy: e }) {
 }
 function FD({ resource: t, buildingColor: e }) {
   var a;
-  const r = S.Resource[t],
+  const r = Config.Resource[t],
     i = ki(),
     n = gi();
-  return mo[t]
+  return NoStorage[t]
     ? null
     : s.jsxs("div", {
         className: "row mv5",
@@ -86287,7 +86295,7 @@ function Tn({ gameState: t, xy: e }) {
       ? void 0
       : a.type;
   if (!r) return null;
-  const i = S.Building[r];
+  const i = Config.Building[r];
   return i.desc
     ? s.jsxs("fieldset", {
         children: [
@@ -86304,8 +86312,8 @@ function wi({ gameState: t, xy: e }) {
   var o, l;
   const r = t.tiles.get(e);
   if ((r == null ? void 0 : r.building) == null) return null;
-  const n = (o = N.current.buildingValueByTile.get(e)) != null ? o : 0,
-    a = (l = N.current.resourceValueByTile.get(e)) != null ? l : 0;
+  const n = (o = Tick.current.buildingValueByTile.get(e)) != null ? o : 0,
+    a = (l = Tick.current.resourceValueByTile.get(e)) != null ? l : 0;
   return s.jsxs("fieldset", {
     children: [
       s.jsx("legend", { children: h(d.EmpireValue) }),
@@ -86369,7 +86377,7 @@ function sn({ gameState: t, xy: e }) {
       ? void 0
       : o.type;
   if (!r) return null;
-  const i = S.Building[r].wikipedia;
+  const i = Config.Building[r].wikipedia;
   if (!i) return null;
   const n = se.useRef(null);
   return (
@@ -86434,7 +86442,7 @@ function Fie({ gameState: t, xy: e }) {
                 children: r.map((l) =>
                   s.jsx(
                     "option",
-                    { value: l, children: S.Building[l].name() },
+                    { value: l, children: Config.Building[l].name() },
                     l
                   )
                 ),
@@ -86443,8 +86451,8 @@ function Fie({ gameState: t, xy: e }) {
                 onClick: () => {
                   const l = t.tiles.get(e);
                   if (!l) return;
-                  const u = Kl(Do({ type: i }), we());
-                  Q(Ns(u), (c, p) => {
+                  const u = Kl(Do({ type: i }), getGameOptions());
+                  forEach(Ns(u), (c, p) => {
                     u.resources[c] = p;
                   }),
                     (l.building = u),
@@ -86459,7 +86467,7 @@ function Fie({ gameState: t, xy: e }) {
           s.jsx("div", {
             className: "mt5 text-desc text-small",
             children:
-              (o = (a = S.Building[i]).desc) == null ? void 0 : o.call(a),
+              (o = (a = Config.Building[i]).desc) == null ? void 0 : o.call(a),
           }),
         ],
       }),
@@ -86484,12 +86492,12 @@ function jD(t, e, r, i, n) {
 function Lie(t, e) {
   var A;
   const { textures: r } = e,
-    { time: i, name: n, age: a, type: o } = S.GreatPerson[t],
+    { time: i, name: n, age: a, type: o } = Config.GreatPerson[t],
     l = new Pi();
   l.addChild(new Nr(Ti("Misc_GreatPersonBackground", r))).position.set(10, 10);
   const c = l.addChild(new Nr(Ti("Misc_GreatPersonFrame", r)));
   c.position.set(0, 0);
-  const p = S.TechAge[a].color;
+  const p = Config.TechAge[a].color;
   if (((c.tint = p), o !== ga.Normal)) {
     const C = l.addChild(new Nr(Ti("Misc_GreatPersonRing", r)));
     (C.tint = p),
@@ -86510,10 +86518,10 @@ function Lie(t, e) {
     m.scale.set(350 / Math.max(m.width, m.height)),
     m.position.set((f.width - m.width) / 2, (f.height - m.width) / 2),
     l
-      .addChild(jD(S.TechAge[a].name(), Ai.OldTypefaces, 46, 16777215, 350))
+      .addChild(jD(Config.TechAge[a].name(), Ai.OldTypefaces, 46, 16777215, 350))
       .position.set(30, 12);
   const y = l.addChild(
-    vf((A = ba(S.TechAge[a].idx + 1)) != null ? A : "", Ai.Platypi, 50, p)
+    vf((A = numberToRoman(Config.TechAge[a].idx + 1)) != null ? A : "", Ai.Platypi, 50, p)
   );
   y.anchor.set(0.5, 0.5), y.position.set(439, 40);
   const x = l.addChild(jD(n(), Ai.OldTypefaces, 50, 6516338, 400));
@@ -86580,12 +86588,12 @@ function Gie({ gameState: t, xy: e }) {
         className: "table-view mb10",
         children: s.jsx("table", {
           children: s.jsx("tbody", {
-            children: zt(S.GreatPerson)
+            children: keysOf(Config.GreatPerson)
               .filter((o) => {
-                const l = S.GreatPerson[o];
+                const l = Config.GreatPerson[o];
                 return !!(
                   l.name().toLowerCase().includes(i.toLowerCase()) ||
-                  S.TechAge[l.age]
+                  Config.TechAge[l.age]
                     .name()
                     .toLowerCase()
                     .includes(i.toLowerCase())
@@ -86593,7 +86601,7 @@ function Gie({ gameState: t, xy: e }) {
               })
               .sort(SL)
               .map((o) => {
-                const l = S.GreatPerson[o];
+                const l = Config.GreatPerson[o];
                 if (l.type !== ga.Normal || o === "Zenobia") return null;
                 const u = xa(o, t);
                 if (u <= 0) return null;
@@ -86621,7 +86629,7 @@ function Gie({ gameState: t, xy: e }) {
                                 }),
                                 s.jsx("span", {
                                   className: "text-desc ml5",
-                                  children: S.TechAge[l.age].name(),
+                                  children: Config.TechAge[l.age].name(),
                                 }),
                               ],
                             }),
@@ -86671,7 +86679,7 @@ function gn({ xy: t, getOptions: e, gameState: r, flags: i }) {
   const n = (u = r.tiles.get(t)) == null ? void 0 : u.building;
   if (!n) return null;
   i != null || (i = 0);
-  const a = S.Building[n.type],
+  const a = Config.Building[n.type],
     o = ki(),
     l = e(n);
   return (
@@ -86804,7 +86812,7 @@ function Kt({
 }
 function C4({ gameState: t, xy: e, type: r }) {
   var l, u;
-  const i = fi(e, r, br.Multiplier | br.Capacity, t),
+  const i = getBuildingIO(e, r, br.Multiplier | br.Capacity, t),
     n = da(e, r, 1, !1, t),
     a =
       (u = (l = t.tiles.get(e)) == null ? void 0 : l.building) == null
@@ -86824,7 +86832,7 @@ function C4({ gameState: t, xy: e, type: r }) {
             : 0,
         m =
           r === "input" &&
-          N.current.notProducingReasons.get(e) === Jt.NotEnoughResources &&
+          Tick.current.notProducingReasons.get(e) === Jt.NotEnoughResources &&
           f < p;
       return s.jsx(
         "li",
@@ -86839,7 +86847,7 @@ function C4({ gameState: t, xy: e, type: r }) {
                     : null,
                   s.jsx("div", {
                     className: Ke({ f1: !0, "production-warning": m }),
-                    children: S.Resource[c].name(),
+                    children: Config.Resource[c].name(),
                   }),
                   s.jsx("div", {
                     className: "text-strong",
@@ -86976,7 +86984,7 @@ function Xt({ children: t, icon: e, className: r, onClick: i }) {
   );
 }
 function zie({ gameState: t, xy: e }) {
-  const r = fi(e, "input", br.Capacity, t);
+  const r = getBuildingIO(e, "input", br.Capacity, t);
   return mr(r)
     ? null
     : s.jsxs("fieldset", {
@@ -86992,10 +87000,10 @@ function Vie({ gameState: t, xy: e }) {
   const r = (i = t.tiles.get(e)) == null ? void 0 : i.building;
   if (r && (r.type === "CloneFactory" || r.type === "CloneLab")) {
     const n = r,
-      a = zt(Sp(t))
-        .filter((o) => !mo[o] && !Qn[o])
+      a = keysOf(unlockedResources(t))
+        .filter((o) => !NoStorage[o] && !NoPrice[o])
         .sort((o, l) =>
-          S.Resource[o].name().localeCompare(S.Resource[l].name())
+          Config.Resource[o].name().localeCompare(Config.Resource[l].name())
         );
     return s.jsxs(s.Fragment, {
       children: [
@@ -87005,9 +87013,9 @@ function Vie({ gameState: t, xy: e }) {
               className: "mb10 text-small",
               children: s.jsx(mt, {
                 html: h(d.CloneFactoryInputDescHTML, {
-                  res: S.Resource[n.inputResource].name(),
+                  res: Config.Resource[n.inputResource].name(),
                   buildings: Ng(n.inputResource)
-                    .map((o) => S.Building[o].name())
+                    .map((o) => Config.Building[o].name())
                     .join(", "),
                 }),
               }),
@@ -87023,7 +87031,7 @@ function Vie({ gameState: t, xy: e }) {
               ((n.inputResource = l), (n.transportedAmount = 0), Ze());
           },
           children: a.map((o) =>
-            s.jsx("option", { value: o, children: S.Resource[o].name() }, o)
+            s.jsx("option", { value: o, children: Config.Resource[o].name() }, o)
           ),
         }),
         s.jsx("div", { className: "sep10" }),
@@ -87046,7 +87054,7 @@ function qie({ gameState: t, xy: e }) {
   if (!r) return null;
   const i = r.building;
   if (!i) return null;
-  const n = S.Building[i.type].deposit;
+  const n = Config.Building[i.type].deposit;
   return !n || Tr(n) === 0
     ? null
     : s.jsxs("fieldset", {
@@ -87062,7 +87070,7 @@ function qie({ gameState: t, xy: e }) {
                   children: [
                     s.jsx("div", {
                       className: "f1",
-                      children: S.Resource[a].name(),
+                      children: Config.Resource[a].name(),
                     }),
                     sj({ [a]: !0 }, e, t)
                       ? s.jsx("div", {
@@ -87086,7 +87094,7 @@ function Yie({ gameState: t, xy: e }) {
   var a;
   const r = (a = t.tiles.get(e)) == null ? void 0 : a.building;
   if (!Ci(mi.Electricity, t) || !r) return null;
-  const i = N.current.powerGrid.has(e);
+  const i = Tick.current.powerGrid.has(e);
   let n = null;
   if (Sk(r.type)) {
     const o = oj(e, t),
@@ -87195,7 +87203,7 @@ function Yie({ gameState: t, xy: e }) {
   return s.jsxs("fieldset", {
     children: [
       s.jsx("legend", { children: h(d.Power) }),
-      S.Building[r.type].power
+      Config.Building[r.type].power
         ? s.jsxs("div", {
             className: "row text-strong",
             children: [
@@ -87239,7 +87247,7 @@ function Vg({ gameState: t, xy: e }) {
   const r = (i = t.tiles.get(e)) == null ? void 0 : i.building;
   return r == null ||
     !Ci(mi.BuildingInputMode, t) ||
-    (r.status === "completed" && mr(fi(e, "input", br.None, t)) && !_0(r))
+    (r.status === "completed" && mr(getBuildingIO(e, "input", br.None, t)) && !_0(r))
     ? null
     : s.jsxs("fieldset", {
         children: [
@@ -87349,7 +87357,7 @@ function Vg({ gameState: t, xy: e }) {
 }
 function P4({ gameState: t, xy: e }) {
   var i, n;
-  const r = fi(e, "output", br.Capacity, t);
+  const r = getBuildingIO(e, "output", br.Capacity, t);
   return mr(r)
     ? null
     : s.jsxs("fieldset", {
@@ -87375,8 +87383,8 @@ function j0({ gameState: t, xy: e }) {
   const r = (i = t.tiles.get(e)) == null ? void 0 : i.building;
   return r == null ||
     !Ci(mi.BuildingProductionPriority, t) ||
-    (mr(fi(e, "input", br.None, t)) &&
-      mr(fi(e, "output", br.None, t)) &&
+    (mr(getBuildingIO(e, "input", br.None, t)) &&
+      mr(getBuildingIO(e, "output", br.None, t)) &&
       !_0(r))
     ? null
     : s.jsxs("fieldset", {
@@ -87456,7 +87464,7 @@ function G0({ gameState: t, xy: e }) {
       Ze();
   };
   fn("BuildingPageSellBuilding", n, [e]);
-  const a = S.Building[i.type];
+  const a = Config.Building[i.type];
   return s.jsxs("fieldset", {
     className: "row",
     children: [
@@ -87468,7 +87476,7 @@ function G0({ gameState: t, xy: e }) {
           s.jsx("div", { children: h(d.DemolishBuilding) }),
         ],
       }),
-      [1, 2, 3, 4, 5, S.City[t.city].size * 2].map((o) =>
+      [1, 2, 3, 4, 5, Config.City[t.city].size * 2].map((o) =>
         s.jsx(
           Te,
           {
@@ -87562,7 +87570,7 @@ function S4({ gameState: t, xy: e }) {
   const r = (i = t.tiles.get(e)) == null ? void 0 : i.building;
   return r == null ||
     !Ci(mi.BuildingStockpileMode, t) ||
-    (mr(fi(e, "input", br.None, t)) && !_0(r))
+    (mr(getBuildingIO(e, "input", br.None, t)) && !_0(r))
     ? null
     : s.jsxs("fieldset", {
         children: [
@@ -87642,9 +87650,9 @@ function $ie({ building: t, resource: e }) {
           className: "title-bar-text",
           children: [
             "Destroying ",
-            S.Resource[e].name(),
+            Config.Resource[e].name(),
             " from ",
-            S.Building[t.type].name(),
+            Config.Building[t.type].name(),
           ],
         }),
       }),
@@ -87654,7 +87662,7 @@ function $ie({ building: t, resource: e }) {
           s.jsx(Xt, {
             icon: "warning",
             children: h(d.ConfirmDestroyResourceContent, {
-              resource: S.Resource[e].name(),
+              resource: Config.Resource[e].name(),
               amount: pr(i),
             }),
           }),
@@ -87688,7 +87696,7 @@ function $ie({ building: t, resource: e }) {
                     ze();
                     return;
                   }
-                  Tt(
+                  safeAdd(
                     t.resources,
                     e,
                     -We(i, 0, (o = t.resources[e]) != null ? o : 0)
@@ -87729,7 +87737,7 @@ function qg({ gameState: t, xy: e }) {
     i = (o = t.tiles.get(e)) == null ? void 0 : o.building;
   if (i == null || !Number.isFinite(r.total) || r.total <= 0) return null;
   const n = r.used / r.total,
-    a = N.current.notProducingReasons.get(e) === Jt.StorageFull;
+    a = Tick.current.notProducingReasons.get(e) === Jt.StorageFull;
   return s.jsxs("fieldset", {
     children: [
       s.jsxs("legend", {
@@ -87846,7 +87854,7 @@ function qg({ gameState: t, xy: e }) {
                   ],
                 }),
                 s.jsx("ul", {
-                  children: zt(i.resources)
+                  children: keysOf(i.resources)
                     .sort((l, u) => i.resources[u] - i.resources[l])
                     .map((l) => {
                       var u;
@@ -87869,7 +87877,7 @@ function qg({ gameState: t, xy: e }) {
                               : null,
                             s.jsx("div", {
                               className: "f1",
-                              children: S.Resource[l].name(),
+                              children: Config.Resource[l].name(),
                             }),
                             s.jsx("div", {
                               children: s.jsx(te, { value: i.resources[l] }),
@@ -87894,7 +87902,7 @@ function O0({ gameState: t, xy: e }) {
     i = r == null ? void 0 : r.building;
   if (
     !i ||
-    ((y = (v = S.Building[i.type]) == null ? void 0 : v.max) != null
+    ((y = (v = Config.Building[i.type]) == null ? void 0 : v.max) != null
       ? y
       : Number.POSITIVE_INFINITY) <= 1
   )
@@ -87918,9 +87926,9 @@ function O0({ gameState: t, xy: e }) {
     fn("BuildingPageUpgrade3", () => l(o[2]), [e]),
     fn("BuildingPageUpgrade4", () => l(o[3]), [e]),
     fn("BuildingPageUpgrade5", () => l(o[4]), [e]);
-  const u = S.BuildingTechAge[i.type],
+  const u = Config.BuildingTechAge[i.type],
     [c, p] = se.useState(!1),
-    f = N.current.specialBuildings.get("TheMet"),
+    f = Tick.current.specialBuildings.get("TheMet"),
     m = (A, C) => {
       var M;
       const P = new Set();
@@ -87956,7 +87964,7 @@ function O0({ gameState: t, xy: e }) {
             A === 0
               ? `${h(d.Upgrade)} +1: `
               : `${h(d.UpgradeTo, { level: C })}: `,
-            zt(P).map((M, k) => {
+            keysOf(P).map((M, k) => {
               var w;
               return s.jsxs(
                 se.Fragment,
@@ -87965,12 +87973,12 @@ function O0({ gameState: t, xy: e }) {
                     k === 0 ? "" : ", ",
                     s.jsxs("span", {
                       className:
-                        ((w = N.current.resourceAmount.get(M)) != null
+                        ((w = Tick.current.resourceAmount.get(M)) != null
                           ? w
                           : 0) < P[M]
                           ? "text-red"
                           : "",
-                      children: [S.Resource[M].name(), " ", pr(P[M])],
+                      children: [Config.Resource[M].name(), " ", pr(P[M])],
                     }),
                   ],
                 },
@@ -88005,7 +88013,7 @@ function O0({ gameState: t, xy: e }) {
               children: [
                 s.jsx("div", {
                   className: "text-strong text-large",
-                  children: ba(S.BuildingTier[i.type]),
+                  children: numberToRoman(Config.BuildingTier[i.type]),
                 }),
                 s.jsx("div", {
                   className: "text-small text-desc",
@@ -88014,13 +88022,13 @@ function O0({ gameState: t, xy: e }) {
               ],
             }),
             s.jsx(Te, {
-              content: S.TechAge[u].name(),
+              content: Config.TechAge[u].name(),
               children: s.jsxs("div", {
                 className: "f1 text-center",
                 children: [
                   s.jsx("div", {
                     className: "text-strong text-large",
-                    children: ba(S.TechAge[u].idx + 1),
+                    children: numberToRoman(Config.TechAge[u].idx + 1),
                   }),
                   s.jsx("div", {
                     className: "text-small text-desc",
@@ -88193,13 +88201,13 @@ function O0({ gameState: t, xy: e }) {
                   P && !P.building && P.explored
                     ? (pc(),
                       (P.building = i),
-                      Tt(f.building.resources, "Teleport", -1),
+                      safeAdd(f.building.resources, "Teleport", -1),
                       delete r.building,
                       Zf.emit(r.tile),
                       Zf.emit(P.tile),
                       Ze(),
                       Kh(),
-                      bL(),
+                      clearIntraTickCache(),
                       (w = be().sceneManager.getCurrent(At)) == null ||
                         w.selectGrid(A))
                     : (ct(d.MoveBuildingFail), ze());
@@ -88230,10 +88238,10 @@ function W0({ gameState: t, xy: e }) {
   const r = UP(e, t),
     i = (c = t.tiles.get(e)) == null ? void 0 : c.building;
   if (i == null) return null;
-  const n = fi(e, "input", br.None, t),
-    a = fi(e, "output", br.None, t);
+  const n = getBuildingIO(e, "input", br.None, t),
+    a = getBuildingIO(e, "output", br.None, t);
   if (mr(n) && mr(a) && !_0(i)) return null;
-  const o = N.current.notProducingReasons.get(e) === Jt.NotEnoughWorkers,
+  const o = Tick.current.notProducingReasons.get(e) === Jt.NotEnoughWorkers,
     l = () => {
       (i.capacity = i.capacity > 0 ? 0 : 1), Ze();
     },
@@ -88267,7 +88275,7 @@ function W0({ gameState: t, xy: e }) {
                               }),
                               s.jsx("div", {
                                 className: "text-strong",
-                                children: (p = sk().get(e)) != null ? p : 0,
+                                children: (p = getFuelByTarget().get(e)) != null ? p : 0,
                               }),
                             ],
                           }),
@@ -88325,7 +88333,7 @@ function W0({ gameState: t, xy: e }) {
                                 className: "text-strong",
                                 children:
                                   r.multiplier +
-                                  N.current.globalMultipliers.transportCapacity.reduce(
+                                  Tick.current.globalMultipliers.transportCapacity.reduce(
                                     (m, g) => m + g.value,
                                     0
                                   ),
@@ -88371,7 +88379,7 @@ function W0({ gameState: t, xy: e }) {
                                   }),
                                   s.jsx("div", {
                                     children:
-                                      N.current.globalMultipliers.transportCapacity.reduce(
+                                      Tick.current.globalMultipliers.transportCapacity.reduce(
                                         (m, g) => m + g.value,
                                         0
                                       ),
@@ -88381,7 +88389,7 @@ function W0({ gameState: t, xy: e }) {
                               s.jsx("ul", {
                                 className: "text-small",
                                 children:
-                                  N.current.globalMultipliers.transportCapacity.map(
+                                  Tick.current.globalMultipliers.transportCapacity.map(
                                     (m, g) =>
                                       s.jsxs(
                                         "li",
@@ -88433,7 +88441,7 @@ function W0({ gameState: t, xy: e }) {
                                 className: "text-strong",
                                 children: s.jsx(te, {
                                   value:
-                                    (f = N.current.workersAssignment.get(e)) !=
+                                    (f = Tick.current.workersAssignment.get(e)) !=
                                     null
                                       ? f
                                       : 0,
@@ -88656,7 +88664,7 @@ function Xie({ gameState: t, xy: e }) {
                     ze();
                     return;
                   }
-                  Tt(r.resources, "TradeValue", -u), r.level++, Le(), Ze();
+                  safeAdd(r.resources, "TradeValue", -u), r.level++, Le(), Ze();
                 },
                 children: [
                   s.jsx("div", {
@@ -88671,7 +88679,7 @@ function Xie({ gameState: t, xy: e }) {
                           ? "text-red"
                           : "",
                       children: [
-                        S.Resource.TradeValue.name(),
+                        Config.Resource.TradeValue.name(),
                         ": ",
                         pr(sy(r.level + 1)),
                       ],
@@ -88696,12 +88704,12 @@ function Xie({ gameState: t, xy: e }) {
 function Zie({ gameState: t, xy: e }) {
   var o, l, u, c, p;
   if (!((o = t.tiles.get(e)) == null ? void 0 : o.building)) return null;
-  const i = Rg(t),
+  const i = getTransportStat(t),
     n =
-      ((l = N.current.workersUsed.get("Worker")) != null ? l : 0) - i.totalFuel,
+      ((l = Tick.current.workersUsed.get("Worker")) != null ? l : 0) - i.totalFuel,
     a =
-      ((u = N.current.workersAvailable.get("Worker")) != null ? u : 0) *
-      ((p = (c = N.current.happiness) == null ? void 0 : c.workerPercentage) !=
+      ((u = Tick.current.workersAvailable.get("Worker")) != null ? u : 0) *
+      ((p = (c = Tick.current.happiness) == null ? void 0 : c.workerPercentage) !=
       null
         ? p
         : 0);
@@ -88839,8 +88847,8 @@ function Zc({
 }
 function Sh(t) {
   return (
-    (t.buyAmount * S.ResourcePrice[t.buyResource]) /
-      (t.sellAmount * S.ResourcePrice[t.sellResource]) -
+    (t.buyAmount * Config.ResourcePrice[t.buyResource]) /
+      (t.sellAmount * Config.ResourcePrice[t.sellResource]) -
     1
   );
 }
@@ -88850,7 +88858,7 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
   const [i, n] = se.useState(pm),
     [a, o] = se.useState(mm),
     l = Array.from(e).sort((u, c) =>
-      S.Resource[u].name().localeCompare(S.Resource[c].name())
+      Config.Resource[u].name().localeCompare(Config.Resource[c].name())
     );
   return s.jsx(s.Fragment, {
     children: s.jsxs("article", {
@@ -88873,7 +88881,7 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
                   value: a || "",
                   onChange: (u) => {
                     u.target.value === "" && ((mm = null), o(mm)),
-                      u.target.value in S.Resource &&
+                      u.target.value in Config.Resource &&
                         ((mm = u.target.value), o(mm));
                   },
                   children: [
@@ -88881,7 +88889,7 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
                     l.map((u) =>
                       s.jsx(
                         "option",
-                        { value: u, children: S.Resource[u].name() },
+                        { value: u, children: Config.Resource[u].name() },
                         u
                       )
                     ),
@@ -88902,7 +88910,7 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
                   value: i || "",
                   onChange: (u) => {
                     u.target.value === "" && ((pm = null), n(pm)),
-                      u.target.value in S.Resource &&
+                      u.target.value in Config.Resource &&
                         ((pm = u.target.value), n(pm));
                   },
                   children: [
@@ -88910,7 +88918,7 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
                     l.map((u) =>
                       s.jsx(
                         "option",
-                        { value: u, children: S.Resource[u].name() },
+                        { value: u, children: Config.Resource[u].name() },
                         u
                       )
                     ),
@@ -88950,13 +88958,13 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
             var f, m;
             switch (p) {
               case 0:
-                return S.Resource[u.sellResource]
+                return Config.Resource[u.sellResource]
                   .name()
-                  .localeCompare(S.Resource[c.sellResource].name());
+                  .localeCompare(Config.Resource[c.sellResource].name());
               case 1:
-                return S.Resource[u.buyResource]
+                return Config.Resource[u.buyResource]
                   .name()
-                  .localeCompare(S.Resource[c.buyResource].name());
+                  .localeCompare(Config.Resource[c.buyResource].name());
               case 2:
                 return (
                   ((f = Sh(u)) != null ? f : 0) - ((m = Sh(c)) != null ? m : 0)
@@ -88968,8 +88976,8 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
           renderRow: (u) => {
             var g;
             const c = (g = r.tiles.get(u.xy)) == null ? void 0 : g.building,
-              p = S.Resource[u.sellResource],
-              f = S.Resource[u.buyResource],
+              p = Config.Resource[u.sellResource],
+              f = Config.Resource[u.buyResource],
               m = Sh(u);
             return s.jsxs(
               "tr",
@@ -89002,7 +89010,7 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
                     children: s.jsxs(Kt, {
                       content: h(d.MarketValueDesc, { value: Dt(m, 0) }),
                       noStyle: !0,
-                      children: [Yh(m, Qu), Dt(Math.abs(m), 0)],
+                      children: [mathSign(m, CURRENCY_PERCENT_EPSILON), Dt(Math.abs(m), 0)],
                     }),
                   }),
                   s.jsx("td", {
@@ -89070,8 +89078,8 @@ function Qie({ allMarketTrades: t, gs: e }) {
       renderRow: (r) => {
         var l;
         const i = (l = e.tiles.get(r.xy)) == null ? void 0 : l.building,
-          n = S.Resource[r.sellResource],
-          a = S.Resource[r.buyResource],
+          n = Config.Resource[r.sellResource],
+          a = Config.Resource[r.buyResource],
           o = Sh(r);
         return s.jsxs(
           "tr",
@@ -89104,7 +89112,7 @@ function Qie({ allMarketTrades: t, gs: e }) {
                 children: s.jsxs(Kt, {
                   content: h(d.MarketValueDesc, { value: Dt(o, 0) }),
                   noStyle: !0,
-                  children: [Yh(o, Qu), Dt(Math.abs(o), 0)],
+                  children: [mathSign(o, CURRENCY_PERCENT_EPSILON), Dt(Math.abs(o), 0)],
                 }),
               }),
               s.jsx("td", {
@@ -89139,13 +89147,13 @@ function Qie({ allMarketTrades: t, gs: e }) {
         var a, o;
         switch (n) {
           case 0:
-            return S.Resource[r.sellResource]
+            return Config.Resource[r.sellResource]
               .name()
-              .localeCompare(S.Resource[i.sellResource].name());
+              .localeCompare(Config.Resource[i.sellResource].name());
           case 1:
-            return S.Resource[r.buyResource]
+            return Config.Resource[r.buyResource]
               .name()
-              .localeCompare(S.Resource[i.buyResource].name());
+              .localeCompare(Config.Resource[i.buyResource].name());
           case 2:
             return (
               ((a = Sh(r)) != null ? a : 0) - ((o = Sh(i)) != null ? o : 0)
@@ -89160,14 +89168,14 @@ function Qie({ allMarketTrades: t, gs: e }) {
 function ene({ gameState: t, xy: e }) {
   var c;
   if (!((c = t.tiles.get(e)) == null ? void 0 : c.building)) return null;
-  const i = oa("Market", t),
+  const i = getBuildingsByType("Market", t),
     n = new Set(),
     a = [];
   i == null ||
     i.forEach((p, f) => {
       const m = p.building;
       m.status === "completed" &&
-        Q(m.availableResources, (g, v) => {
+        forEach(m.availableResources, (g, v) => {
           n.add(g), n.add(v);
           const y = Ab(g, f, t);
           a.push({
@@ -89203,7 +89211,7 @@ function ene({ gameState: t, xy: e }) {
               }),
               s.jsx("div", {
                 className: "text-strong",
-                children: Ko(NL(t.lastPriceUpdated + 1) - Date.now()),
+                children: formatHMS(NL(t.lastPriceUpdated + 1) - Date.now()),
               }),
             ],
           }),
@@ -89428,7 +89436,7 @@ function w4() {
           s.jsx("div", {
             className: "inset-shallow white",
             style: { maxHeight: "50vh", overflowY: "auto" },
-            children: Bt(S.TechAge, (e, r) => {
+            children: Bt(Config.TechAge, (e, r) => {
               var o;
               if (r.idx === 0) return null;
               const i = (o = t.ageWisdom[e]) != null ? o : 0,
@@ -89451,7 +89459,7 @@ function w4() {
                   },
                   children: [
                     s.jsxs("div", {
-                      children: ["(", ba(r.idx + 1), ") ", r.name()],
+                      children: ["(", numberToRoman(r.idx + 1), ") ", r.name()],
                     }),
                     s.jsx("div", { className: "f1" }),
                     s.jsx("div", {
@@ -89470,7 +89478,7 @@ function w4() {
                             const c = t.greatPeople[u];
                             c && (c.amount -= w0(u));
                           }),
-                          Tt(t.ageWisdom, e, 1),
+                          safeAdd(t.ageWisdom, e, 1),
                           ut();
                       },
                       children: s.jsx(Te, {
@@ -89487,7 +89495,7 @@ function w4() {
                                 children: [
                                   s.jsx("div", {
                                     className: "f1",
-                                    children: S.GreatPerson[l].name(),
+                                    children: Config.GreatPerson[l].name(),
                                   }),
                                   s.jsx("div", {
                                     className: "ml20",
@@ -89558,7 +89566,7 @@ function Xk() {
                 },
                 children: [
                   s.jsx("option", { value: "" }),
-                  Bt(S.TechAge, (r, i) =>
+                  Bt(Config.TechAge, (r, i) =>
                     i.idx <= 0
                       ? null
                       : s.jsx("option", { value: r, children: i.name() }, r)
@@ -89610,11 +89618,11 @@ function Xk() {
                   }),
                 }),
                 s.jsx("tbody", {
-                  children: zt(S.GreatPerson)
-                    .filter((r) => t === null || S.GreatPerson[r].age === t)
+                  children: keysOf(Config.GreatPerson)
+                    .filter((r) => t === null || Config.GreatPerson[r].age === t)
                     .sort(SL)
                     .map((r) => {
-                      const i = S.GreatPerson[r];
+                      const i = Config.GreatPerson[r];
                       return s.jsxs(
                         "tr",
                         {
@@ -89633,7 +89641,7 @@ function Xk() {
                                 }),
                                 s.jsx("div", {
                                   className: "text-desc text-small",
-                                  children: S.TechAge[i.age].name(),
+                                  children: Config.TechAge[i.age].name(),
                                 }),
                                 i.city
                                   ? s.jsxs("div", {
@@ -89646,10 +89654,10 @@ function Xk() {
                                         s.jsx(Te, {
                                           content: h(
                                             d.OnlyAvailableWhenPlaying,
-                                            { city: S.City[i.city].name() }
+                                            { city: Config.City[i.city].name() }
                                           ),
                                           children: s.jsx("div", {
-                                            children: S.City[i.city].name(),
+                                            children: Config.City[i.city].name(),
                                           }),
                                         }),
                                       ],
@@ -89673,7 +89681,7 @@ function Xk() {
   });
 }
 function nne({ greatPerson: t }) {
-  switch (S.GreatPerson[t].type) {
+  switch (Config.GreatPerson[t].type) {
     case ga.Wildcard:
       return s.jsx(one, { greatPerson: t });
     case ga.Promotion:
@@ -89689,7 +89697,7 @@ function ane({ greatPerson: t }) {
   const e = ki(),
     i = gi().greatPeople[t],
     n = e.greatPeople[t],
-    a = S.GreatPerson[t],
+    a = Config.GreatPerson[t],
     o = n ? $f(t, n.level + 1) : 0,
     l = ((u = n == null ? void 0 : n.amount) != null ? u : 0) - w0(t);
   return s.jsxs(s.Fragment, {
@@ -89704,7 +89712,7 @@ function ane({ greatPerson: t }) {
       s.jsx("td", {
         className: "text-center",
         children: n
-          ? s.jsx(Kt, { content: a.desc(a, n.level), children: ba(n.level) })
+          ? s.jsx(Kt, { content: a.desc(a, n.level), children: numberToRoman(n.level) })
           : null,
       }),
       s.jsx("td", {
@@ -89797,15 +89805,15 @@ function one({ greatPerson: t }) {
     r = e.greatPeople[t],
     n = gi().greatPeople[t];
   e.greatPeople[t] || (e.greatPeople[t] = { amount: 0, level: 0 });
-  const a = S.GreatPerson[t],
-    o = zt(S.GreatPerson)
+  const a = Config.GreatPerson[t],
+    o = keysOf(Config.GreatPerson)
       .filter(
         (c) =>
-          S.GreatPerson[c].age === a.age &&
-          S.GreatPerson[c].type !== ga.Wildcard
+          Config.GreatPerson[c].age === a.age &&
+          Config.GreatPerson[c].type !== ga.Wildcard
       )
       .sort((c, p) =>
-        S.GreatPerson[c].name().localeCompare(S.GreatPerson[p].name())
+        Config.GreatPerson[c].name().localeCompare(Config.GreatPerson[p].name())
       ),
     [l, u] = se.useState(o[0]);
   return s.jsxs(s.Fragment, {
@@ -89843,7 +89851,7 @@ function one({ greatPerson: t }) {
                     ? f
                     : 0,
                   ") ",
-                  S.GreatPerson[c].name(),
+                  Config.GreatPerson[c].name(),
                 ],
               },
               c
@@ -89856,7 +89864,7 @@ function one({ greatPerson: t }) {
           disabled: !r || r.amount <= 0,
           className: "w100 text-strong",
           onClick: () => {
-            if (S.GreatPerson[l].type === ga.Wildcard) {
+            if (Config.GreatPerson[l].type === ga.Wildcard) {
               ze();
               return;
             }
@@ -89886,18 +89894,18 @@ function sne({ greatPerson: t }) {
   e.greatPeople[t] || (e.greatPeople[t] = { amount: 0, level: 0 });
   const r = e.greatPeople[t],
     n = gi().greatPeople[t],
-    a = S.GreatPerson[t],
-    o = zt(S.GreatPerson)
-      .filter((g) => S.GreatPerson[g].age === a.age)
+    a = Config.GreatPerson[t],
+    o = keysOf(Config.GreatPerson)
+      .filter((g) => Config.GreatPerson[g].age === a.age)
       .sort((g, v) =>
-        S.GreatPerson[g].name().localeCompare(S.GreatPerson[v].name())
+        Config.GreatPerson[g].name().localeCompare(Config.GreatPerson[v].name())
       ),
-    l = zt(S.GreatPerson)
+    l = keysOf(Config.GreatPerson)
       .filter(
-        (g) => S.TechAge[S.GreatPerson[g].age].idx === S.TechAge[a.age].idx + 1
+        (g) => Config.TechAge[Config.GreatPerson[g].age].idx === Config.TechAge[a.age].idx + 1
       )
       .sort((g, v) =>
-        S.GreatPerson[g].name().localeCompare(S.GreatPerson[v].name())
+        Config.GreatPerson[g].name().localeCompare(Config.GreatPerson[v].name())
       ),
     [u, c] = se.useState(o[0]),
     [p, f] = se.useState(l[0]),
@@ -89950,7 +89958,7 @@ function sne({ greatPerson: t }) {
                         ? y
                         : 0,
                       ") ",
-                      S.GreatPerson[g].name(),
+                      Config.GreatPerson[g].name(),
                     ],
                   },
                   g
@@ -89982,7 +89990,7 @@ function sne({ greatPerson: t }) {
                         ? y
                         : 0,
                       ") ",
-                      S.GreatPerson[g].name(),
+                      Config.GreatPerson[g].name(),
                     ],
                   },
                   g
@@ -90066,7 +90074,7 @@ function Ra({ permanent: t }) {
         }
         Le(),
           e.greatPeopleChoicesV2.splice(c, 1),
-          Tt(e.greatPeople, u, l.amount),
+          safeAdd(e.greatPeople, u, l.amount),
           Ze(),
           e.greatPeopleChoicesV2.length <= 0 && Qt();
       });
@@ -90092,7 +90100,7 @@ function Ra({ permanent: t }) {
                 style: { alignItems: "stretch", columnGap: 5 },
                 children: i.map((l, u) => {
                   var p, f, m, g;
-                  const c = S.GreatPerson[l];
+                  const c = Config.GreatPerson[l];
                   return s.jsxs(
                     "div",
                     {
@@ -90172,7 +90180,7 @@ function lne({ greatPerson: t, permanent: e }) {
   var u, c, p, f, m;
   const r = ki(),
     i = gi(),
-    n = S.GreatPerson[t].type === ga.Normal,
+    n = Config.GreatPerson[t].type === ga.Normal,
     a = P0(t),
     o = r.greatPeople[t],
     l = $f(t, ((u = o == null ? void 0 : o.level) != null ? u : 0) + 1);
@@ -90228,7 +90236,7 @@ function lne({ greatPerson: t, permanent: e }) {
               a
                 ? ` (${h(d.LevelX, {
                     level:
-                      (f = r.ageWisdom[S.GreatPerson[t].age]) != null ? f : 0,
+                      (f = r.ageWisdom[Config.GreatPerson[t].age]) != null ? f : 0,
                   })})`
                 : null,
             ],
@@ -90383,7 +90391,7 @@ const Db = [],
   Rb = [];
 function k4() {
   var e, r;
-  const t = LP(kt());
+  const t = LP(getGameState());
   for (let i = 0; i < a1; i++)
     for (let n = 0; n < ao; n++) {
       const a = `${n},${i}`,
@@ -90782,7 +90790,7 @@ function yne({ title: t, children: e }) {
   });
 }
 function bne() {
-  const t = fo();
+  const t = useUser();
   if (!t) return null;
   const [e, r] = se.useState(t.handle),
     [i, n] = se.useState(t.flag),
@@ -90897,7 +90905,7 @@ function bne() {
 }
 function E4() {
   var a, o;
-  const t = fo(),
+  const t = useUser(),
     e = Gue(),
     [r, i] = se.useState(!1),
     n = (a = t == null ? void 0 : t.level) != null ? a : it.Tribune;
@@ -91042,7 +91050,7 @@ function E4() {
 function Tne() {
   var o;
   const [t, e] = se.useState(0),
-    r = fo();
+    r = useUser();
   se.useEffect(() => {
     ae(this, null, function* () {
       (r == null ? void 0 : r.level) === it.Tribune &&
@@ -91053,9 +91061,9 @@ function Tne() {
     n = ot((o = r == null ? void 0 : r.attr) != null ? o : 0, Ir.DLC1),
     a = () =>
       wp() +
-        Tr(kt().greatPeople) +
-        kt().greatPeopleChoicesV2.length +
-        we().greatPeopleChoicesV2.length <=
+        Tr(getGameState().greatPeople) +
+        getGameState().greatPeopleChoicesV2.length +
+        getGameOptions().greatPeopleChoicesV2.length <=
       0;
   return s.jsxs(s.Fragment, {
     children: [
@@ -91205,10 +91213,10 @@ function Tne() {
                 children: [
                   s.jsx("td", { children: h(d.AccountPlayTimeRequirement) }),
                   s.jsx("td", { children: "-" }),
-                  s.jsxs("td", { children: [xd[it.Quaestor] / _a, "h"] }),
-                  s.jsxs("td", { children: [xd[it.Aedile] / _a, "h"] }),
-                  s.jsxs("td", { children: [xd[it.Praetor] / _a, "h"] }),
-                  s.jsxs("td", { children: [xd[it.Consul] / _a, "h"] }),
+                  s.jsxs("td", { children: [xd[it.Quaestor] / HOUR, "h"] }),
+                  s.jsxs("td", { children: [xd[it.Aedile] / HOUR, "h"] }),
+                  s.jsxs("td", { children: [xd[it.Praetor] / HOUR, "h"] }),
+                  s.jsxs("td", { children: [xd[it.Consul] / HOUR, "h"] }),
                 ],
               }),
               " ",
@@ -91249,8 +91257,8 @@ function Tne() {
                   s.jsx("div", {
                     className: "f1",
                     children: h(d.AccountLevelPlayTime, {
-                      requiredTime: cc(xd[it.Quaestor]),
-                      actualTime: cc(t * 1e3),
+                      requiredTime: formatHM(xd[it.Quaestor]),
+                      actualTime: formatHM(t * 1e3),
                     }),
                   }),
                   i
@@ -91306,12 +91314,12 @@ function Tne() {
                       onConfirm: () =>
                         ae(this, null, function* () {
                           try {
-                            yield qe.upgrade(), Dk(), yield CM(kt().city);
-                            const l = we();
+                            yield qe.upgrade(), Dk(), yield CM(getGameState().city);
+                            const l = getGameOptions();
                             (l.greatPeopleChoicesV2 = []),
                               hJ(l),
-                              Q(l.greatPeople, (u, c) => {
-                                const p = cJ(S.GreatPerson[u].age);
+                              forEach(l.greatPeople, (u, c) => {
+                                const p = cJ(Config.GreatPerson[u].age);
                                 c.level >= p && ((c.level = p), (c.amount = 0));
                               }),
                               (l.ageWisdom = {}),
@@ -91489,7 +91497,7 @@ function Cne({ xy: t }) {
   });
 }
 function _4({ xy: t }) {
-  _j(Zh);
+  _j(GameStateChanged);
   const e = jg(),
     r = Lc();
   let i = sJ;
@@ -91524,7 +91532,7 @@ function _4({ xy: t }) {
           s.jsx("div", {
             className: "f1",
             children: h(d.PlayerMapClaimTileCondition3, {
-              tech: S.Tech.LandTrade.name(),
+              tech: Config.Tech.LandTrade.name(),
             }),
           }),
         ],
@@ -91549,7 +91557,7 @@ function _4({ xy: t }) {
                 ? s.jsx("div", {
                     className: "text-strong",
                     children: h(d.PlayerMapClaimTileCooldownLeft, {
-                      time: Ko(i),
+                      time: formatHMS(i),
                     }),
                   })
                 : null,
@@ -91590,9 +91598,9 @@ function D4({ tradeId: tradeId, xy: xy }) {
   const [tiles, setTiles] = se.useState([]),
     map = jg(),
     gs = gi(),
-    trade = Gg().find((D) => D.id === tradeId),
+    trade = useTrades().find((D) => D.id === tradeId),
     myXy = Lc(),
-    allTradeBuildings = N.current.playerTradeBuildings,
+    allTradeBuildings = Tick.current.playerTradeBuildings,
 
     // *****
     cSorted = new Map(),
@@ -91665,30 +91673,30 @@ function D4({ tradeId: tradeId, xy: xy }) {
         var $;
 
         if (!hasValidPath()) {
-          Lt("hasValidPath=false");
+          addSystemMessage("hasValidPath=false");
           ct(h(d.OperationNotAllowedError)), ze();
           return;
         }
         if(!fillsHaveEnoughResource(fills)) {
-          Lt("fillsHaveEnoughResource=false");
+          addSystemMessage("fillsHaveEnoughResource=false");
           ct(h(d.OperationNotAllowedError)), ze();
           return;
         }
         if(!fillsHaveEnoughStorage(fills)) {
-          Lt("fillsHaveEnoughStorage=false");
+          addSystemMessage("fillsHaveEnoughStorage=false");
           ct(h(d.OperationNotAllowedError)), ze();
           return;
         }
   
         const totalFillAmount = getTotalFillAmount(fills);
         if(!(totalFillAmount > 0)) {
-          Lt("totalFillAmount=" + totalFillAmount + " is negative."+
+          addSystemMessage("totalFillAmount=" + totalFillAmount + " is negative."+
             " This shouldn't happen. Trying to proceed anyway.");
           //ct(h(d.OperationNotAllowedError)), ze();
           //return;
         }
         if(!(totalFillAmount <= trade.buyAmount)) {
-          Lt("totalFillAmount=" + totalFillAmount +
+          addSystemMessage("totalFillAmount=" + totalFillAmount +
             " is greater than trade.buyAmount="+trade.buyAmount+"."+
             " This shouldn't happen. Trying to proceed anyway.");
           //ct(h(d.OperationNotAllowedError)), ze();
@@ -91723,14 +91731,14 @@ function D4({ tradeId: tradeId, xy: xy }) {
               path: tiles,
               seaTileCost: LP(gs),
             });
-            Q(V, (Z, ee) => {
+            forEach(V, (Z, ee) => {
               ee > 0 && (receivedAmount += ee),
                 ee < 0 && (fillAmount += Math.abs(ee)),
-                Tt(allTradeBuildings.get(tile).resources, Z, ee);
+                safeAdd(allTradeBuildings.get(tile).resources, Z, ee);
             }),
               ++success;
           } catch (V) {
-            Lt("Error at trade "+tradeStr+": "+v);
+            addSystemMessage("Error at trade "+tradeStr+": "+v);
             errors.push(String(V));
           } finally {
             re.rollback();
@@ -91743,17 +91751,17 @@ function D4({ tradeId: tradeId, xy: xy }) {
                 success: success,
                 total: total,
                 fillAmount: pr(fillAmount),
-                fillResource: S.Resource[trade.buyResource].name(),
+                fillResource: Config.Resource[trade.buyResource].name(),
                 receivedAmount: pr(receivedAmount),
-                receivedResource: S.Resource[trade.sellResource].name(),
+                receivedResource: Config.Resource[trade.sellResource].name(),
               })
             );
-          const X = N.current.specialBuildings.get("EastIndiaCompany");
+          const X = Tick.current.specialBuildings.get("EastIndiaCompany");
           X &&
-            Tt(
+            safeAdd(
               X.building.resources,
               "TradeValue",
-              fillAmount * (($ = S.ResourcePrice[trade.buyResource]) != null ? $ : 0)
+              fillAmount * (($ = Config.ResourcePrice[trade.buyResource]) != null ? $ : 0)
             ),
             ct(errors.join("<br />")),
             Qt();
@@ -91882,7 +91890,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                       s.jsx("th", {}),
                       s.jsx("th", {
                         className: "text-right",
-                        children: S.Resource[trade.buyResource].name(),
+                        children: Config.Resource[trade.buyResource].name(),
                       }),
                       s.jsx("th", {
                         className: "text-right",
@@ -91917,7 +91925,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                             s.jsxs("td", {
                               children: [
                                 s.jsx("div", {
-                                  children: S.Building[I.type].name(),
+                                  children: Config.Building[I.type].name(),
                                 }),
                                 s.jsx("div", {
                                   className: "text-desc text-small",
@@ -92022,7 +92030,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                         s.jsx("div", {
                           className: "f1",
                           children: h(d.PlayerTradeYouPay, {
-                            res: S.Resource[trade.buyResource].name(),
+                            res: Config.Resource[trade.buyResource].name(),
                           }),
                         }),
                         s.jsx("div", { children: s.jsx(te, { value: getTotalFillAmount(fills) }) }),
@@ -92109,7 +92117,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                         s.jsx("div", {
                           className: "f1",
                           children: h(d.PlayerTradeYouGetNet, {
-                            res: S.Resource[trade.sellResource].name(),
+                            res: Config.Resource[trade.sellResource].name(),
                           }),
                         }),
                         s.jsx("div", {
@@ -92129,7 +92137,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                             s.jsx("div", {
                               className: "f1",
                               children: h(d.PlayerTradeYouGetGross, {
-                                res: S.Resource[trade.sellResource].name(),
+                                res: Config.Resource[trade.sellResource].name(),
                               }),
                             }),
                             s.jsx("div", {
@@ -92200,7 +92208,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
 function Pne({ xy: t }) {
   const r = jg().get(t);
   if (!r) return null;
-  const i = Gg(),
+  const i = useTrades(),
     n = GL(r);
   return s.jsxs("div", {
     className: "window",
@@ -92327,7 +92335,7 @@ function Pne({ xy: t }) {
                               children: [
                                 s.jsxs("td", {
                                   children: [
-                                    S.Resource[a.buyResource].name(),
+                                    Config.Resource[a.buyResource].name(),
                                     " x",
                                     " ",
                                     s.jsx(te, { value: a.buyAmount }),
@@ -92335,7 +92343,7 @@ function Pne({ xy: t }) {
                                 }),
                                 s.jsxs("td", {
                                   children: [
-                                    S.Resource[a.sellResource].name(),
+                                    Config.Resource[a.sellResource].name(),
                                     " x",
                                     " ",
                                     s.jsx(te, { value: a.sellAmount }),
@@ -92444,7 +92452,7 @@ class Mne extends Pi {
     });
     b(this, "onMouseWheel", (r) => {
       r.preventDefault();
-      const i = we();
+      const i = getGameOptions();
       switch (this.wheelMode) {
         case 0: {
           (this.cursorPos = { x: r.x, y: r.y }),
@@ -92780,7 +92788,7 @@ class ap extends H0 {
     this.viewport.setWorldSize(this._width, this._height),
       this.viewport.setZoomRange(a, 1),
       (this._landTiles = this.viewport.addChild(new Pi())),
-      Q(k0, (l) => {
+      forEach(k0, (l) => {
         const u = $u(l),
           c = this._landTiles.addChild(
             new Nr(this.context.textures.Misc_100x100)
@@ -92808,7 +92816,7 @@ class ap extends H0 {
       }),
       zj.on((l) => {
         l.remove && l.remove.forEach((u) => this.removeTile(u)),
-          l.upsert && Q(l.upsert, (u, c) => this.addOrReplaceTile(u, c));
+          l.upsert && forEach(l.upsert, (u, c) => this.addOrReplaceTile(u, c));
       });
   }
   backgroundColor() {
@@ -93327,7 +93335,7 @@ function Nne() {
                   className: "mb10 text-small",
                   children: s.jsx(mt, {
                     html: h(d.OfflineProductionTimeDescHTML, {
-                      time: cc(lf * 1e3),
+                      time: formatHM(lf * 1e3),
                     }),
                   }),
                 }),
@@ -93365,7 +93373,7 @@ function Nne() {
                     }),
                     s.jsx("div", {
                       className: "text-strong",
-                      children: cc(t.offlineProductionPercent * lf * 1e3),
+                      children: formatHM(t.offlineProductionPercent * lf * 1e3),
                     }),
                   ],
                 }),
@@ -93375,7 +93383,7 @@ function Nne() {
                     s.jsx("div", { className: "f1", children: h(d.TimeWarp) }),
                     s.jsx("div", {
                       className: "text-strong",
-                      children: cc((1 - t.offlineProductionPercent) * lf * 1e3),
+                      children: formatHM((1 - t.offlineProductionPercent) * lf * 1e3),
                     }),
                   ],
                 }),
@@ -93610,11 +93618,11 @@ function Nne() {
                       className: "table-view",
                       children: s.jsx("table", {
                         children: s.jsx("tbody", {
-                          children: zt(t.buildingDefaults)
+                          children: keysOf(t.buildingDefaults)
                             .sort((e, r) =>
-                              S.Building[e]
+                              Config.Building[e]
                                 .name()
-                                .localeCompare(S.Building[r].name())
+                                .localeCompare(Config.Building[r].name())
                             )
                             .map((e) => {
                               const r = t.buildingDefaults[e];
@@ -93623,7 +93631,7 @@ function Nne() {
                                 {
                                   children: [
                                     s.jsx("td", {
-                                      children: S.Building[e].name(),
+                                      children: Config.Building[e].name(),
                                     }),
                                     s.jsx("td", {
                                       children: s.jsx(Kt, {
@@ -93697,8 +93705,8 @@ function Fne() {
   return (
     se.useEffect(() => {
       qe.getHallOfFame().then((r) => {
-        Q(r, (i, n) => {
-          $o(n);
+        forEach(r, (i, n) => {
+          shuffle(n);
         }),
           e(r);
       });
@@ -93889,7 +93897,7 @@ function jne({ action: t }) {
                 onClick: () => {
                   try {
                     r &&
-                      (Q(e.shortcuts, (a, o) => {
+                      (forEach(e.shortcuts, (a, o) => {
                         if (!ah[a]) {
                           delete e.shortcuts[a];
                           return;
@@ -94354,17 +94362,17 @@ const Wne = gp(One);
 function N4(t) {
   const e = Wne({
     luminosity: "light",
-    count: Ui(S.Building, (r, i) => r + (yr(i) ? 0 : 1), 0) + Tr(S.Resource),
+    count: reduceOf(Config.Building, (r, i) => r + (yr(i) ? 0 : 1), 0) + Tr(Config.Resource),
   });
-  Q(S.Building, (r, i) => {
+  forEach(Config.Building, (r, i) => {
     yr(r) ? delete t.buildingColors[r] : (t.buildingColors[r] = e.pop());
   }),
-    Q(S.Resource, (r, i) => {
+    forEach(Config.Resource, (r, i) => {
       t.resourceColors[r] = e.pop();
     });
 }
 function Hne(t) {
-  Q(S.Resource, (e) => {
+  forEach(Config.Resource, (e) => {
     const r = Ng(e);
     for (const i of r)
       if (t.buildingColors[i]) {
@@ -94597,7 +94605,7 @@ function Une() {
                 },
                 children: h(d.ThemeColorReset),
               }),
-              zt(t.themeColors).map((e) => {
+              keysOf(t.themeColors).map((e) => {
                 if (typeof t.themeColors[e] == "string")
                   return s.jsxs(
                     "div",
@@ -94662,9 +94670,9 @@ function Une() {
                 },
                 children: h(d.ThemeColorResetBuildingColors),
               }),
-              zt(t.buildingColors)
+              keysOf(t.buildingColors)
                 .sort((e, r) =>
-                  S.Building[e].name().localeCompare(S.Building[r].name())
+                  Config.Building[e].name().localeCompare(Config.Building[r].name())
                 )
                 .map((e) => {
                   var r;
@@ -94675,7 +94683,7 @@ function Une() {
                       children: [
                         s.jsx("div", {
                           className: "f1",
-                          children: S.Building[e].name(),
+                          children: Config.Building[e].name(),
                         }),
                         s.jsx(gf, {
                           value:
@@ -94712,9 +94720,9 @@ function Une() {
                 },
                 children: h(d.ThemeColorResetResourceColors),
               }),
-              zt(t.resourceColors)
+              keysOf(t.resourceColors)
                 .sort((e, r) =>
-                  S.Resource[e].name().localeCompare(S.Resource[r].name())
+                  Config.Resource[e].name().localeCompare(Config.Resource[r].name())
                 )
                 .map((e) => {
                   var r;
@@ -94725,7 +94733,7 @@ function Une() {
                       children: [
                         s.jsx("div", {
                           className: "f1",
-                          children: S.Resource[e].name(),
+                          children: Config.Resource[e].name(),
                         }),
                         s.jsx(gf, {
                           value:
@@ -94773,7 +94781,7 @@ const zne = "" + new URL("Electricity-10954ffa.png", import.meta.url).href,
   };
 function L4({ advisor: t }) {
   se.useEffect(() => {
-    we().disabledTutorials.add(t), ut();
+    getGameOptions().disabledTutorials.add(t), ut();
   }, [t]);
   const e = tg[t];
   return s.jsxs("div", {
@@ -94800,8 +94808,8 @@ function L4({ advisor: t }) {
               onClick: () => {
                 Le(),
                   Qt(),
-                  Q(tg, (r) => {
-                    we().disabledTutorials.add(r);
+                  forEach(tg, (r) => {
+                    getGameOptions().disabledTutorials.add(r);
                   });
               },
               children: h(d.AdvisorSkipAllTutorials),
@@ -94855,7 +94863,7 @@ function m1({ advisor: t, action: e, content: r }) {
   });
 }
 function j4() {
-  _j(Jf);
+  _j(GameOptionsChanged);
   const [t, e] = se.useState(0);
   let r = null;
   switch (t) {
@@ -94899,7 +94907,7 @@ function j4() {
     }
     case 2: {
       lO.emit(!0);
-      const i = new or();
+      const i = new TypedEvent();
       r = s.jsx(m1, {
         advisor: "Welcome3",
         content: s.jsx(rae, { submitEvent: i }),
@@ -94935,7 +94943,7 @@ function j4() {
 }
 function rae({ submitEvent: t }) {
   var l, u;
-  const e = fo(),
+  const e = useUser(),
     [r, i] = se.useState((l = e == null ? void 0 : e.handle) != null ? l : ""),
     [n, a] = se.useState(
       (u = e == null ? void 0 : e.flag) != null ? u : Ib.EARTH
@@ -95130,7 +95138,7 @@ function Hn({ check: t, children: e }) {
 function An() {
   const [t, e] = se.useState(null),
     r = se.useRef(null),
-    i = fo(),
+    i = useUser(),
     n = Yj();
   return (
     nT(),
@@ -95185,7 +95193,7 @@ function An() {
                         children: h(d.ResearchMenu),
                       }),
                     }),
-                    Tr(N.current.playerTradeBuildings) <= 0
+                    Tr(Tick.current.playerTradeBuildings) <= 0
                       ? null
                       : s.jsx("div", {
                           className: "menu-popover-item",
@@ -95373,7 +95381,7 @@ function An() {
                       : null,
                     oi() &&
                     i &&
-                    !jt(n == null ? void 0 : n.connectedUserId) &&
+                    !isNullOrUndefined(n == null ? void 0 : n.connectedUserId) &&
                     mj(n, i)
                       ? s.jsx("div", {
                           className: "menu-popover-item",
@@ -95445,7 +95453,7 @@ function aae({ definition: t, gameState: e }) {
       (r = t.revealDeposit) == null
         ? void 0
         : r.map((a) => {
-            const o = S.Resource[a];
+            const o = Config.Resource[a];
             return s.jsxs(
               "fieldset",
               {
@@ -95459,7 +95467,7 @@ function aae({ definition: t, gameState: e }) {
                   }),
                   h(d.DepositTileCountDesc, {
                     count: BL(a, e),
-                    city: S.City[e.city].name(),
+                    city: Config.City[e.city].name(),
                     deposit: o.name(),
                   }),
                 ],
@@ -95470,7 +95478,7 @@ function aae({ definition: t, gameState: e }) {
       (i = t.unlockBuilding) == null
         ? void 0
         : i.map((a) => {
-            const o = S.Building[a];
+            const o = Config.Building[a];
             return s.jsxs(
               "fieldset",
               {
@@ -95491,7 +95499,7 @@ function aae({ definition: t, gameState: e }) {
                           s.jsx("div", {
                             className: "f1",
                             children: h(d.ConsumeResource, {
-                              resource: S.Resource[l].name(),
+                              resource: Config.Resource[l].name(),
                             }),
                           }),
                           s.jsx("div", {
@@ -95511,7 +95519,7 @@ function aae({ definition: t, gameState: e }) {
                           s.jsx("div", {
                             className: "f1",
                             children: h(d.ProduceResource, {
-                              resource: S.Resource[l].name(),
+                              resource: Config.Resource[l].name(),
                             }),
                           }),
                           s.jsx("div", {
@@ -95545,7 +95553,7 @@ function aae({ definition: t, gameState: e }) {
                     children: h(d.ConstructionCost, {
                       cost: ws(
                         Ns({ type: a, level: 0 }),
-                        (l, u) => `${S.Resource[l].name()} x${pr(u)}`
+                        (l, u) => `${Config.Resource[l].name()} x${pr(u)}`
                       ).join(", "),
                     }),
                   }),
@@ -95563,7 +95571,7 @@ function aae({ definition: t, gameState: e }) {
                 children: [
                   s.jsx("b", { children: h(d.BuildingMultipliers) }),
                   " ",
-                  S.Building[a].name(),
+                  Config.Building[a].name(),
                 ],
               }),
               o.input
@@ -95679,7 +95687,7 @@ function aae({ definition: t, gameState: e }) {
 }
 function oae({ id: t }) {
   const e = gi(),
-    r = S.Tech[t],
+    r = Config.Tech[t],
     i = () => be().sceneManager.loadScene(At),
     n = () => r.column <= fQ,
     a = () => {
@@ -95700,8 +95708,8 @@ function oae({ id: t }) {
                   : T.building.status,
               C = A === "completed" || A === "upgrading";
             if (
-              (Q(S.TechAge, (P, M) => {
-                if (M.idx <= S.TechAge[x].idx) {
+              (forEach(Config.TechAge, (P, M) => {
+                if (M.idx <= Config.TechAge[x].idx) {
                   const k = In(new Set([C ? x : P]), e.city, Yn());
                   k && e.greatPeopleChoicesV2.push(k);
                 }
@@ -95799,7 +95807,7 @@ function oae({ id: t }) {
                                   children: [
                                     s.jsx("div", {
                                       className: "f1",
-                                      children: S.Tech[f].name(),
+                                      children: Config.Tech[f].name(),
                                     }),
                                     s.jsx("div", {
                                       children: s.jsx(te, { value: ks(f) }),
@@ -96172,7 +96180,7 @@ class op extends H0 {
     b(this, "_selectedTech");
     b(this, "_layout", []);
     const { app: i } = r;
-    Q(S.Tech, (a, o) => {
+    forEach(Config.Tech, (a, o) => {
       this._layout[o.column]
         ? this._layout[o.column].push(a)
         : (this._layout[o.column] = [a]);
@@ -96190,14 +96198,14 @@ class op extends H0 {
       (this.viewport.wheelMode = R4.HorizontalScroll);
   }
   backgroundColor() {
-    return we().themeColors.ResearchBackground;
+    return getGameOptions().themeColors.ResearchBackground;
   }
   onEnable() {
     this.renderTechTree("jump", !0), super.onEnable();
   }
   onClicked(r) {
     const i = this.viewport.screenToWorld(r);
-    Q(this._boxPositions, (n, a) =>
+    forEach(this._boxPositions, (n, a) =>
       a != null && a.contains(i.x, i.y)
         ? (this.selectNode(n, "no", !0), !0)
         : !1
@@ -96216,14 +96224,14 @@ class op extends H0 {
         (l =
           (o = r.revealDeposit) == null
             ? void 0
-            : o.map((f) => S.Resource[f].name())) != null
+            : o.map((f) => Config.Resource[f].name())) != null
           ? l
           : [],
       n =
         (c =
           (u = r.unlockBuilding) == null
             ? void 0
-            : u.map((f) => S.Building[f].name())) != null
+            : u.map((f) => Config.Building[f].name())) != null
           ? c
           : [];
     return (p = i.concat(n.concat()).join(", ")) != null ? p : null;
@@ -96231,22 +96239,22 @@ class op extends H0 {
   renderTechTree(r, i) {
     if (!this.viewport) return;
     const n = Ut.shared
-        .setValue(we().themeColors.ResearchUnlockedColor)
+        .setValue(getGameOptions().themeColors.ResearchUnlockedColor)
         .toNumber(),
-      a = Za(we().themeColors.ResearchLockedColor).toNumber();
+      a = Za(getGameOptions().themeColors.ResearchLockedColor).toNumber();
     Nb(this.viewport);
     const o = new sl();
     this.viewport.addChild(o).lineStyle(KD),
       (this._selectedGraphics = this.viewport.addChild(new sl())),
       (this._boxPositions = {}),
-      Q(this._layout, (l, u) => {
+      forEach(this._layout, (l, u) => {
         const c = (nx - xy) / u.length;
         u.forEach((p, f) => {
           const m = 50 + 500 * l,
             g = c * f + xy + (c / 2 - Sd / 2 - (xy - ax) / 2),
             v = new dt(m, g, gm, Sd);
           this._boxPositions[p] = v;
-          const y = S.Tech[p];
+          const y = Config.Tech[p];
           this.drawBox(
             o,
             v,
@@ -96256,16 +96264,16 @@ class op extends H0 {
           );
         });
       }),
-      Q(S.TechAge, (l, u) => {
+      forEach(Config.TechAge, (l, u) => {
         this.drawHeader(
           o,
           u.from,
           u.to,
-          `${ba(u.idx + 1)}.  ${u.name()}`,
+          `${numberToRoman(u.idx + 1)}.  ${u.name()}`,
           IJ(l, this.context.gameState) ? n : a
         );
       }),
-      Q(S.Tech, (l, u) => {
+      forEach(Config.Tech, (l, u) => {
         u.requireTech.forEach((c) => {
           this.drawConnection(
             o,
@@ -96290,7 +96298,7 @@ class op extends H0 {
     let a = r;
     a || (a = qL(this.context.gameState)[0]), a || (a = "Future");
     const o = Ut.shared
-      .setValue(we().themeColors.ResearchHighlightColor)
+      .setValue(getGameOptions().themeColors.ResearchHighlightColor)
       .toNumber();
     (this._selectedTech = a),
       n && be().routeTo(oae, { id: a }),
@@ -96303,7 +96311,7 @@ class op extends H0 {
       l.forEach((v) => {
         if (u.has(v) || (this.context.gameState.unlockedTech[v] && v !== a))
           return;
-        const y = S.Tech[v];
+        const y = Config.Tech[v];
         this.drawBox(
           this._selectedGraphics,
           this._boxPositions[v],
@@ -96314,7 +96322,7 @@ class op extends H0 {
           this._selectedContainer
         ),
           u.add(v),
-          S.Tech[v].requireTech.forEach((x) => {
+          Config.Tech[v].requireTech.forEach((x) => {
             this.context.gameState.unlockedTech[v] || g.push(x);
             const T = `${x} -> ${v}`;
             !c.has(T) &&
@@ -96408,7 +96416,7 @@ function pae({ open: t }) {
     a =
       (u =
         (l =
-          (o = N.current.specialBuildings.get("Headquarter")) == null
+          (o = Tick.current.specialBuildings.get("Headquarter")) == null
             ? void 0
             : o.building) == null
           ? void 0
@@ -96514,7 +96522,7 @@ function pae({ open: t }) {
                             c
                           )
                         ),
-                        N.current.globalMultipliers.happiness.map((c) =>
+                        Tick.current.globalMultipliers.happiness.map((c) =>
                           s.jsxs(
                             "li",
                             {
@@ -96655,7 +96663,7 @@ function pae({ open: t }) {
                       }),
                       s.jsx(Te, {
                         content: h(d.FestivalTechTooltipV2, {
-                          desc: S.City[n.city].festivalDesc(),
+                          desc: Config.City[n.city].festivalDesc(),
                           point: Xh,
                         }),
                         children: s.jsx("div", {
@@ -96720,8 +96728,8 @@ function pae({ open: t }) {
 }
 function mae() {
   var g, v;
-  const t = Gg(),
-    e = fo(),
+  const t = useTrades(),
+    e = useUser(),
     [r, i] = se.useState(
       t.filter((y) => y.fromId === (e == null ? void 0 : e.userId)).length
     );
@@ -96730,11 +96738,11 @@ function mae() {
   }, []);
   const n = gi(),
     [a, o] = se.useState(n.city),
-    l = Xf(we()),
+    l = Xf(getGameOptions()),
     u = wp(),
     c = () => {
       var y;
-      return S.City[a].requireSupporterPack
+      return Config.City[a].requireSupporterPack
         ? ot(
             (y = e == null ? void 0 : e.attr) != null ? y : Ir.None,
             Ir.DLC1
@@ -96776,7 +96784,7 @@ function mae() {
             className: "mb10 text-small",
             children: s.jsx(mt, { html: h(d.RebornModalDescV3) }),
           }),
-          rS()
+          canEarnGreatPeopleFromReborn()
             ? s.jsxs("ul", {
                 className: "tree-view",
                 children: [
@@ -96789,7 +96797,7 @@ function mae() {
                       }),
                       s.jsx("div", {
                         className: "text-strong",
-                        children: Ui(n.greatPeople, (y, x, T) => y + T, 0),
+                        children: reduceOf(n.greatPeople, (y, x, T) => y + T, 0),
                       }),
                     ],
                   }),
@@ -96802,7 +96810,7 @@ function mae() {
                       }),
                       s.jsx("div", {
                         className: "text-strong",
-                        children: s.jsx(te, { value: N.current.totalValue }),
+                        children: s.jsx(te, { value: Tick.current.totalValue }),
                       }),
                     ],
                   }),
@@ -96883,7 +96891,7 @@ function mae() {
                     className: "text-small mb10",
                     children: s.jsx(mt, {
                       html: h(d.FreeThisWeekDescHTMLV2, {
-                        city: S.City[jA()].name(),
+                        city: Config.City[jA()].name(),
                       }),
                     }),
                   }),
@@ -96899,7 +96907,7 @@ function mae() {
                     onChange: (y) => {
                       o(y.target.value);
                     },
-                    children: Bt(S.City, (y, x) =>
+                    children: Bt(Config.City, (y, x) =>
                       s.jsxs(
                         "option",
                         {
@@ -96925,15 +96933,15 @@ function mae() {
                   }),
                   s.jsxs("div", {
                     className: "text-desc ml5",
-                    children: ["(", S.City[a].size, "x", S.City[a].size, ")"],
+                    children: ["(", Config.City[a].size, "x", Config.City[a].size, ")"],
                   }),
                 ],
               }),
               s.jsx("div", {
                 className: "mb5",
                 children: ws(
-                  S.City[a].deposits,
-                  (y, x) => `${S.Resource[y].name()}: ${Dt(x)}`
+                  Config.City[a].deposits,
+                  (y, x) => `${Config.Resource[y].name()}: ${Dt(x)}`
                 ).join(", "),
               }),
               s.jsx("div", {
@@ -96942,18 +96950,18 @@ function mae() {
               }),
               s.jsx("div", {
                 className: "mb5",
-                children: Bt(S.City[a].uniqueBuildings, (y, x) =>
+                children: Bt(Config.City[a].uniqueBuildings, (y, x) =>
                   s.jsxs(
                     Kt,
                     {
                       className: "mr10",
                       content: $P(y),
                       children: [
-                        S.Building[y].name(),
+                        Config.Building[y].name(),
                         " ",
                         s.jsxs("span", {
                           className: "text-desc",
-                          children: ["(", S.Tech[x].name(), ")"],
+                          children: ["(", Config.Tech[x].name(), ")"],
                         }),
                       ],
                     },
@@ -96967,8 +96975,8 @@ function mae() {
               }),
               s.jsx("div", {
                 className: "mb5",
-                children: Bt(S.City[a].naturalWonders, (y, x) => {
-                  const T = S.Building[y];
+                children: Bt(Config.City[a].naturalWonders, (y, x) => {
+                  const T = Config.Building[y];
                   return s.jsx(
                     Kt,
                     { className: "mr10", content: $P(y), children: T.name() },
@@ -96976,7 +96984,7 @@ function mae() {
                   );
                 }),
               }),
-              mr(S.City[a].uniqueMultipliers)
+              mr(Config.City[a].uniqueMultipliers)
                 ? null
                 : s.jsxs(s.Fragment, {
                     children: [
@@ -96986,13 +96994,13 @@ function mae() {
                       }),
                       s.jsx("div", {
                         className: "mb5",
-                        children: Bt(S.City[a].uniqueMultipliers, (y, x) =>
+                        children: Bt(Config.City[a].uniqueMultipliers, (y, x) =>
                           s.jsx(
                             Kt,
                             {
                               className: "mr10",
                               content: VQ(x),
-                              children: S.Tech[y].name(),
+                              children: Config.Tech[y].name(),
                             },
                             y
                           )
@@ -97006,7 +97014,7 @@ function mae() {
               }),
               s.jsx("div", {
                 className: "mb5",
-                children: Bt(S.GreatPerson, (y, x) =>
+                children: Bt(Config.GreatPerson, (y, x) =>
                   x.city === a
                     ? s.jsx(
                         Kt,
@@ -97026,7 +97034,7 @@ function mae() {
               }),
               s.jsx("div", {
                 className: "mb5",
-                children: S.City[a].festivalDesc(),
+                children: Config.City[a].festivalDesc(),
               }),
               s.jsx("div", { className: "separator" }),
               s.jsxs("div", {
@@ -97036,7 +97044,7 @@ function mae() {
                     className: "f1",
                     children: h(d.GreatPersonLevelRequired),
                   }),
-                  l >= S.City[a].requireGreatPeopleLevel
+                  l >= Config.City[a].requireGreatPeopleLevel
                     ? s.jsx("div", {
                         className: "m-icon small mr5 text-green",
                         children: "check_circle",
@@ -97049,16 +97057,16 @@ function mae() {
                     className: "text-strong",
                     children: s.jsx(Kt, {
                       content: h(d.GreatPersonLevelRequiredDescV2, {
-                        city: S.City[a].name(),
-                        required: S.City[a].requireGreatPeopleLevel,
+                        city: Config.City[a].name(),
+                        required: Config.City[a].requireGreatPeopleLevel,
                         current: l,
                       }),
-                      children: S.City[a].requireGreatPeopleLevel,
+                      children: Config.City[a].requireGreatPeopleLevel,
                     }),
                   }),
                 ],
               }),
-              S.City[a].requireSupporterPack
+              Config.City[a].requireSupporterPack
                 ? s.jsxs(s.Fragment, {
                     children: [
                       s.jsx("div", { className: "separator" }),
@@ -97111,12 +97119,12 @@ function mae() {
               }),
               s.jsx("div", { style: { width: "6px" } }),
               s.jsx("button", {
-                disabled: l < S.City[a].requireGreatPeopleLevel || !c(),
+                disabled: l < Config.City[a].requireGreatPeopleLevel || !c(),
                 style: { padding: "0 15px" },
                 className: "text-strong",
                 onClick: () =>
                   ae(this, null, function* () {
-                    if (Xf(we()) < S.City[a].requireGreatPeopleLevel || !c()) {
+                    if (Xf(getGameOptions()) < Config.City[a].requireGreatPeopleLevel || !c()) {
                       ze();
                       return;
                     }
@@ -97134,9 +97142,9 @@ function mae() {
                       Number.POSITIVE_INFINITY
                     );
                     !n.rebirthed &&
-                      rS() &&
+                      canEarnGreatPeopleFromReborn() &&
                       (uk(y, f, Yn(), Sr(n), n.city).forEach((x) => {
-                        we().greatPeopleChoicesV2.push(x);
+                        getGameOptions().greatPeopleChoicesV2.push(x);
                       }),
                       dJ(),
                       (n.rebirthed = !0)),
@@ -97181,7 +97189,7 @@ function fae() {
                 var n;
                 return be().routeTo(eT, {
                   xy:
-                    (n = N.current.specialBuildings.get("Headquarter")) == null
+                    (n = Tick.current.specialBuildings.get("Headquarter")) == null
                       ? void 0
                       : n.tile,
                 });
@@ -97241,7 +97249,7 @@ function fae() {
 }
 function G4() {
   var n, a, o;
-  const t = N.current.specialBuildings.get("Headquarter"),
+  const t = Tick.current.specialBuildings.get("Headquarter"),
     e = gi();
   if (!t) return null;
   const r = VP(e),
@@ -97310,9 +97318,9 @@ function gae() {
   const t = gi(),
     e = {};
   return (
-    qn(t).forEach((r) => {
-      S.Building[r.type].max === 1 &&
-        S.Building[r.type].construction &&
+    getXyBuildings(t).forEach((r) => {
+      Config.Building[r.type].max === 1 &&
+        Config.Building[r.type].construction &&
         (e[r.type] = !0);
     }),
     s.jsxs("div", {
@@ -97332,7 +97340,7 @@ function gae() {
                   var r;
                   return be().routeTo(eT, {
                     xy:
-                      (r = N.current.specialBuildings.get("Headquarter")) ==
+                      (r = Tick.current.specialBuildings.get("Headquarter")) ==
                       null
                         ? void 0
                         : r.tile,
@@ -97362,14 +97370,14 @@ function gae() {
                     }),
                   }),
                   s.jsx("tbody", {
-                    children: zt(S.Building)
+                    children: keysOf(Config.Building)
                       .filter((r) => on(r))
                       .sort((r, i) =>
-                        S.Building[r].name().localeCompare(S.Building[i].name())
+                        Config.Building[r].name().localeCompare(Config.Building[i].name())
                       )
                       .map((r) => {
                         var n;
-                        const i = S.Building[r];
+                        const i = Config.Building[r];
                         return s.jsxs(
                           "tr",
                           {
@@ -97447,7 +97455,7 @@ function O4({ gameState: t, xy: e }) {
                 s.jsx("ul", {
                   className: "text-small",
                   children:
-                    N.current.globalMultipliers.sciencePerIdleWorker.map((f) =>
+                    Tick.current.globalMultipliers.sciencePerIdleWorker.map((f) =>
                       s.jsxs(
                         "li",
                         {
@@ -97502,7 +97510,7 @@ function O4({ gameState: t, xy: e }) {
                 s.jsx("ul", {
                   className: "text-small",
                   children:
-                    N.current.globalMultipliers.sciencePerBusyWorker.map((f) =>
+                    Tick.current.globalMultipliers.sciencePerBusyWorker.map((f) =>
                       s.jsxs(
                         "li",
                         {
@@ -97544,7 +97552,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
     m = vk(),
     g = Sr(t),
     v = ki(),
-    y = Rg(t);
+    y = getTransportStat(t);
   return s.jsxs("div", {
     className: "window-body",
     children: [
@@ -97646,7 +97654,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
                           className: "text-strong",
                           children: s.jsx(te, {
                             value:
-                              N.current.globalMultipliers.builderCapacity.reduce(
+                              Tick.current.globalMultipliers.builderCapacity.reduce(
                                 (x, T) => x + T.value,
                                 0
                               ),
@@ -97655,7 +97663,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
                       ],
                     }),
                     s.jsx("ul", {
-                      children: N.current.globalMultipliers.builderCapacity.map(
+                      children: Tick.current.globalMultipliers.builderCapacity.map(
                         (x) =>
                           s.jsxs(
                             "li",
@@ -97690,7 +97698,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
                           className: "text-strong",
                           children: s.jsx(te, {
                             value:
-                              N.current.globalMultipliers.transportCapacity.reduce(
+                              Tick.current.globalMultipliers.transportCapacity.reduce(
                                 (x, T) => x + T.value,
                                 0
                               ),
@@ -97700,7 +97708,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
                     }),
                     s.jsx("ul", {
                       children:
-                        N.current.globalMultipliers.transportCapacity.map((x) =>
+                        Tick.current.globalMultipliers.transportCapacity.map((x) =>
                           s.jsxs(
                             "li",
                             {
@@ -97728,7 +97736,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
       s.jsxs("fieldset", {
         children: [
           s.jsx("legend", {
-            children: g != null ? S.TechAge[g].name() : "Unknown Age",
+            children: g != null ? Config.TechAge[g].name() : "Unknown Age",
           }),
           s.jsxs("ul", {
             className: "tree-view",
@@ -97792,7 +97800,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
                       "tr",
                       {
                         children: [
-                          s.jsx("td", { children: S.Tech[x].name() }),
+                          s.jsx("td", { children: Config.Tech[x].name() }),
                           s.jsx("td", {
                             className: "right",
                             children: s.jsx(te, { value: T != null ? T : 0 }),
@@ -97905,19 +97913,19 @@ function yae({ gameState: t, options: e }) {
                     }),
                     s.jsx("div", {
                       className: "text-strong",
-                      children: Ui(t.greatPeople, (r, i, n) => r + n, 0),
+                      children: reduceOf(t.greatPeople, (r, i, n) => r + n, 0),
                     }),
                   ],
                 }),
                 s.jsx("ul", {
-                  children: zt(t.greatPeople)
+                  children: keysOf(t.greatPeople)
                     .sort(
                       (r, i) =>
-                        S.TechAge[S.GreatPerson[r].age].idx -
-                        S.TechAge[S.GreatPerson[i].age].idx
+                        Config.TechAge[Config.GreatPerson[r].age].idx -
+                        Config.TechAge[Config.GreatPerson[i].age].idx
                     )
                     .map((r) => {
-                      const i = S.GreatPerson[r],
+                      const i = Config.GreatPerson[r],
                         n = t.greatPeople[r];
                       return s.jsxs(
                         "li",
@@ -97930,7 +97938,7 @@ function yae({ gameState: t, options: e }) {
                                 i.name(),
                                 s.jsxs("span", {
                                   className: "text-desc ml5",
-                                  children: ["(", S.TechAge[i.age].name(), ")"],
+                                  children: ["(", Config.TechAge[i.age].name(), ")"],
                                 }),
                               ],
                             }),
@@ -97997,14 +98005,14 @@ function yae({ gameState: t, options: e }) {
                         }),
                       ],
                     }),
-                    zt(e.greatPeople)
+                    keysOf(e.greatPeople)
                       .sort(
                         (r, i) =>
-                          S.TechAge[S.GreatPerson[r].age].idx -
-                          S.TechAge[S.GreatPerson[i].age].idx
+                          Config.TechAge[Config.GreatPerson[r].age].idx -
+                          Config.TechAge[Config.GreatPerson[i].age].idx
                       )
                       .map((r) => {
-                        const i = S.GreatPerson[r],
+                        const i = Config.GreatPerson[r],
                           n = e.greatPeople[r];
                         return s.jsxs(
                           "li",
@@ -98019,7 +98027,7 @@ function yae({ gameState: t, options: e }) {
                                     className: "text-desc ml5",
                                     children: [
                                       "(",
-                                      S.TechAge[i.age].name(),
+                                      Config.TechAge[i.age].name(),
                                       ")",
                                     ],
                                   }),
@@ -98029,7 +98037,7 @@ function yae({ gameState: t, options: e }) {
                                 className: "text-strong",
                                 children: s.jsx(Kt, {
                                   content: i.desc(i, n.level),
-                                  children: ba(n.level),
+                                  children: numberToRoman(n.level),
                                 }),
                               }),
                             ],
@@ -98088,7 +98096,7 @@ function bae({ gameState: t }) {
               s.jsx("div", { className: "f1", children: h(d.WondersUnlocked) }),
               s.jsx("div", {
                 className: "text-strong",
-                children: Ui(lk(t), (e, r) => e + (on(r) ? 1 : 0), 0),
+                children: reduceOf(unlockedBuildings(t), (e, r) => e + (on(r) ? 1 : 0), 0),
               }),
             ],
           }),
@@ -98098,7 +98106,7 @@ function bae({ gameState: t }) {
               s.jsx("div", { className: "f1", children: h(d.WondersBuilt) }),
               s.jsx("div", {
                 className: "text-strong",
-                children: $h(qn(t), (e, r, i) => e + (on(i.type) ? 1 : 0), 0),
+                children: $h(getXyBuildings(t), (e, r, i) => e + (on(i.type) ? 1 : 0), 0),
               }),
             ],
           }),
@@ -98123,7 +98131,7 @@ function bae({ gameState: t }) {
 }
 function Tae({ gameState: t }) {
   const e = wp(),
-    r = Xf(we());
+    r = Xf(getGameOptions());
   return s.jsxs("fieldset", {
     children: [
       s.jsx("legend", { children: h(d.Reborn) }),
@@ -98139,7 +98147,7 @@ function Tae({ gameState: t }) {
               }),
               s.jsx("div", {
                 className: "text-strong",
-                children: Ui(t.greatPeople, (i, n, a) => i + a, 0),
+                children: reduceOf(t.greatPeople, (i, n, a) => i + a, 0),
               }),
             ],
           }),
@@ -98152,7 +98160,7 @@ function Tae({ gameState: t }) {
               }),
               s.jsx("div", {
                 className: "text-strong",
-                children: s.jsx(te, { value: N.current.totalValue }),
+                children: s.jsx(te, { value: Tick.current.totalValue }),
               }),
             ],
           }),
@@ -98167,8 +98175,8 @@ function Tae({ gameState: t }) {
                   }),
                   s.jsx("div", {
                     children: s.jsx(Kt, {
-                      content: hb(t.tick * Fo).join(":"),
-                      children: Ko(t.tick * Fo),
+                      content: hb(t.tick * SECOND).join(":"),
+                      children: formatHMS(t.tick * SECOND),
                     }),
                   }),
                 ],
@@ -98180,7 +98188,7 @@ function Tae({ gameState: t }) {
                     className: "f1",
                     children: h(d.TotalEmpireValuePerCycle),
                   }),
-                  s.jsx(te, { value: N.current.totalValue / t.tick }),
+                  s.jsx(te, { value: Tick.current.totalValue / t.tick }),
                 ],
               }),
               s.jsxs("li", {
@@ -98191,7 +98199,7 @@ function Tae({ gameState: t }) {
                     children: h(d.TotalEmpireValuePerCyclePerGreatPeopleLevel),
                   }),
                   s.jsx(te, {
-                    value: r === 0 ? 0 : N.current.totalValue / t.tick / r,
+                    value: r === 0 ? 0 : Tick.current.totalValue / t.tick / r,
                   }),
                 ],
               }),
@@ -98207,8 +98215,8 @@ function Tae({ gameState: t }) {
                   }),
                   s.jsx("div", {
                     children: s.jsx(Kt, {
-                      content: hb(t.seconds * Fo).join(":"),
-                      children: Ko(t.seconds * Fo),
+                      content: hb(t.seconds * SECOND).join(":"),
+                      children: formatHMS(t.seconds * SECOND),
                     }),
                   }),
                 ],
@@ -98220,7 +98228,7 @@ function Tae({ gameState: t }) {
                     className: "f1",
                     children: h(d.TotalEmpireValuePerWallSecond),
                   }),
-                  s.jsx(te, { value: N.current.totalValue / t.seconds }),
+                  s.jsx(te, { value: Tick.current.totalValue / t.seconds }),
                 ],
               }),
               s.jsxs("li", {
@@ -98233,7 +98241,7 @@ function Tae({ gameState: t }) {
                     ),
                   }),
                   s.jsx(te, {
-                    value: r === 0 ? 0 : N.current.totalValue / t.seconds / r,
+                    value: r === 0 ? 0 : Tick.current.totalValue / t.seconds / r,
                   }),
                 ],
               }),
@@ -98315,16 +98323,16 @@ function Zk({
   var c;
   let a = t != null ? t : "",
     o = "";
-  const l = ((c = N.current.resourceAmount.get(e)) != null ? c : 0) - r;
+  const l = ((c = Tick.current.resourceAmount.get(e)) != null ? c : 0) - r;
   l < 0 &&
     ((a += " text-red"),
     (o = h(d.ResourceNeeded, {
-      resource: S.Resource[e].name(),
+      resource: Config.Resource[e].name(),
       amount: pr(Math.abs(l)),
     })));
   const u = s.jsxs("span", {
     className: a,
-    children: [i ? S.Resource[e].name() : null, " x", pr(r)],
+    children: [i ? Config.Resource[e].name() : null, " x", pr(r)],
   });
   return n ? s.jsx(Te, { content: o, disabled: !o, children: u }) : u;
 }
@@ -98341,7 +98349,7 @@ function Jk({
       children: s.jsx("tbody", {
         children: e.map((a, o) => {
           var c, p;
-          const l = S.Upgrade[a];
+          const l = Config.Upgrade[a];
           let u = null;
           return (
             (!i() && o === 0) || (i() && r.level === o)
@@ -98390,7 +98398,7 @@ function Jk({
                 children: [
                   s.jsx("td", {
                     className: "text-strong",
-                    children: ba(o + 1),
+                    children: numberToRoman(o + 1),
                   }),
                   s.jsxs("td", {
                     children: [
@@ -98408,7 +98416,7 @@ function Jk({
                                 children: [
                                   s.jsx(mt, {
                                     html: h(d.UnlockXHTML, {
-                                      name: S.Building[f].name(),
+                                      name: Config.Building[f].name(),
                                     }),
                                   }),
                                   s.jsx("div", {
@@ -98433,7 +98441,7 @@ function Jk({
                             children: [
                               s.jsx("div", {
                                 className: "f1 text-strong",
-                                children: S.Building[f].name(),
+                                children: Config.Building[f].name(),
                               }),
                               m.input
                                 ? s.jsxs("div", {
@@ -98553,7 +98561,7 @@ function Aae({ gameState: t, xy: e }) {
                 className: "text-small mb10",
                 children: s.jsx(mt, { html: h(d.IdeologyDescHTML) }),
               }),
-          Bt(S.Ideology, (n, a) =>
+          Bt(Config.Ideology, (n, a) =>
             r.ideology && r.ideology !== n
               ? null
               : s.jsxs(
@@ -98692,11 +98700,11 @@ function Pae({ gameState: t, xy: e }) {
   const i = r,
     n = new Map();
   return (
-    Q(i.availableResources, (o, l) => {
+    forEach(i.availableResources, (o, l) => {
       const u = Ab(o, e, t),
         c = eg(o, u, l, e, t),
-        p = S.ResourcePrice[o] * u,
-        m = (S.ResourcePrice[l] * c) / p - 1;
+        p = Config.ResourcePrice[o] * u,
+        m = (Config.ResourcePrice[l] * c) / p - 1;
       n.set(o, m);
     }),
     s.jsxs("div", {
@@ -98713,7 +98721,7 @@ function Pae({ gameState: t, xy: e }) {
               }),
               s.jsx("div", {
                 className: "text-strong",
-                children: Ko(NL(t.lastPriceUpdated + 1) - Date.now()),
+                children: formatHMS(NL(t.lastPriceUpdated + 1) - Date.now()),
               }),
             ],
           }),
@@ -98729,20 +98737,20 @@ function Pae({ gameState: t, xy: e }) {
                 { name: h(d.MarketSell), sortable: !1 },
               ],
               sortingState: Cae,
-              data: zt(i.availableResources),
+              data: keysOf(i.availableResources),
               compareFunc: (o, l, u) => {
                 var c, p, f, m;
                 switch (u) {
                   case 0:
-                    return S.Resource[o]
+                    return Config.Resource[o]
                       .name()
-                      .localeCompare(S.Resource[l].name());
+                      .localeCompare(Config.Resource[l].name());
                   case 1: {
                     const g = i.availableResources[o],
                       v = i.availableResources[l];
-                    return S.Resource[g]
+                    return Config.Resource[g]
                       .name()
-                      .localeCompare(S.Resource[v].name());
+                      .localeCompare(Config.Resource[v].name());
                   }
                   case 2:
                     return (
@@ -98760,8 +98768,8 @@ function Pae({ gameState: t, xy: e }) {
               },
               renderRow: (o) => {
                 var m, g;
-                const l = S.Resource[o];
-                if (!l || Qn[o] || mo[o]) return null;
+                const l = Config.Resource[o];
+                if (!l || NoPrice[o] || NoStorage[o]) return null;
                 const u = Ab(o, e, t),
                   c = i.availableResources[o],
                   p = eg(o, u, c, e, t),
@@ -98781,7 +98789,7 @@ function Pae({ gameState: t, xy: e }) {
                       }),
                       s.jsxs("td", {
                         children: [
-                          s.jsx("div", { children: S.Resource[c].name() }),
+                          s.jsx("div", { children: Config.Resource[c].name() }),
                           s.jsx("div", {
                             className: "text-small text-desc text-strong",
                             children: s.jsx(te, { value: p }),
@@ -98797,7 +98805,7 @@ function Pae({ gameState: t, xy: e }) {
                         children: s.jsxs(Kt, {
                           content: h(d.MarketValueDesc, { value: Dt(f, 0) }),
                           noStyle: !0,
-                          children: [Yh(f, Qu), Dt(Math.abs(f), 0)],
+                          children: [mathSign(f, CURRENCY_PERCENT_EPSILON), Dt(Math.abs(f), 0)],
                         }),
                       }),
                       s.jsx("td", {
@@ -98905,7 +98913,7 @@ function Sae({ gameState: t, xy: e }) {
   const r = (a = t.tiles.get(e)) == null ? void 0 : a.building;
   if (!r) return null;
   const i =
-    (o = N.current.specialBuildings.get("Headquarter")) == null
+    (o = Tick.current.specialBuildings.get("Headquarter")) == null
       ? void 0
       : o.building;
   if (!i) return null;
@@ -98951,7 +98959,7 @@ function Sae({ gameState: t, xy: e }) {
         className: "text-small mb10",
         children: s.jsx(mt, {
           html: h(d.BuildingNoMultiplier, {
-            building: S.Building[r.type].name(),
+            building: Config.Building[r.type].name(),
           }),
         }),
       }),
@@ -98971,7 +98979,7 @@ function W4({ text: t, length: e }) {
 }
 function wae({ gameState: t, xy: e }) {
   const [r, i] = se.useState([]),
-    n = r.filter((o) => o.resource in S.Resource);
+    n = r.filter((o) => o.resource in Config.Resource);
   if (
     (se.useEffect(() => {
       qe.getPendingClaims().then(i);
@@ -98985,7 +98993,7 @@ function wae({ gameState: t, xy: e }) {
   const a = (o) =>
     ae(this, null, function* () {
       try {
-        const l = Array.from(N.current.playerTradeBuildings.keys()),
+        const l = Array.from(Tick.current.playerTradeBuildings.keys()),
           u = jL(l, t),
           c = {};
         let p = 0;
@@ -98999,7 +99007,7 @@ function wae({ gameState: t, xy: e }) {
         const { pendingClaims: f, resources: m } = yield qe.claimTradesV2(c);
         if (
           (i(f),
-          Q(m, (g, v) => {
+          forEach(m, (g, v) => {
             const y = LL(g, v, l, t);
             console.assert(y.amount === v);
           }),
@@ -99010,18 +99018,18 @@ function wae({ gameState: t, xy: e }) {
               h(d.PlayerTradeClaimAllMessageV2, {
                 resources: ws(
                   m,
-                  (v, y) => `${S.Resource[v].name()}: ${pr(y)}`
+                  (v, y) => `${Config.Resource[v].name()}: ${pr(y)}`
                 ).join(", "),
               })
             );
-          const g = N.current.specialBuildings.get("EastIndiaCompany");
+          const g = Tick.current.specialBuildings.get("EastIndiaCompany");
           g &&
-            Q(m, (v, y) => {
+            forEach(m, (v, y) => {
               var x;
-              Tt(
+              safeAdd(
                 g.building.resources,
                 "TradeValue",
-                y * ((x = S.ResourcePrice[v]) != null ? x : 0)
+                y * ((x = Config.ResourcePrice[v]) != null ? x : 0)
               );
             });
         } else ze(), ct(h(d.PlayerTradeClaimAllFailedMessageV2));
@@ -99079,7 +99087,7 @@ function wae({ gameState: t, xy: e }) {
                             })
                           : null,
                       }),
-                      s.jsx("td", { children: S.Resource[o.resource].name() }),
+                      s.jsx("td", { children: Config.Resource[o.resource].name() }),
                       s.jsx("td", {
                         children: s.jsx(W4, { text: o.fillBy, length: 10 }),
                       }),
@@ -99140,48 +99148,72 @@ function kae({ gameState: t, xy: e }) {
 
 // SOURCE src/scripts/ui/AddTradeComponent.tsx
 
-const XD = 100;
-function Mae({ gameState: t, xy: e }) {
+// ***** added new 2025-02-26
+// returns the sum of resources player already unlocked via tech and that are in storage
+function getSeenResourceKeys()
+{
+  let gameState = getGameState();
+  let unlockedResourceKeys = keysOf(unlockedResources(gameState)).filter((T) => !NoStorage[T] && !NoPrice[T]);
+  let availableResources = combineResources(
+    Array.from(Tick.current.playerTradeBuildings.values()).map((T) => T.resources));
+  let storageResourceKeys = keysOf(availableResources);
+  let seenResourceKeys = unlockedResourceKeys.slice();
+  storageResourceKeys.forEach(item => {
+    if (!seenResourceKeys.includes(item)) {
+      seenResourceKeys.push(item);
+    }
+  });
+  return seenResourceKeys;
+}
+
+const INPUT_WIDTH = 100;
+
+function AddTradeComponent({ gameState: gameState, xy: xy }) {
   var x;
-  const r = fo(), // const user = useUser();
-    i = Gg(), // const trades = useTrades();
-    n /*enabled*/ =
-      !jt(r) && i.filter((T) => T.fromId === r.userId).length < wJ(r),
-    a /*buyResources*/ = zt(Sp(t)).filter((T) => !mo[T] && !Qn[T]),
-    o /*availableResources*/ = PJ(
-      Array.from(N.current.playerTradeBuildings.values()).map(
+  const user = useUser(), // const user = useUser();
+    trades = useTrades(), // const trades = useTrades();
+    enabled =
+      !isNullOrUndefined(user) && trades.filter((T) => T.fromId === user.userId).length < wJ(user),
+    //buyResources = keysOf(unlockedResources(gameState)).filter((T) => !NoStorage[T] && !NoPrice[T]),
+    buyResources = getSeenResourceKeys(),
+    availableResources = combineResources(
+      Array.from(Tick.current.playerTradeBuildings.values()).map(
         (T) => T.resources
       )
     ),
     // *****  fix sell resources list refreshing needlessly
-    // was: l = zt(o),
+    // was: sellResources = keysOf(o),
     // is: same as buyResources
-    l /*sellResources*/ = zt(Sp(t)).filter((T) => !mo[T] && !Qn[T]),
-    [u, c] = se.useState({
-      buyResource: a[0],
+    //sellResources = keysOf(Sp(gameState)).filter((T) => !NoStorage[T] && !NoPrice[T]),
+    //sellResources = keysOf(availableResources),
+    sellResources = getSeenResourceKeys(),
+
+
+    [trade, setTrade] = se.useState({
+      buyResource: buyResources[0],
       buyAmount: 0,
-      sellResource: l[0],
+      sellResource: sellResources[0],
       sellAmount: 0,
     }),
-    [p, f] = se.useState(!1),
-    m = O_(r), // const percentage = getUserTradePriceRange(user);
-    g = kJ(u, O_(r)); // const buyAmountRange = getBuyAmountRange(trade, getUserTradePriceRange(user));
+    [showTrade, setShowTrade] = se.useState(!1),
+    percentage = getUserTradePriceRange(user), // const percentage = getUserTradePriceRange(user);
+    buyAmountRange = getBuyAmountRange(trade, getUserTradePriceRange(user));
 
   // function isTradeValid(trade: IAddTradeRequest): boolean
-  function v(T) {
+  function isTradeValid(T) {
     var A;
     return !(
       T.buyResource === T.sellResource ||
       T.buyAmount < 1 ||
-      T.buyAmount > g.max ||
-      T.buyAmount < g.min ||
+      T.buyAmount > buyAmountRange.max ||
+      T.buyAmount < buyAmountRange.min ||
       T.sellAmount < 0 ||
-      T.sellAmount > ((A = o[T.sellResource]) != null ? A : 0)
+      T.sellAmount > ((A = availableResources[T.sellResource]) != null ? A : 0)
     );
   }
 
   // if (showTrade) {
-  if (p)
+  if (showTrade)
     return s.jsxs("fieldset", {
       children: [
         s.jsx("legend", { children: h(d.PlayerTradeNewTrade) }),
@@ -99194,30 +99226,30 @@ function Mae({ gameState: t, xy: e }) {
           children: [
             s.jsx("select", {
               className: "f1 mr10",
-              value: u.sellResource,
+              value: trade.sellResource,
               onChange: (T) => {
-                T.target.value in S.Resource &&
-                  c(Ie(U({}, u), { sellResource: T.target.value }));
+                T.target.value in Config.Resource &&
+                  setTrade(Ie(U({}, trade), { sellResource: T.target.value }));
               },
-              children: l
+              children: sellResources
                 .sort((T, A) =>
-                  S.Resource[T].name().localeCompare(S.Resource[A].name())
+                  Config.Resource[T].name().localeCompare(Config.Resource[A].name())
                 )
                 .map((T) =>
                   s.jsx(
                     "option",
-                    { value: T, children: S.Resource[T].name() },
+                    { value: T, children: Config.Resource[T].name() },
                     T
                   )
                 ),
             }),
             s.jsx("input", {
-              style: { width: XD },
+              style: { width: INPUT_WIDTH },
               className: "text-right",
               type: "text",
-              value: u.sellAmount,
+              value: trade.sellAmount,
               onChange: (T) =>
-                c(Ie(U({}, u), { sellAmount: xi(T.target.value) })),
+                setTrade(Ie(U({}, trade), { sellAmount: xi(T.target.value) })),
             }),
           ],
         }),
@@ -99228,7 +99260,7 @@ function Mae({ gameState: t, xy: e }) {
               className: "f1",
               children: [
                 "0 ~ ",
-                s.jsx(te, { value: (x = o[u.sellResource]) != null ? x : 0 }),
+                s.jsx(te, { value: (x = availableResources[trade.sellResource]) != null ? x : 0 }),
               ],
             }),
             // ***** 2025-02-22
@@ -99239,10 +99271,10 @@ function Mae({ gameState: t, xy: e }) {
                   className: "text-link text-strong ml10",
                   onClick: () => {
                     var A;
-                    return c(
-                      Ie(U({}, u), {
+                    return setTrade(
+                      Ie(U({}, trade), {
                         sellAmount: Math.floor(
-                          ((A = o[u.sellResource]) != null ? A : 0) * T
+                          ((A = availableResources[trade.sellResource]) != null ? A : 0) * T
                         ),
                       })
                     );
@@ -99264,30 +99296,30 @@ function Mae({ gameState: t, xy: e }) {
           children: [
             s.jsx("select", {
               className: "f1 mr10",
-              value: u.buyResource,
+              value: trade.buyResource,
               onChange: (T) => {
-                T.target.value in S.Resource &&
-                  c(Ie(U({}, u), { buyResource: T.target.value }));
+                T.target.value in Config.Resource &&
+                  setTrade(Ie(U({}, trade), { buyResource: T.target.value }));
               },
-              children: a
+              children: buyResources
                 .sort((T, A) =>
-                  S.Resource[T].name().localeCompare(S.Resource[A].name())
+                  Config.Resource[T].name().localeCompare(Config.Resource[A].name())
                 )
                 .map((T) =>
                   s.jsx(
                     "option",
-                    { value: T, children: S.Resource[T].name() },
+                    { value: T, children: Config.Resource[T].name() },
                     T
                   )
                 ),
             }),
             s.jsx("input", {
-              style: { width: XD },
+              style: { width: INPUT_WIDTH },
               className: "text-right",
               type: "text",
-              value: u.buyAmount,
+              value: trade.buyAmount,
               onChange: (T) =>
-                c(Ie(U({}, u), { buyAmount: xi(T.target.value) })),
+                setTrade(Ie(U({}, trade), { buyAmount: xi(T.target.value) })),
             }),
           ],
         }),
@@ -99296,25 +99328,25 @@ function Mae({ gameState: t, xy: e }) {
           children: [
             s.jsxs("div", {
               children: [
-                s.jsx(te, { value: g.min }),
+                s.jsx(te, { value: buyAmountRange.min }),
                 " ~ ",
-                s.jsx(te, { value: g.max }),
+                s.jsx(te, { value: buyAmountRange.max }),
               ],
             }),
             s.jsx("div", { className: "f1" }),
             // ***** 2025-02-22
-            [-m, -m / 2, -0.03, 0, 0.03, m / 2, m].map((T) =>
+            [-percentage, -percentage / 2, -0.03, 0, 0.03, percentage / 2, percentage].map((T) =>
               s.jsx(
                 "div",
                 {
                   className: "text-link text-strong ml10",
                   onClick: () =>
-                    c(
-                      Ie(U({}, u), {
+                    setTrade(
+                      Ie(U({}, trade), {
                         buyAmount: We(
-                          Math.round(g.amount * (1 + T)),
-                          g.min,
-                          g.max
+                          Math.round(buyAmountRange.amount * (1 + T)),
+                          buyAmountRange.min,
+                          buyAmountRange.max
                         ),
                       })
                     ),
@@ -99331,29 +99363,29 @@ function Mae({ gameState: t, xy: e }) {
           children: [
             s.jsxs("button", {
               className: "row f1 jcc",
-              disabled: !v(u) || !n,
+              disabled: !isTradeValid(trade) || !enabled,
               onClick: () =>
                 ae(this, null, function* () {
                   var A;
                   if (
-                    !v(u) ||
-                    !n ||
-                    ((A = o[u.sellResource]) != null ? A : 0) < u.sellAmount
+                    !isTradeValid(trade) ||
+                    !enabled ||
+                    ((A = availableResources[trade.sellResource]) != null ? A : 0) < trade.sellAmount
                   ) {
                     ze(), ct(h(d.OperationNotAllowedError));
                     return;
                   }
                   const T = FL(
-                    u.sellResource,
-                    u.sellAmount,
-                    Array.from(N.current.playerTradeBuildings.keys()),
-                    t
+                    trade.sellResource,
+                    trade.sellAmount,
+                    Array.from(Tick.current.playerTradeBuildings.keys()),
+                    gameState
                   );
                   try {
-                    const C = T.amount / u.sellAmount;
-                    (u.sellAmount *= C),
-                      (u.buyAmount *= C),
-                      yield qe.addTrade(u),
+                    const C = T.amount / trade.sellAmount;
+                    (trade.sellAmount *= C),
+                      (trade.buyAmount *= C),
+                      yield qe.addTrade(trade),
                       Fg(),
                       ct(h(d.PlayerTradeAddSuccess));
                   } catch (C) {
@@ -99375,7 +99407,7 @@ function Mae({ gameState: t, xy: e }) {
             s.jsx("button", {
               className: "row f1 jcc",
               onClick: () => {
-                f(!1);
+                setShowTrade(!1);
               },
               children: h(d.PlayerTradeAddTradeCancel),
             }),
@@ -99385,13 +99417,13 @@ function Mae({ gameState: t, xy: e }) {
     });
   let y = null;
   return (
-    n || (y = h(d.PlayerTradeMaxTradeExceeded)),
+    enabled || (y = h(d.PlayerTradeMaxTradeExceeded)),
     s.jsxs("button", {
       className: "row w100 jcc mb5",
       onClick: () => {
-        n ? f(!0) : ze();
+        enabled ? setShowTrade(!0) : ze();
       },
-      disabled: !n || zJ,
+      disabled: !enabled || zJ,
       children: [
         s.jsx("div", { className: "m-icon small", children: "add_circle" }),
         s.jsx(Te, {
@@ -99449,7 +99481,7 @@ function formatNumberTradeTable(num, binary = false, scientific = false) {
   }
 
   // __ is humanFormat, CZ is NUMBER_SUFFIX_1
-  return __(num, xZ);
+  return __(num, NUMBER_SUFFIX_1);
 }
 
 const savedResourceWantFilters = new Set(),
@@ -99459,7 +99491,7 @@ let savedPlayerNameFilter = "",
 const playerTradesSortingState = { column: 0, asc: !0 };
 
 // ***** PlayerTradeComponent
-function Eae({ gameState: t, xy: e }) {
+function PlayerTradeComponent({ gameState: t, xy: e }) {
   var T;
   const building = (T = t.tiles.get(e)) == null ? void 0 : T.building,
     [i, n] = se.useState(savedResourceWantFilters),
@@ -99468,8 +99500,8 @@ function Eae({ gameState: t, xy: e }) {
     [playerNameFilter, setPlayerNameFilter] = se.useState(savedPlayerNameFilter),
     [f, m] = se.useState(savedMaxTradeAmountFilter);
   if (!building) return null;
-  const trades = Gg(), // useTrades()
-    user = fo(); // useUser()
+  const trades = useTrades(), // useTrades()
+    user = useUser(); // useUser()
 
   if (!Lc()) // getMyMapXy()
     return s.jsx("article", {
@@ -99488,13 +99520,15 @@ function Eae({ gameState: t, xy: e }) {
       }),
     });
 
-  const resources = zt(Sp(t)).filter((A) => !mo[A] && !Qn[A]);
+  // *****
+  //const resources = keysOf(unlockedResources(t)).filter((A) => !NoStorage[A] && !NoPrice[A]);
+  const resources = getSeenResourceKeys();
   return s.jsxs("article", {
     role: "tabpanel",
     style: { padding: "8px" },
     children: [
       s.jsx("div", { className: "sep5" }),
-      s.jsx(Mae, { gameState: t, xy: e }),
+      s.jsx(AddTradeComponent, { gameState: t, xy: e }),
       l
         ? s.jsxs("fieldset", {
             children: [
@@ -99516,8 +99550,8 @@ function Eae({ gameState: t, xy: e }) {
                     s.jsx("tbody", {
                       children: resources
                         .sort((A, C) =>
-                          S.Resource[A].name().localeCompare(
-                            S.Resource[C].name()
+                          Config.Resource[A].name().localeCompare(
+                            Config.Resource[C].name()
                           )
                         )
                         .map((A) =>
@@ -99525,7 +99559,7 @@ function Eae({ gameState: t, xy: e }) {
                             "tr",
                             {
                               children: [
-                                s.jsx("td", { children: S.Resource[A].name() }),
+                                s.jsx("td", { children: Config.Resource[A].name() }),
                                 s.jsx("td", {
                                   style: { width: 0 },
                                   className: "text-strong",
@@ -99705,13 +99739,13 @@ function Eae({ gameState: t, xy: e }) {
             return M;
           switch (P) {
             case 0:
-              return S.Resource[A.buyResource]
+              return Config.Resource[A.buyResource]
                 .name()
-                .localeCompare(S.Resource[C.buyResource].name());
+                .localeCompare(Config.Resource[C.buyResource].name());
             case 1:
-              return S.Resource[A.sellResource]
+              return Config.Resource[A.sellResource]
                 .name()
-                .localeCompare(S.Resource[C.sellResource].name());
+                .localeCompare(Config.Resource[C.sellResource].name());
             case 2:
               return WA(A) - WA(C);
             case 3:
@@ -99735,7 +99769,7 @@ function Eae({ gameState: t, xy: e }) {
                   children: [
                     s.jsx("div", {
                       className: Ke({ "text-strong": _J(A.buyResource) }),
-                      children: S.Resource[A.buyResource].name(),
+                      children: Config.Resource[A.buyResource].name(),
                     }),
                     s.jsx("div", {
                       className: "text-small text-strong text-desc",
@@ -99743,14 +99777,14 @@ function Eae({ gameState: t, xy: e }) {
                     }),
                     s.jsx("div", {
                         className: "text-small text-strong text-desc",
-                        children: s.jsx(te, { value: "You: "+formatNumberTradeTable(N.current.resourceAmount.get(A.buyResource)) }),
+                        children: s.jsx(te, { value: "You: "+formatNumberTradeTable(Tick.current.resourceAmount.get(A.buyResource)) }),
                     }), 
                   ],
                 }),
                 s.jsxs("td", {
                   children: [
                     s.jsx("div", {
-                      children: S.Resource[A.sellResource].name(),
+                      children: Config.Resource[A.sellResource].name(),
                     }),
                     s.jsx("div", {
                         className: "text-small text-strong text-desc",
@@ -99758,21 +99792,21 @@ function Eae({ gameState: t, xy: e }) {
                       }),
                     s.jsx("div", {
                       className: "text-small text-strong text-desc",
-                      children: s.jsx(te, { value: "You: "+formatNumberTradeTable(N.current.resourceAmount.get(A.sellResource)) }),
+                      children: s.jsx(te, { value: "You: "+formatNumberTradeTable(Tick.current.resourceAmount.get(A.sellResource)) }),
                     }),
                   ],
                 }),
                 s.jsx("td", {
                   className: Ke({
                     "text-small text-right": !0,
-                    "text-red": P <= -Qu,
-                    "text-green": P >= Qu,
-                    "text-desc": Math.abs(P) < Qu,
+                    "text-red": P <= -CURRENCY_PERCENT_EPSILON,
+                    "text-green": P >= CURRENCY_PERCENT_EPSILON,
+                    "text-desc": Math.abs(P) < CURRENCY_PERCENT_EPSILON,
                   }),
                   children: s.jsx(Te, {
                     content: h(d.MarketValueDesc, { value: Dt(P, 0) }),
                     children: s.jsxs("div", {
-                      children: [Yh(P, Qu), Dt(Math.abs(P), 0)],
+                      children: [mathSign(P, CURRENCY_PERCENT_EPSILON), Dt(Math.abs(P), 0)],
                     }),
                   }),
                 }),
@@ -99821,7 +99855,7 @@ function Eae({ gameState: t, xy: e }) {
                           className: "m-icon small text-link",
                           onClick: () => {
                             const M = jL(
-                              Array.from(N.current.playerTradeBuildings.keys()),
+                              Array.from(Tick.current.playerTradeBuildings.keys()),
                               t
                             );
                             let k = A.sellAmount * ry - M;
@@ -99837,7 +99871,7 @@ function Eae({ gameState: t, xy: e }) {
                                           w.sellResource,
                                           w.sellAmount * ry,
                                           Array.from(
-                                            N.current.playerTradeBuildings.keys()
+                                            Tick.current.playerTradeBuildings.keys()
                                           ),
                                           t
                                         ),
@@ -99851,7 +99885,7 @@ function Eae({ gameState: t, xy: e }) {
                                       percent: Dt(1 - ry),
                                       res: `${pr(
                                         A.sellAmount * ry
-                                      )} ${S.Resource[A.sellResource].name()}`,
+                                      )} ${Config.Resource[A.sellResource].name()}`,
                                       discard: pr(k),
                                     }),
                                   }),
@@ -99888,7 +99922,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
       (p = t.resourceImports[e]) != null ? p : { cap: 0, perCycle: 0 }
     ),
     o = gi(),
-    l = Ui(t.resourceImports, (f, m, g) => (m === e ? f : f + g.perCycle), 0),
+    l = reduceOf(t.resourceImports, (f, m, g) => (m === e ? f : f + g.perCycle), 0),
     u = We(i - l, 0, i),
     c = n.perCycle >= 0 && n.perCycle <= u;
   return s.jsxs("div", {
@@ -99901,7 +99935,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
           s.jsx("div", {
             className: "title-bar-text",
             children: h(d.ResourceImportSettings, {
-              res: S.Resource[e].name(),
+              res: Config.Resource[e].name(),
             }),
           }),
           s.jsx("div", {
@@ -100043,8 +100077,8 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
                           },
                           className: Ke({
                             f1: !0,
-                            active: jt(n.inputMode),
-                            "text-desc": !jt(n.inputMode),
+                            active: isNullOrUndefined(n.inputMode),
+                            "text-desc": !isNullOrUndefined(n.inputMode),
                           }),
                           children: h(d.TechResourceTransportPreferenceDefault),
                         }),
@@ -100122,7 +100156,7 @@ function H4({ gameState: gameState, xy: xy }) {
   const storage = Es(xy, gameState), // Es is getStorageFor
     baseCapacity = Qh(building, 1),
     capacityMultiplier = da(xy, "output", 1, !1, gameState),
-    resources = zt(Sp(gameState)).filter((f) => !mo[f] && !Qn[f]),
+    resources = keysOf(unlockedResources(gameState)).filter((f) => !NoStorage[f] && !NoPrice[f]),
     idleCapacity = Ck(xy, gameState);
   return s.jsxs("fieldset", {
     children: [
@@ -100184,7 +100218,7 @@ function H4({ gameState: gameState, xy: xy }) {
                   : 0)
               );
             default:
-              return S.Resource[f].name().localeCompare(S.Resource[m].name());
+              return Config.Resource[f].name().localeCompare(Config.Resource[m].name());
           }
         },
         renderRow: (f) => {
@@ -100211,8 +100245,8 @@ function H4({ gameState: gameState, xy: xy }) {
                 s.jsxs("td", {
                   className: "row",
                   children: [
-                    s.jsx("div", { children: S.Resource[f].name() }),
-                    jt(m == null ? void 0 : m.inputMode)
+                    s.jsx("div", { children: Config.Resource[f].name() }),
+                    isNullOrUndefined(m == null ? void 0 : m.inputMode)
                       ? null
                       : s.jsx(Te, {
                           content: h(
@@ -100311,7 +100345,7 @@ function H4({ gameState: gameState, xy: xy }) {
           s.jsx("div", {
             className: "text-link mr10",
             onClick: () => {
-              Q(building.resourceImports, (m, g) => {
+              forEach(building.resourceImports, (m, g) => {
                 g.perCycle = 0;
               });
               const f = Math.floor((baseCapacity * capacityMultiplier) / selected.size);
@@ -100327,7 +100361,7 @@ function H4({ gameState: gameState, xy: xy }) {
           s.jsx("div", {
             className: "text-link",
             onClick: () => {
-              Q(building.resourceImports, (m, g) => {
+              forEach(building.resourceImports, (m, g) => {
                 g.cap = 0;
               });
               const f = storage.total / selected.size;
@@ -100378,7 +100412,7 @@ function H4({ gameState: gameState, xy: xy }) {
           s.jsx("div", {
             className: "text-link mr10",
             onClick: () => {
-              Q(building.resourceImports, (f, m) => {
+              forEach(building.resourceImports, (f, m) => {
                 selected.has(f) && (m.perCycle = 0);
               }),
                 Ze();
@@ -100388,7 +100422,7 @@ function H4({ gameState: gameState, xy: xy }) {
           s.jsx("div", {
             className: "text-link",
             onClick: () => {
-              Q(building.resourceImports, (f, m) => {
+              forEach(building.resourceImports, (f, m) => {
                 selected.has(f) && (m.cap = 0);
               }),
                 Ze();
@@ -100642,7 +100676,7 @@ function Rae({ gameState: t, xy: e }) {
   let n = null;
   return (
     r === "trades"
-      ? ((Sy = "trades"), (n = s.jsx(Eae, { gameState: t, xy: e })))
+      ? ((Sy = "trades"), (n = s.jsx(PlayerTradeComponent, { gameState: t, xy: e })))
       : r === "pending"
       ? ((Sy = "pending"), (n = s.jsx(kae, { gameState: t, xy: e })))
       : r === "import" &&
@@ -100702,7 +100736,7 @@ function Iae({ gameState: t, xy: e }) {
                 className: "text-small mb10",
                 children: s.jsx(mt, { html: h(d.ReligionDescHTML) }),
               }),
-          Bt(S.Religion, (n, a) =>
+          Bt(Config.Religion, (n, a) =>
             r.religion && r.religion !== n
               ? null
               : s.jsxs(
@@ -100750,7 +100784,7 @@ function wd({ gameState: t, xy: e }) {
                     "+",
                     s.jsx(te, {
                       value:
-                        (n = N.current.scienceProduced.get(e)) != null ? n : 0,
+                        (n = Tick.current.scienceProduced.get(e)) != null ? n : 0,
                     }),
                   ],
                 }),
@@ -107935,13 +107969,13 @@ function iue({ gameState: t, xy: e }) {
   var p, f, m, g, v;
   const r = (p = t.tiles.get(e)) == null ? void 0 : p.building;
   if (!r) return null;
-  const i = $h(N.current.resourceValues, (y, x, T) => y + T, 0),
-    n = $h(N.current.buildingValues, (y, x, T) => y + T, 0),
+  const i = $h(Tick.current.resourceValues, (y, x, T) => y + T, 0),
+    n = $h(Tick.current.buildingValues, (y, x, T) => y + T, 0),
     a = RQ(),
     { scienceFromWorkers: o } = Pu(),
     l = vk(),
     u = o + a,
-    c = Rg(t);
+    c = getTransportStat(t);
   return s.jsxs("article", {
     role: "tabpanel",
     className: "f1 col",
@@ -107962,7 +107996,7 @@ function iue({ gameState: t, xy: e }) {
                   }),
                   s.jsx("div", {
                     className: "text-strong",
-                    children: s.jsx(te, { value: N.current.totalValue }),
+                    children: s.jsx(te, { value: Tick.current.totalValue }),
                   }),
                 ],
               }),
@@ -107984,14 +108018,14 @@ function iue({ gameState: t, xy: e }) {
                     }),
                     s.jsx("ul", {
                       className: "text-small",
-                      children: Array.from(N.current.resourceValues.keys())
+                      children: Array.from(Tick.current.resourceValues.keys())
                         .sort((y, x) => {
                           var T, A;
                           return (
-                            ((T = N.current.resourceValues.get(x)) != null
+                            ((T = Tick.current.resourceValues.get(x)) != null
                               ? T
                               : 0) -
-                            ((A = N.current.resourceValues.get(y)) != null
+                            ((A = Tick.current.resourceValues.get(y)) != null
                               ? A
                               : 0)
                           );
@@ -107999,9 +108033,9 @@ function iue({ gameState: t, xy: e }) {
                         .map((y) =>
                           !(
                             y === "Science" &&
-                            N.current.specialBuildings.has("MatrioshkaBrain")
+                            Tick.current.specialBuildings.has("MatrioshkaBrain")
                           ) &&
-                          (Qn[y] || mo[y])
+                          (NoPrice[y] || NoStorage[y])
                             ? null
                             : s.jsxs(
                                 "li",
@@ -108010,10 +108044,10 @@ function iue({ gameState: t, xy: e }) {
                                   children: [
                                     s.jsx("div", {
                                       className: "f1",
-                                      children: S.Resource[y].name(),
+                                      children: Config.Resource[y].name(),
                                     }),
                                     s.jsx(te, {
-                                      value: N.current.resourceValues.get(y),
+                                      value: Tick.current.resourceValues.get(y),
                                     }),
                                   ],
                                 },
@@ -108042,14 +108076,14 @@ function iue({ gameState: t, xy: e }) {
                     }),
                     s.jsx("ul", {
                       className: "text-small",
-                      children: Array.from(N.current.buildingValues.keys())
+                      children: Array.from(Tick.current.buildingValues.keys())
                         .sort((y, x) => {
                           var T, A;
                           return (
-                            ((T = N.current.buildingValues.get(x)) != null
+                            ((T = Tick.current.buildingValues.get(x)) != null
                               ? T
                               : 0) -
-                            ((A = N.current.buildingValues.get(y)) != null
+                            ((A = Tick.current.buildingValues.get(y)) != null
                               ? A
                               : 0)
                           );
@@ -108062,10 +108096,10 @@ function iue({ gameState: t, xy: e }) {
                               children: [
                                 s.jsx("div", {
                                   className: "f1",
-                                  children: S.Building[y].name(),
+                                  children: Config.Building[y].name(),
                                 }),
                                 s.jsx(te, {
-                                  value: N.current.buildingValues.get(y),
+                                  value: Tick.current.buildingValues.get(y),
                                 }),
                               ],
                             },
@@ -108172,11 +108206,11 @@ function iue({ gameState: t, xy: e }) {
                     }),
                     s.jsx("ul", {
                       className: "text-small",
-                      children: Array.from(N.current.scienceProduced.keys())
+                      children: Array.from(Tick.current.scienceProduced.keys())
                         .sort(
                           (y, x) =>
-                            N.current.scienceProduced.get(x) -
-                            N.current.scienceProduced.get(y)
+                            Tick.current.scienceProduced.get(x) -
+                            Tick.current.scienceProduced.get(y)
                         )
                         .map((y) => {
                           const x = t.tiles.get(y),
@@ -108188,10 +108222,10 @@ function iue({ gameState: t, xy: e }) {
                               children: [
                                 s.jsx("div", {
                                   className: "f1",
-                                  children: S.Building[T.type].name(),
+                                  children: Config.Building[T.type].name(),
                                 }),
                                 s.jsx(te, {
-                                  value: N.current.scienceProduced.get(y),
+                                  value: Tick.current.scienceProduced.get(y),
                                 }),
                               ],
                             },
@@ -108343,7 +108377,7 @@ function nue({ gameState: t }) {
                 current: 1 << o,
                 savedFilter: Dy,
                 onFilterChange: i,
-                children: ba(o),
+                children: numberToRoman(o),
               },
               o
             )
@@ -108354,17 +108388,17 @@ function nue({ gameState: t }) {
         className: "table-view",
         style: { flex: 1 },
         children: s.jsx(ise, {
-          data: Array.from(qn(t))
+          data: Array.from(getXyBuildings(t))
             .filter(([o, l]) => {
-              if (S.Building[l.type].special === tl.NaturalWonder) return !1;
+              if (Config.Building[l.type].special === tl.NaturalWonder) return !1;
               let u = (e & 268435455) === 0;
               for (let p = 0; p < 12; p++)
-                ot(e, 1 << p) && (u || (u = S.BuildingTier[l.type] === p));
+                ot(e, 1 << p) && (u || (u = Config.BuildingTier[l.type] === p));
               const c = n.toLowerCase();
-              return u && S.Building[l.type].name().toLowerCase().includes(c);
+              return u && Config.Building[l.type].name().toLowerCase().includes(c);
             })
             .sort(([o, l], [u, c]) =>
-              S.Building[l.type].name().localeCompare(S.Building[c.type].name())
+              Config.Building[l.type].name().localeCompare(Config.Building[c.type].name())
             ),
           fixedHeaderContent: () =>
             s.jsxs("tr", {
@@ -108409,7 +108443,7 @@ function nue({ gameState: t }) {
               className: "m-icon small text-green",
               children: "check_circle",
             });
-            const p = N.current.notProducingReasons.get(l);
+            const p = Tick.current.notProducingReasons.get(l);
             return (
               u.status !== "completed"
                 ? (c = s.jsx("div", {
@@ -108448,7 +108482,7 @@ function nue({ gameState: t }) {
                           (y = be().sceneManager.getCurrent(At)) == null ||
                             y.lookAtTile(l, Oc.Highlight);
                         },
-                        children: S.Building[u.type].name(),
+                        children: Config.Building[u.type].name(),
                       }),
                       s.jsx("div", {
                         className: "text-small text-desc",
@@ -108462,7 +108496,7 @@ function nue({ gameState: t }) {
                       s.jsx("div", {
                         children: s.jsx(te, {
                           value:
-                            (f = N.current.buildingValueByTile.get(l)) != null
+                            (f = Tick.current.buildingValueByTile.get(l)) != null
                               ? f
                               : 0,
                         }),
@@ -108470,7 +108504,7 @@ function nue({ gameState: t }) {
                       s.jsx("div", {
                         children: s.jsx(te, {
                           value:
-                            (m = N.current.resourceValueByTile.get(l)) != null
+                            (m = Tick.current.resourceValueByTile.get(l)) != null
                               ? m
                               : 0,
                         }),
@@ -108480,19 +108514,19 @@ function nue({ gameState: t }) {
                   s.jsx("td", {
                     className: "right",
                     children: s.jsx(te, {
-                      value: (g = sk().get(l)) != null ? g : 0,
+                      value: (g = getFuelByTarget().get(l)) != null ? g : 0,
                     }),
                   }),
                   s.jsx("td", {
                     className: Ke({
                       "text-red":
-                        N.current.notProducingReasons.get(l) ===
+                        Tick.current.notProducingReasons.get(l) ===
                         Jt.NotEnoughWorkers,
                       "text-right": !0,
                     }),
                     children: s.jsx(te, {
                       value:
-                        (v = N.current.workersAssignment.get(l)) != null
+                        (v = Tick.current.workersAssignment.get(l)) != null
                           ? v
                           : 0,
                     }),
@@ -108515,16 +108549,16 @@ function oue({ gameState: t }) {
     },
     [n, a] = se.useState(""),
     [o, l] = se.useState(!0),
-    u = Sp(t),
-    c = TL(t),
+    u = unlockedResources(t),
+    c = getResourceIO(t),
     p = o ? c.theoreticalInput : c.actualInput,
     f = o ? c.theoreticalOutput : c.actualOutput,
     m = (g, v) => {
       var x;
       const y = [];
       t.tiles.forEach((T, A) => {
-        const C = fi(A, v, br.Multiplier | br.Capacity, t);
-        Q(C, (P, M) => {
+        const C = getBuildingIO(A, v, br.Multiplier | br.Capacity, t);
+        forEach(C, (P, M) => {
           g === P && y.push(T.tile);
         });
       }),
@@ -108554,7 +108588,7 @@ function oue({ gameState: t }) {
                 current: 1 << g,
                 savedFilter: Am,
                 onFilterChange: i,
-                children: ba(g),
+                children: numberToRoman(g),
               },
               g
             )
@@ -108584,20 +108618,20 @@ function oue({ gameState: t }) {
           { name: h(d.StatisticsResourcesRunOut), right: !0, sortable: !0 },
         ],
         sortingState: aue,
-        data: zt(u).filter((g) => {
+        data: keysOf(u).filter((g) => {
           let v = (Am & 268435455) === 0;
           for (let x = 0; x < 12; x++)
-            ot(Am, 1 << x) && (v || (v = S.ResourceTier[g] === x));
+            ot(Am, 1 << x) && (v || (v = Config.ResourceTier[g] === x));
           const y = n.toLowerCase();
-          return v && S.Resource[g].name().toLowerCase().includes(y);
+          return v && Config.Resource[g].name().toLowerCase().includes(y);
         }),
         compareFunc: (g, v, y) => {
           var x, T, A, C, P, M, k, w, B, _, D, I;
           switch (y) {
             case 1:
               return (
-                ((x = N.current.resourceAmount.get(g)) != null ? x : 0) -
-                ((T = N.current.resourceAmount.get(v)) != null ? T : 0)
+                ((x = Tick.current.resourceAmount.get(g)) != null ? x : 0) -
+                ((T = Tick.current.resourceAmount.get(v)) != null ? T : 0)
               );
             case 2:
               return (
@@ -108615,30 +108649,30 @@ function oue({ gameState: t }) {
                   ((_ = p.get(v)) != null ? _ : 0),
                 W =
                   L < 0
-                    ? ((D = N.current.resourceAmount.get(g)) != null ? D : 0) /
+                    ? ((D = Tick.current.resourceAmount.get(g)) != null ? D : 0) /
                       L
                     : Number.NEGATIVE_INFINITY,
                 H =
                   F < 0
-                    ? ((I = N.current.resourceAmount.get(v)) != null ? I : 0) /
+                    ? ((I = Tick.current.resourceAmount.get(v)) != null ? I : 0) /
                       F
                     : Number.NEGATIVE_INFINITY;
               return W !== H
                 ? H - W
-                : S.Resource[g].name().localeCompare(S.Resource[v].name());
+                : Config.Resource[g].name().localeCompare(Config.Resource[v].name());
             }
             default:
-              return S.Resource[g].name().localeCompare(S.Resource[v].name());
+              return Config.Resource[g].name().localeCompare(Config.Resource[v].name());
           }
         },
         renderRow: (g) => {
           var P, M, k;
-          const v = S.Resource[g];
-          if (Qn[g] || mo[g]) return null;
+          const v = Config.Resource[g];
+          if (NoPrice[g] || NoStorage[g]) return null;
           const y = (P = f.get(g)) != null ? P : 0,
             x = (M = p.get(g)) != null ? M : 0,
             T = y - x,
-            A = (k = N.current.resourceAmount.get(g)) != null ? k : 0,
+            A = (k = Tick.current.resourceAmount.get(g)) != null ? k : 0,
             C = T < 0 ? Math.abs((1e3 * A) / T) : Number.POSITIVE_INFINITY;
           return s.jsxs(
             "tr",
@@ -108651,7 +108685,7 @@ function oue({ gameState: t }) {
                       content: h(d.EmpireValue),
                       children: s.jsx("span", {
                         className: "text-desc text-small",
-                        children: s.jsx(te, { value: S.ResourcePrice[g] }),
+                        children: s.jsx(te, { value: Config.ResourcePrice[g] }),
                       }),
                     }),
                   ],
@@ -108697,7 +108731,7 @@ function oue({ gameState: t }) {
                     "text-red": T < 0,
                     "text-right text-small": !0,
                   }),
-                  children: Ko(C),
+                  children: formatHMS(C),
                 }),
               ],
             },
@@ -108861,7 +108895,7 @@ function cue({ gameState: t, xy: e }) {
                 className: "text-small mb10",
                 children: s.jsx(mt, { html: h(d.TraditionDescHTML) }),
               }),
-          Bt(S.Tradition, (n, a) =>
+          Bt(Config.Tradition, (n, a) =>
             r.tradition && r.tradition !== n
               ? null
               : s.jsxs(
@@ -108902,7 +108936,7 @@ function due({ gameState: t, xy: e }) {
         className: "window-body",
         children: [
           s.jsx(Tn, { gameState: t, xy: e }),
-          jt(i)
+          isNullOrUndefined(i)
             ? null
             : s.jsxs(s.Fragment, {
                 children: [
@@ -108917,7 +108951,7 @@ function due({ gameState: t, xy: e }) {
                           buildings: i.current.options[
                             i.current.voted
                           ].buildings
-                            .map((o) => S.Building[o].name())
+                            .map((o) => Config.Building[o].name())
                             .join(", "),
                         }),
                       }),
@@ -108948,7 +108982,7 @@ function due({ gameState: t, xy: e }) {
                                     html: h(d.UNGeneralAssemblyMultipliers, {
                                       count: 5,
                                       buildings: o.buildings
-                                        .map((u) => S.Building[u].name())
+                                        .map((u) => Config.Building[u].name())
                                         .join(", "),
                                     }),
                                   }),
@@ -108972,7 +109006,7 @@ function due({ gameState: t, xy: e }) {
                       s.jsx(mt, {
                         className: "text-small text-desc",
                         html: h(d.UNGeneralAssemblyVoteEndIn, {
-                          time: Ko(EJ()),
+                          time: formatHMS(EJ()),
                         }),
                       }),
                     ],
@@ -109035,7 +109069,7 @@ function ns({ gameState: t, xy: e }) {
                     children: [
                       s.jsx("div", {
                         className: "f1 text-strong",
-                        children: S.Resource[n].name(),
+                        children: Config.Resource[n].name(),
                       }),
                       s.jsx("div", {
                         children: s.jsx(Zk, {
@@ -109228,9 +109262,9 @@ function fue({ gameState: t, xy: e }) {
     className: "window-body",
     children: [
       s.jsx(Tn, { gameState: t, xy: e }),
-      Bt(S.TechAge, (a, o) => {
+      Bt(Config.TechAge, (a, o) => {
         var u;
-        if (o.idx > S.TechAge[i].idx) return null;
+        if (o.idx > Config.TechAge[i].idx) return null;
         const l = r.greatPeople.get(a);
         return s.jsxs("fieldset", {
           children: [
@@ -109255,7 +109289,7 @@ function fue({ gameState: t, xy: e }) {
                       ? null
                       : s.jsx(
                           "option",
-                          { value: c, children: S.GreatPerson[c].name() },
+                          { value: c, children: Config.GreatPerson[c].name() },
                           c
                         )
                   ),
@@ -109265,8 +109299,8 @@ function fue({ gameState: t, xy: e }) {
             l
               ? s.jsx("div", {
                   className: "mt5 text-desc text-small",
-                  children: S.GreatPerson[l].desc(
-                    S.GreatPerson[l],
+                  children: Config.GreatPerson[l].desc(
+                    Config.GreatPerson[l],
                     t.festival ? 2 : 1
                   ),
                 })
@@ -109328,7 +109362,7 @@ function vue(t) {
   if (e.building == null) return be().routeTo(Ts, { stage: Ks.LoadSave }), null;
   const r = e.building, // const building = tile.building;
     i = gi(), // const gs = useGameState();
-    n = S.Building[r.type], // const definition = Config.Building[building.type];
+    n = Config.Building[r.type], // const definition = Config.Building[building.type];
     a = (o = gue[r.type]) != null ? o : Kie;
     
   var vTile = t;
@@ -109396,7 +109430,7 @@ function yue({ gameState: t, xy: e }) {
         className: "row",
         children: [
           s.jsx("div", { className: "f1", children: h(d.EstimatedTimeLeft) }),
-          s.jsx("div", { children: Ko(u * 1e3) }),
+          s.jsx("div", { children: formatHMS(u * 1e3) }),
         ],
       }),
       s.jsx("div", { className: "sep5" }),
@@ -109452,7 +109486,7 @@ function yue({ gameState: t, xy: e }) {
                                 }),
                         }),
                       }),
-                      s.jsx("td", { children: S.Resource[m].name() }),
+                      s.jsx("td", { children: Config.Resource[m].name() }),
                       s.jsx("td", {
                         className: "text-right",
                         children: r.suspendedInput.has(m)
@@ -109546,7 +109580,7 @@ function yue({ gameState: t, xy: e }) {
                 }),
                 s.jsxs("ul", {
                   children: [
-                    N.current.globalMultipliers.builderCapacity.map((m, g) =>
+                    Tick.current.globalMultipliers.builderCapacity.map((m, g) =>
                       s.jsxs(
                         "li",
                         {
@@ -109598,7 +109632,7 @@ function bue({ tile: t }) {
   const e = t.building; // const building = tile.building;
   if (e == null) return null;
   const r = gi(),
-    i = S.Building[e.type],
+    i = Config.Building[e.type],
     n = () => e.desiredLevel > e.level + 1,
     a = () => {
       yr(e.type) || (Le(), e.desiredLevel++, Ze());
@@ -109831,13 +109865,13 @@ function Cue({ tile: t }) {
       n(m), (Cm = m);
     },
     [o, l] = se.useState(""),
-    u = Yf(e),
+    u = getTypeBuildings(e),
     c = (m) => {
       if (!zP(m, e)) {
         ze();
         return;
       }
-      (t.building = Kl(Do({ type: m }), we())), Ze(), yr(m) || (xm = m);
+      (t.building = Kl(Do({ type: m }), getGameOptions())), Ze(), yr(m) || (xm = m);
     },
     p = (m) => m.deposit && DZ(t.deposit, m.deposit);
   fn(
@@ -109847,7 +109881,7 @@ function Cue({ tile: t }) {
     },
     []
   );
-  const f = Yf(e);
+  const f = getTypeBuildings(e);
   return s.jsxs("div", {
     className: "window",
     onPointerDown: () => r(null),
@@ -109881,7 +109915,7 @@ function Cue({ tile: t }) {
                             (y = be().sceneManager.getCurrent(At)) == null ||
                               y.drawSelection(xe(t.tile), v);
                         },
-                        children: S.Resource[m].name(),
+                        children: Config.Resource[m].name(),
                       },
                       m
                     )
@@ -109916,7 +109950,7 @@ function Cue({ tile: t }) {
                     current: 1 << m,
                     savedFilter: Cm,
                     onFilterChange: a,
-                    children: ba(m),
+                    children: numberToRoman(m),
                   },
                   m
                 )
@@ -109942,11 +109976,11 @@ function Cue({ tile: t }) {
               { name: h(d.BuildingName), sortable: !0 },
               { name: "", sortable: !1 },
             ],
-            data: zt(lk(e)).filter((m) => {
+            data: keysOf(unlockedBuildings(e)).filter((m) => {
               var y, x, T, A;
               if (
                 ((y = Tr(u.get(m))) != null ? y : 0) >=
-                  ((x = S.Building[m].max) != null
+                  ((x = Config.Building[m].max) != null
                     ? x
                     : Number.POSITIVE_INFINITY) ||
                 (m === "BritishMuseum" && e.unlockedUpgrades.BritishMuseum)
@@ -109954,7 +109988,7 @@ function Cue({ tile: t }) {
                 return !1;
               let g = (i & 268435455) === 0;
               for (let C = 0; C < 12; C++)
-                ot(i, 1 << C) && (g || (g = S.BuildingTier[m] === C));
+                ot(i, 1 << C) && (g || (g = Config.BuildingTier[m] === C));
               ot(i, du.NotBuilt) &&
                 g &&
                 (g =
@@ -109964,12 +109998,12 @@ function Cue({ tile: t }) {
               const v = o.toLowerCase();
               return (
                 g &&
-                (S.Building[m].name().toLowerCase().includes(v) ||
-                  D_(S.Building[m].input, (C) =>
-                    S.Resource[C].name().toLowerCase().includes(v)
+                (Config.Building[m].name().toLowerCase().includes(v) ||
+                  D_(Config.Building[m].input, (C) =>
+                    Config.Resource[C].name().toLowerCase().includes(v)
                   ) ||
-                  D_(S.Building[m].output, (C) =>
-                    S.Resource[C].name().toLowerCase().includes(v)
+                  D_(Config.Building[m].output, (C) =>
+                    Config.Resource[C].name().toLowerCase().includes(v)
                   ))
               );
             }),
@@ -109977,22 +110011,22 @@ function Cue({ tile: t }) {
               var y, x;
               switch (v) {
                 case 1:
-                  return S.Building[m]
+                  return Config.Building[m]
                     .name()
-                    .localeCompare(S.Building[g].name());
+                    .localeCompare(Config.Building[g].name());
                 default: {
                   const T =
-                    ((y = S.BuildingTier[m]) != null ? y : 0) -
-                    ((x = S.BuildingTier[g]) != null ? x : 0);
+                    ((y = Config.BuildingTier[m]) != null ? y : 0) -
+                    ((x = Config.BuildingTier[g]) != null ? x : 0);
                   return T !== 0
                     ? T
-                    : S.Building[m].name().localeCompare(S.Building[g].name());
+                    : Config.Building[m].name().localeCompare(Config.Building[g].name());
                 }
               }
             },
             renderRow: (m) => {
               var y, x, T;
-              const g = S.Building[m],
+              const g = Config.Building[m],
                 v = Ns({ type: m, level: 0 });
               return s.jsxs(
                 "tr",
@@ -110031,8 +110065,8 @@ function Cue({ tile: t }) {
                                   (C = be().sceneManager.getCurrent(At)) ==
                                     null || C.drawSelection(xe(t.tile), A);
                               },
-                              children: ba(
-                                (T = S.BuildingTier[m]) != null ? T : 1
+                              children: numberToRoman(
+                                (T = Config.BuildingTier[m]) != null ? T : 1
                               ),
                             }),
                     }),
@@ -110115,7 +110149,7 @@ function Cue({ tile: t }) {
                                       {
                                         className: "mr5",
                                         children: [
-                                          S.Resource[A].name(),
+                                          Config.Resource[A].name(),
                                           " x",
                                           pr(C),
                                         ],
@@ -110142,7 +110176,7 @@ function Cue({ tile: t }) {
                                       {
                                         className: "mr5",
                                         children: [
-                                          S.Resource[A].name(),
+                                          Config.Resource[A].name(),
                                           " x",
                                           pr(C),
                                         ],
@@ -110193,7 +110227,7 @@ function Cue({ tile: t }) {
 const Pue = "" + new URL("Discovery-802f7195.jpg", import.meta.url).href;
 function Sue({ xy: t, gameState: e }) {
   var a;
-  const r = N.current.specialBuildings.get("Statistics");
+  const r = Tick.current.specialBuildings.get("Statistics");
   let i = 0;
   r && (i = (a = r.building.resources.Explorer) != null ? a : 0);
   const n = () => {
@@ -110210,7 +110244,7 @@ function Sue({ xy: t, gameState: e }) {
     }
     pc(),
       ((u = l.resources.Explorer) != null ? u : 0) > 0 &&
-        Tt(l.resources, "Explorer", -1),
+        safeAdd(l.resources, "Explorer", -1),
       Rc(t, e),
       be().sceneManager.enqueue(At, (c) => c.revealTile(t)),
       Mt(e)
@@ -110236,7 +110270,7 @@ function Sue({ xy: t, gameState: e }) {
               children: s.jsx(mt, {
                 className: "text-small",
                 html: h(d.ExploreThisTileHTML, {
-                  name: S.Building.Statistics.name(),
+                  name: Config.Building.Statistics.name(),
                   count: i,
                 }),
               }),
@@ -110273,7 +110307,7 @@ function Sue({ xy: t, gameState: e }) {
 function eT(t) {
   const e = gi(),
     { xy: r } = t;
-  if (jt(r) || !Zte()) return null;
+  if (isNullOrUndefined(r) || !Zte()) return null;
   const i = e.tiles.get(r);
   return i != null && i.explored
     ? i.building
@@ -110349,7 +110383,7 @@ class eI extends Pi {
     b(this, "_floaterValue", 0);
     b(this, "_aabb");
     (this._world = r), (this._grid = i), (this._xy = Se(this._grid));
-    const n = kt();
+    const n = getGameState();
     (this._tile = n.tiles.get(this._xy)),
       console.assert(this._tile, `Expect tile ${this._xy} to exist!`);
     const a = Mt(n);
@@ -110418,7 +110452,7 @@ class eI extends Pi {
       this._fog.anchor.set(0.5),
       (this._fog.visible = !this._tile.explored),
       this._tile &&
-        (Q(Object.assign({}, this._tile.deposit, { Power: !0 }), (l) => {
+        (forEach(Object.assign({}, this._tile.deposit, { Power: !0 }), (l) => {
           const u = this.addChild(new Nr(e4(l, o)));
           (u.alpha = 0.5),
             u.anchor.set(0.5),
@@ -110426,7 +110460,7 @@ class eI extends Pi {
             this._deposits.set(l, u);
         }),
         this.updateDepositLayout(),
-        this.updateDepositColor(we())),
+        this.updateDepositColor(getGameOptions())),
       this.update(0);
   }
   isInViewport() {
@@ -110494,7 +110528,7 @@ class eI extends Pi {
       !this._tile || !this._tile.building)
     )
       return;
-    const i = we().buildingColors[this._tile.building.type];
+    const i = getGameOptions().buildingColors[this._tile.building.type];
     if (i) {
       const n = Za(i);
       (this._building.tint = n),
@@ -110505,16 +110539,16 @@ class eI extends Pi {
         (this._notProducing.tint = 16777215),
         (this._spinner.tint = 16777215);
     this._tile.building.status === "completed" &&
-      ((this._spinner.angle += N.current.electrified.has(this._tile.tile)
+      ((this._spinner.angle += Tick.current.electrified.has(this._tile.tile)
         ? r * 180
         : r * 90),
-      N.current.notProducingReasons.has(this._xy)
+      Tick.current.notProducingReasons.has(this._xy)
         ? ((this._spinner.alpha -= r), (this._building.alpha -= r))
         : ((this._spinner.alpha += r), (this._building.alpha += r)),
       (this._spinner.alpha = We(this._spinner.alpha, 0, 0.5)),
       (this._building.alpha = We(
         this._building.alpha,
-        we().themeColors.InactiveBuildingAlpha,
+        getGameOptions().themeColors.InactiveBuildingAlpha,
         1
       )));
   }
@@ -110570,7 +110604,7 @@ class eI extends Pi {
             this.toggleConstructionTween(!1),
             (this._upgrade.visible = !1),
             this.toggleUpgradeTween(!1),
-            we().extraTileInfoType)
+            getGameOptions().extraTileInfoType)
           ) {
             case "None": {
               this._bottomText.visible = !1;
@@ -110578,10 +110612,10 @@ class eI extends Pi {
             }
             case "EmpireValue": {
               const p =
-                ((o = N.current.buildingValueByTile.get(r.tile)) != null
+                ((o = Tick.current.buildingValueByTile.get(r.tile)) != null
                   ? o
                   : 0) +
-                ((l = N.current.resourceValueByTile.get(r.tile)) != null
+                ((l = Tick.current.resourceValueByTile.get(r.tile)) != null
                   ? l
                   : 0);
               p > 0
@@ -110591,7 +110625,7 @@ class eI extends Pi {
               break;
             }
             case "StoragePercentage": {
-              const p = N.current.storagePercentages.get(r.tile);
+              const p = Tick.current.storagePercentages.get(r.tile);
               p
                 ? ((this._bottomText.visible = !0),
                   (this._bottomText.text = Dt(p)))
@@ -110602,11 +110636,11 @@ class eI extends Pi {
             ? ((this._level.visible = !0),
               (this._level.text = UA(this._tile.building)))
             : (this._level.visible = !1);
-          const c = N.current.notProducingReasons.get(r.tile);
+          const c = Tick.current.notProducingReasons.get(r.tile);
           c
             ? ((this._notProducing.texture = Kte(c, i)),
               this.fadeInTopLeftIcon())
-            : N.current.electrified.has(r.tile)
+            : Tick.current.electrified.has(r.tile)
             ? ((this._notProducing.texture = Ti("Misc_Bolt", i)),
               this.fadeInTopLeftIcon())
             : this.fadeOutTopLeftIcon(),
@@ -110634,7 +110668,7 @@ class eI extends Pi {
   }
   showTimeLeft(r, i) {
     const { secondsLeft: n } = rj(r.tile, i);
-    (this._bottomText.text = Ko(n * 1e3)), (this._bottomText.visible = !0);
+    (this._bottomText.text = formatHMS(n * 1e3)), (this._bottomText.visible = !0);
   }
   toggleConstructionTween(r) {
     r &&
@@ -110653,7 +110687,7 @@ class eI extends Pi {
     this._tile.building && ((r = lu({ x: 0, y: 28 })), (i = 0.15));
     const n = i * 100;
     let a = Tr(this._tile.deposit);
-    const o = N.current.powerGrid.has(this._tile.tile);
+    const o = Tick.current.powerGrid.has(this._tile.tile);
     o && ++a;
     let l = 0;
     this._deposits.forEach((u, c) => {
@@ -110854,7 +110888,7 @@ class Mue extends tO {
     );
   }
   onAllocate(r) {
-    r.alpha = we().themeColors.TransportIndicatorAlpha;
+    r.alpha = getGameOptions().themeColors.TransportIndicatorAlpha;
   }
   onRelease(r) {
     r.alpha = 0;
@@ -110883,7 +110917,7 @@ class At extends H0 {
     b(this, "_rect", new dt(0, 0, 9.75, 9.75));
     b(this, "_pos", { x: 0, y: 0 });
     const { app: i, textures: n } = r,
-      a = Mt(kt()).maxPosition();
+      a = Mt(getGameState()).maxPosition();
     (this._width = a.x),
       (this._height = a.y),
       this.viewport.setWorldSize(this._width, this._height, Iu),
@@ -110897,7 +110931,7 @@ class At extends H0 {
       (this._bg = this.viewport.addChild(
         new lw(Ti("Misc_Paper", n), this._width + Iu * 2, this._height + Iu * 2)
       )),
-      (this._bg.tint = Za(we().themeColors.WorldBackground)),
+      (this._bg.tint = Za(getGameOptions().themeColors.WorldBackground)),
       this._bg.position.set(
         (this._width - this._bg.width) / 2,
         (this._height - this._bg.height) / 2
@@ -110912,8 +110946,8 @@ class At extends H0 {
           alignment: 0.5,
         })),
       (this._graphics.alpha = 0.1),
-      kue(Mt(kt()), this._graphics),
-      Mt(kt()).forEach((o) => {
+      kue(Mt(getGameState()), this._graphics),
+      Mt(getGameState()).forEach((o) => {
         const l = Se(o);
         this._tiles.set(l, this.viewport.addChild(new eI(this, o)));
       }),
@@ -110928,11 +110962,11 @@ class At extends H0 {
       (this._transportLines = this.viewport.addChild(new sl()));
   }
   backgroundColor() {
-    return we().themeColors.WorldBackground;
+    return getGameOptions().themeColors.WorldBackground;
   }
   onEnable() {
     this.restoreViewport();
-    const r = Kn("Headquarter", kt());
+    const r = Kn("Headquarter", getGameState());
     r && this.selectGrid(xe(r.tile)), super.onEnable();
   }
   restoreViewport() {
@@ -110949,7 +110983,7 @@ class At extends H0 {
     });
   }
   onClicked(r) {
-    const i = kt(),
+    const i = getGameState(),
       n = Mt(i).positionToGrid(this.viewport.screenToWorld(r));
     if (this._hijackSelectGridResolve) {
       this._hijackSelectGridResolve(n), (this._hijackSelectGridResolve = null);
@@ -110986,7 +111020,7 @@ class At extends H0 {
         ze();
         return;
       }
-      (o.building = Kl(Do({ type: n.type }), we())), Ze();
+      (o.building = Kl(Do({ type: n.type }), getGameOptions())), Ze();
     }
   }
   onResize(r, i) {
@@ -111017,7 +111051,7 @@ class At extends H0 {
   lookAtTile(r, i) {
     var a;
     (a = this.cameraMovement) == null || a.stop();
-    const n = this.viewport.clampCenter(Mt(kt()).xyToPosition(r));
+    const n = this.viewport.clampCenter(Mt(getGameState()).xyToPosition(r));
     (this.cameraMovement = new wue(
       () => Bl,
       (o) => {
@@ -111035,7 +111069,7 @@ class At extends H0 {
       i === 0 ? this.drawSelection(null, [r]) : this.selectGrid(xe(r));
   }
   drawSelection(r, i) {
-    if (!this._selectedGraphics || jt(this._selectedXy)) return;
+    if (!this._selectedGraphics || isNullOrUndefined(this._selectedXy)) return;
     this._selectedGraphics.clear(),
       r != null || (r = xe(this._selectedXy)),
       this._selectedGraphics.lineStyle({
@@ -111045,7 +111079,7 @@ class At extends H0 {
         join: Yr.ROUND,
         alignment: 0.5,
       });
-    const n = Mt(kt());
+    const n = Mt(getGameState());
     vx(n, r, this._selectedGraphics),
       i.length > 0
         ? i.forEach((a) => {
@@ -111054,10 +111088,10 @@ class At extends H0 {
               vx(n, xe(a), this._selectedGraphics),
               this._selectedGraphics.endFill();
           })
-        : this.drawBuildingDecors(kt());
+        : this.drawBuildingDecors(getGameState());
   }
   selectGrid(r) {
-    const i = kt();
+    const i = getGameState();
     if (!Mt(i).isValid(r)) return;
     const n = Se(r);
     (this._selectedXy = n),
@@ -111078,7 +111112,7 @@ class At extends H0 {
           const l = Mt(r).gridToPosition(o);
           this._selectedGraphics.lineStyle({ width: 0 }),
             this._selectedGraphics.beginFill(16777215, 0.2, !0),
-            this._selectedGraphics.drawCircle(l.x, l.y, HP * 4),
+            this._selectedGraphics.drawCircle(l.x, l.y, TILE_SIZE * 4),
             this._selectedGraphics.endFill();
           break;
         }
@@ -111160,7 +111194,7 @@ class At extends H0 {
         ((n[u] = !0),
         this._transportLines.lineStyle({
           color: Za(
-            (c = we().resourceColors[a.resource]) != null ? c : "#ffffff"
+            (c = getGameOptions().resourceColors[a.resource]) != null ? c : "#ffffff"
           ),
           width: 2,
           cap: tn.ROUND,
@@ -111173,7 +111207,7 @@ class At extends H0 {
     });
   }
   highlightRange(r, i) {
-    const n = Mt(kt());
+    const n = Mt(getGameState());
     n.getRange(r, i).forEach((a) => {
       this._selectedGraphics.lineStyle({ width: 0 }),
         this._selectedGraphics.beginFill(16777215, 0.2, !0),
@@ -111202,7 +111236,7 @@ class At extends H0 {
     for (const i of this._tiles.values()) i.flushFloater(r);
   }
   updateTransportVisual(r, i) {
-    const n = we();
+    const n = getGameOptions();
     if (!n.showTransportArrow) {
       for (const [o, l] of this._transport)
         this._transportPool.release(l), this._transport.delete(o);
@@ -111254,7 +111288,7 @@ class At extends H0 {
   cameraPan(r, i) {
     const { app: n } = this.context;
     this._selectedXy &&
-      (this.viewport.center = Mt(kt()).xyToPosition(this._selectedXy));
+      (this.viewport.center = Mt(getGameState()).xyToPosition(this._selectedXy));
     const a = We(
       r,
       Math.max(n.screen.width / this._width, n.screen.height / this._height),
@@ -111268,7 +111302,7 @@ var Oc = ((t) => (
 ))(Oc || {});
 function Bue(t) {
   var n, a, o;
-  const e = kt();
+  const e = getGameState();
   for (const l of KP(t, zQ(), e))
     be().sceneManager.enqueue(At, (u) => u.revealTile(l));
   const r = (n = e.tiles.get(t)) == null ? void 0 : n.building;
@@ -111304,26 +111338,26 @@ function Bue(t) {
     case "Atomium": {
       const l = M0(e),
         u =
-          (a = N.current.specialBuildings.get("Headquarter")) == null
+          (a = Tick.current.specialBuildings.get("Headquarter")) == null
             ? void 0
             : a.building.resources;
-      l && u && Tt(u, "Science", ks(l));
+      l && u && safeAdd(u, "Science", ks(l));
       break;
     }
     case "CologneCathedral": {
       const l = Sr(e),
         [u, c] = yb(l),
         p =
-          (o = N.current.specialBuildings.get("Headquarter")) == null
+          (o = Tick.current.specialBuildings.get("Headquarter")) == null
             ? void 0
             : o.building.resources;
-      p && Tt(p, "Science", c);
+      p && safeAdd(p, "Science", c);
       break;
     }
     case "StatueOfZeus": {
       let l = [];
       for (const u of i.getNeighbors(xe(t))) {
-        l.length <= 0 && (l = $o(CJ(e)));
+        l.length <= 0 && (l = shuffle(CJ(e)));
         const c = Se(u);
         if (mr(e.tiles.get(c).deposit)) {
           const p = l.pop();
@@ -111333,7 +111367,7 @@ function Bue(t) {
       break;
     }
     case "TempleOfArtemis": {
-      qn(e).forEach((l) => {
+      getXyBuildings(e).forEach((l) => {
         l.status === "completed" &&
           (l.type === "Armory" || l.type === "SwordForge") &&
           (l.level += 5);
@@ -111345,7 +111379,7 @@ function Bue(t) {
       e.claimedGreatPeople = wp();
       let l = 1;
       const u = Yn();
-      we().porcelainTowerMaxPickPerRoll &&
+      getGameOptions().porcelainTowerMaxPickPerRoll &&
         (l = We(
           Math.floor(e.claimedGreatPeople / 50),
           1,
@@ -111367,7 +111401,7 @@ function Bue(t) {
       e.tiles.forEach((c, p) => {
         !c.explored && Tr(c.deposit) > 0 && l.push(p);
       }),
-        $o(l);
+        shuffle(l);
       let u = 0;
       for (const c of l) {
         const p = e.tiles.get(c);
@@ -111380,7 +111414,7 @@ function Bue(t) {
           ((p.explored = !0),
           (p.building = Kl(
             Do({ type: m, level: 10, status: "completed" }),
-            we()
+            getGameOptions()
           )),
           fk.emit(c),
           ++u,
@@ -111403,7 +111437,7 @@ function Bue(t) {
       const l = Sr(e),
         u = In(new Set([l]), e.city, Yn());
       u && e.greatPeopleChoicesV2.push(u);
-      const c = qf(Dg(S.TechAge, (p, f) => f.idx === S.TechAge[l].idx - 1));
+      const c = qf(Dg(Config.TechAge, (p, f) => f.idx === Config.TechAge[l].idx - 1));
       if (c) {
         const p = In(new Set([c]), e.city, Yn());
         p && e.greatPeopleChoicesV2.push(p);
@@ -111420,7 +111454,7 @@ function Bue(t) {
   Eue(r, e);
 }
 function Eue(t, e) {
-  if (N.current.specialBuildings.has("CerneAbbasGiant") && on(t.type)) {
+  if (Tick.current.specialBuildings.has("CerneAbbasGiant") && on(t.type)) {
     const r = In(new Set([Sr(e)]), e.city, Yn());
     r && e.greatPeopleChoicesV2.push(r),
       e.greatPeopleChoicesV2.length > 0 &&
@@ -111429,7 +111463,7 @@ function Eue(t, e) {
 }
 function _ue(t) {
   var i;
-  const e = kt(),
+  const e = getGameState(),
     r = (i = e.tiles.get(t)) == null ? void 0 : i.building;
   if (r)
     switch (r.type) {
@@ -111512,34 +111546,34 @@ function Due({ xy: t, offline: e }) {
     ke,
     Ve,
     xt;
-  const r = kt(),
-    i = we(),
+  const r = getGameState(),
+    i = getGameOptions(),
     n = (u = r.tiles.get(t)) == null ? void 0 : u.building;
   if (!n) return;
-  const a = Yf(r),
+  const a = getTypeBuildings(r),
     o = Mt(r),
-    l = S.Building[n.type].name();
+    l = Config.Building[n.type].name();
   switch (n.type) {
     case "Headquarter": {
       if (
-        (Et(N.next.tileMultipliers, t, {
-          output: Pp(Xf(we()) * 0.1, 1),
+        (Et(Tick.next.tileMultipliers, t, {
+          output: Pp(Xf(getGameOptions()) * 0.1, 1),
           source: h(d.PermanentGreatPeople),
         }),
         r.unlockedUpgrades.SpaceshipIdle &&
-          Gm(S.Upgrade.SpaceshipIdle, h(d.WishlistSpaceshipIdle), r),
+          Gm(Config.Upgrade.SpaceshipIdle, h(d.WishlistSpaceshipIdle), r),
         Ci(mi.Festival, r))
       )
         if (r.festival)
           ((c = n.resources.Festival) != null ? c : 0) >= Xh
-            ? Tt(n.resources, "Festival", -Xh)
+            ? safeAdd(n.resources, "Festival", -Xh)
             : (r.festival = !1);
         else {
           const j =
-            (f = (p = N.current.happiness) == null ? void 0 : p.value) != null
+            (f = (p = Tick.current.happiness) == null ? void 0 : p.value) != null
               ? f
               : 0;
-          j > 0 && Tt(n.resources, "Festival", j);
+          j > 0 && safeAdd(n.resources, "Festival", j);
         }
       else r.festival = !1;
       e ||
@@ -111559,7 +111593,7 @@ function Due({ xy: t, offline: e }) {
             for (const Ae of o.getNeighbors(xe(z)))
               (K = r.tiles.get(Se(Ae))) != null && K.deposit.Water && ++ne;
             ne > 0 &&
-              Et(N.next.tileMultipliers, j.tile, { output: ne, source: l });
+              Et(Tick.next.tileMultipliers, j.tile, { output: ne, source: l });
           }
         });
       break;
@@ -111568,14 +111602,14 @@ function Due({ xy: t, offline: e }) {
       st("MusiciansGuild", { output: 1, storage: 1 }, l),
         st("PaintersGuild", { output: 1, storage: 1 }, l),
         st("WritersGuild", { output: 1, storage: 1 }, l),
-        N.next.globalMultipliers.happiness.push({ value: 5, source: l });
+        Tick.next.globalMultipliers.happiness.push({ value: 5, source: l });
       break;
     }
     case "Alps": {
-      qn(r).forEach((j, z) => {
+      getXyBuildings(r).forEach((j, z) => {
         const K = Math.floor(j.level / 10);
         K > 0 &&
-          Et(N.next.tileMultipliers, z, {
+          Et(Tick.next.tileMultipliers, z, {
             input: r.festival ? 0 : K,
             output: K,
             source: h(d.NaturalWonderName, { name: l }),
@@ -111584,20 +111618,20 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "GrottaAzzurra": {
-      Q(S.BuildingTier, (j, z) => {
+      forEach(Config.BuildingTier, (j, z) => {
         z === 1 && st(j, { output: 1, worker: 1, storage: 1 }, l);
       });
       break;
     }
     case "PyramidOfGiza": {
-      Q(S.Building, (j, z) => {
+      forEach(Config.Building, (j, z) => {
         z.output.Worker && st(j, { output: 1 }, l);
       });
       break;
     }
     case "ChichenItza": {
       for (const j of o.getNeighbors(xe(t)))
-        Et(N.next.tileMultipliers, Se(j), {
+        Et(Tick.next.tileMultipliers, Se(j), {
           output: 1,
           storage: 1,
           worker: 1,
@@ -111607,7 +111641,7 @@ function Due({ xy: t, offline: e }) {
     }
     case "LighthouseOfAlexandria": {
       for (const j of o.getNeighbors(xe(t)))
-        Et(N.next.tileMultipliers, Se(j), { storage: 5, source: l });
+        Et(Tick.next.tileMultipliers, Se(j), { storage: 5, source: l });
       break;
     }
     case "GrandBazaar": {
@@ -111615,7 +111649,7 @@ function Due({ xy: t, offline: e }) {
         const z = Se(j),
           K = Ei(z, r);
         (K == null ? void 0 : K.type) === "Caravansary" &&
-          Et(N.next.tileMultipliers, z, { output: 5, storage: 5, source: l });
+          Et(Tick.next.tileMultipliers, z, { output: 5, storage: 5, source: l });
       }
       break;
     }
@@ -111623,42 +111657,42 @@ function Due({ xy: t, offline: e }) {
       let j = 0;
       for (const z of o.getNeighbors(xe(t))) {
         const K = Ei(Se(z), r);
-        K && !S.Building[K.type].output.Worker && j++;
+        K && !Config.Building[K.type].output.Worker && j++;
       }
-      N.next.globalMultipliers.happiness.push({ value: j, source: l });
+      Tick.next.globalMultipliers.happiness.push({ value: j, source: l });
       break;
     }
     case "HagiaSophia": {
       let j = 5;
       const z =
-        (y = (v = N.current.happiness) == null ? void 0 : v.value) != null
+        (y = (v = Tick.current.happiness) == null ? void 0 : v.value) != null
           ? y
           : 0;
-      N.current.tick <= 10 && z < 0 && (j += Math.abs(z)),
-        N.next.globalMultipliers.happiness.push({ value: j, source: l });
+      Tick.current.tick <= 10 && z < 0 && (j += Math.abs(z)),
+        Tick.next.globalMultipliers.happiness.push({ value: j, source: l });
       break;
     }
     case "Colosseum": {
-      let j = (S.TechAge[Sr(r)].idx + 1) * 2;
-      N.current.notProducingReasons.has(t) ||
-        (j += S.Building.Colosseum.input.Chariot),
-        N.next.globalMultipliers.happiness.push({ value: j, source: l }),
-        (x = oa("ChariotWorkshop", r)) == null ||
+      let j = (Config.TechAge[Sr(r)].idx + 1) * 2;
+      Tick.current.notProducingReasons.has(t) ||
+        (j += Config.Building.Colosseum.input.Chariot),
+        Tick.next.globalMultipliers.happiness.push({ value: j, source: l }),
+        (x = getBuildingsByType("ChariotWorkshop", r)) == null ||
           x.forEach((z, K) => {
-            N.next.happinessExemptions.add(K);
+            Tick.next.happinessExemptions.add(K);
           });
       break;
     }
     case "AngkorWat": {
-      hr(N.next.workersAvailable, "Worker", 1e3);
+      hr(Tick.next.workersAvailable, "Worker", 1e3);
       for (const j of o.getNeighbors(xe(t)))
-        Et(N.next.tileMultipliers, Se(j), { worker: 1, source: l });
+        Et(Tick.next.tileMultipliers, Se(j), { worker: 1, source: l });
       break;
     }
     case "TempleOfHeaven": {
-      qn(r).forEach((j, z) => {
+      getXyBuildings(r).forEach((j, z) => {
         j.level >= 10 &&
-          Et(N.next.tileMultipliers, z, { worker: 1, source: l });
+          Et(Tick.next.tileMultipliers, z, { worker: 1, source: l });
       });
       break;
     }
@@ -111670,14 +111704,14 @@ function Due({ xy: t, offline: e }) {
           K.explored &&
           ((T = K == null ? void 0 : K.building) == null ? void 0 : T.type) ===
             "EuphratesRiver" &&
-          (j = S.TechAge[Sr(r)].idx - S.TechAge[H_("HangingGarden")].idx);
+          (j = Config.TechAge[Sr(r)].idx - Config.TechAge[H_("HangingGarden")].idx);
       }
-      N.next.globalMultipliers.builderCapacity.push({ value: j, source: l });
+      Tick.next.globalMultipliers.builderCapacity.push({ value: j, source: l });
       for (const z of o.getNeighbors(xe(t))) {
         const K = (A = r.tiles.get(Se(z))) == null ? void 0 : A.building;
         K &&
           K.type === "Aqueduct" &&
-          Et(N.next.tileMultipliers, Se(z), {
+          Et(Tick.next.tileMultipliers, Se(z), {
             worker: j,
             storage: j,
             output: j,
@@ -111689,18 +111723,18 @@ function Due({ xy: t, offline: e }) {
     case "Parthenon": {
       st("MusiciansGuild", { output: 1, worker: 1, storage: 1 }, l),
         st("PaintersGuild", { output: 1, worker: 1, storage: 1 }, l),
-        (C = oa("MusiciansGuild", r)) == null ||
+        (C = getBuildingsByType("MusiciansGuild", r)) == null ||
           C.forEach((j, z) => {
-            N.next.happinessExemptions.add(z);
+            Tick.next.happinessExemptions.add(z);
           }),
-        (P = oa("PaintersGuild", r)) == null ||
+        (P = getBuildingsByType("PaintersGuild", r)) == null ||
           P.forEach((j, z) => {
-            N.next.happinessExemptions.add(z);
+            Tick.next.happinessExemptions.add(z);
           });
       break;
     }
     case "Stonehenge": {
-      Q(S.Building, (j, z) => {
+      forEach(Config.Building, (j, z) => {
         (z.input.Stone || z.output.Stone) && st(j, { output: 1 }, l);
       });
       break;
@@ -111722,7 +111756,7 @@ function Due({ xy: t, offline: e }) {
                   ++ne;
               }
               ne > 0 &&
-                Et(N.next.tileMultipliers, j.tile, { output: ne, source: l });
+                Et(Tick.next.tileMultipliers, j.tile, { output: ne, source: l });
             }
           });
       break;
@@ -111735,18 +111769,18 @@ function Due({ xy: t, offline: e }) {
     }
     case "OxfordUniversity": {
       let j = 0;
-      N.current.scienceProduced.forEach((K, ne) => {
+      Tick.current.scienceProduced.forEach((K, ne) => {
         t !== ne && (j += K);
       }),
         (j *= 0.1);
       const z =
-        (k = N.current.specialBuildings.get("Headquarter")) == null
+        (k = Tick.current.specialBuildings.get("Headquarter")) == null
           ? void 0
           : k.building.resources;
       z &&
-        (Tt(z, "Science", j),
-        hr(N.next.wonderProductions, "Science", j),
-        N.next.scienceProduced.set(t, j));
+        (safeAdd(z, "Science", j),
+        hr(Tick.next.wonderProductions, "Science", j),
+        Tick.next.scienceProduced.set(t, j));
       break;
     }
     case "ForbiddenCity": {
@@ -111760,7 +111794,7 @@ function Due({ xy: t, offline: e }) {
         ((B = (w = n.resources) == null ? void 0 : w.Explorer) != null
           ? B
           : 0) < YL &&
-        Tt(n.resources, "Explorer", 1);
+        safeAdd(n.resources, "Explorer", 1);
       break;
     }
     case "HimejiCastle": {
@@ -111770,10 +111804,10 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "TajMahal": {
-      qn(r).forEach((j, z) => {
+      getXyBuildings(r).forEach((j, z) => {
         j.level >= 20 &&
           j.status !== "completed" &&
-          Et(N.next.tileMultipliers, z, { worker: 5, source: l });
+          Et(Tick.next.tileMultipliers, z, { worker: 5, source: l });
       });
       break;
     }
@@ -111782,8 +111816,8 @@ function Due({ xy: t, offline: e }) {
         const z = Se(j),
           K = Ei(z, r);
         K &&
-          S.BuildingTier[K.type] === 1 &&
-          Et(N.next.tileMultipliers, z, {
+          Config.BuildingTier[K.type] === 1 &&
+          Et(Tick.next.tileMultipliers, z, {
             output: 1,
             worker: 1,
             storage: 1,
@@ -111793,16 +111827,16 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "Aphrodite": {
-      qn(r).forEach((j, z) => {
+      getXyBuildings(r).forEach((j, z) => {
         j.level >= 20 &&
           j.status !== "completed" &&
-          Et(N.next.tileMultipliers, z, {
+          Et(Tick.next.tileMultipliers, z, {
             worker: 2 * (j.level - 20),
             source: l,
           });
       }),
-        Q(i.greatPeople, (j, z) => {
-          const K = S.GreatPerson[j];
+        forEach(i.greatPeople, (j, z) => {
+          const K = Config.GreatPerson[j];
           K.age === "ClassicalAge" &&
             z.level > 0 &&
             K.tick(K, 1, `${l}: ${K.name()}`, Li.Unstable);
@@ -111815,9 +111849,9 @@ function Due({ xy: t, offline: e }) {
           K = Ei(z, r);
         if (K && !yr(K.type)) {
           K.level < 25 && (K.level = 25);
-          const ne = (_ = S.BuildingTier[K.type]) != null ? _ : 0;
+          const ne = (_ = Config.BuildingTier[K.type]) != null ? _ : 0;
           ne > 0 &&
-            Et(N.next.tileMultipliers, z, {
+            Et(Tick.next.tileMultipliers, z, {
               output: ne,
               storage: ne,
               source: l,
@@ -111825,7 +111859,7 @@ function Due({ xy: t, offline: e }) {
         }
       }
       r.festival &&
-        N.next.globalMultipliers.output.push({ value: 1, source: l });
+        Tick.next.globalMultipliers.output.push({ value: 1, source: l });
       break;
     }
     case "StatueOfZeus": {
@@ -111833,8 +111867,8 @@ function Due({ xy: t, offline: e }) {
         const z = Se(j),
           K = (D = r.tiles.get(z)) == null ? void 0 : D.building;
         K &&
-          S.BuildingTier[K.type] === 1 &&
-          Et(N.next.tileMultipliers, z, { output: 5, storage: 5, source: l });
+          Config.BuildingTier[K.type] === 1 &&
+          Et(Tick.next.tileMultipliers, z, { output: 5, storage: 5, source: l });
       }
       break;
     }
@@ -111852,7 +111886,7 @@ function Due({ xy: t, offline: e }) {
           (j.push(ne), ++z);
       }
       for (const K of j)
-        Et(N.next.tileMultipliers, K, {
+        Et(Tick.next.tileMultipliers, K, {
           worker: z,
           storage: z,
           output: z,
@@ -111861,15 +111895,15 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "Rijksmuseum": {
-      Q(S.Building, (j, z) => {
+      forEach(Config.Building, (j, z) => {
         (z.input.Culture || z.output.Culture) &&
           st(j, { output: 1, worker: 1, storage: 1 }, l);
       }),
-        N.next.globalMultipliers.happiness.push({ value: 5, source: l });
+        Tick.next.globalMultipliers.happiness.push({ value: 5, source: l });
       break;
     }
     case "SummerPalace": {
-      Q(S.Building, (j, z) => {
+      forEach(Config.Building, (j, z) => {
         (z.input.Gunpowder || z.output.Gunpowder) &&
           st(j, { output: 1, worker: 1, storage: 1 }, l);
       });
@@ -111877,9 +111911,9 @@ function Due({ xy: t, offline: e }) {
         const z = Se(j),
           K = Ei(z, r);
         K &&
-          (S.Building[K.type].input.Gunpowder ||
-            S.Building[K.type].output.Gunpowder) &&
-          N.next.happinessExemptions.add(z);
+          (Config.Building[K.type].input.Gunpowder ||
+            Config.Building[K.type].output.Gunpowder) &&
+          Tick.next.happinessExemptions.add(z);
       }
       break;
     }
@@ -111889,16 +111923,16 @@ function Due({ xy: t, offline: e }) {
       for (const ne of o.getNeighbors(xe(t))) {
         const Ae = Se(ne),
           vt = (L = Ei(Ae, r)) == null ? void 0 : L.type;
-        vt && S.Building[vt].output.Faith && N.next.happinessExemptions.add(Ae);
+        vt && Config.Building[vt].output.Faith && Tick.next.happinessExemptions.add(Ae);
       }
-      N.next.globalMultipliers.happiness.push({ value: K, source: l });
+      Tick.next.globalMultipliers.happiness.push({ value: K, source: l });
       break;
     }
     case "Neuschwanstein": {
-      qn(r).forEach((j, z) => {
+      getXyBuildings(r).forEach((j, z) => {
         on(j.type) &&
           j.status !== "completed" &&
-          Et(N.next.tileMultipliers, z, { worker: 10, source: l });
+          Et(Tick.next.tileMultipliers, z, { worker: 10, source: l });
       });
       break;
     }
@@ -111911,7 +111945,7 @@ function Due({ xy: t, offline: e }) {
           let Ae = 0;
           for (const vt of o.getNeighbors(j))
             ((W = Ei(Se(vt), r)) == null ? void 0 : W.type) === ne && ++Ae;
-          Et(N.next.tileMultipliers, z, {
+          Et(Tick.next.tileMultipliers, z, {
             worker: Ae,
             storage: Ae,
             output: Ae,
@@ -111930,7 +111964,7 @@ function Due({ xy: t, offline: e }) {
             for (const Ae of o.getNeighbors(xe(z)))
               (K = r.tiles.get(Se(Ae))) != null && K.deposit.Oil && ++ne;
             ne > 0 &&
-              Et(N.next.tileMultipliers, j.tile, {
+              Et(Tick.next.tileMultipliers, j.tile, {
                 output: ne,
                 storage: ne,
                 worker: ne,
@@ -111943,7 +111977,7 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "MountSinai": {
-      Q(S.Building, (j, z) => {
+      forEach(Config.Building, (j, z) => {
         z.output.Faith && st(j, { storage: 5 }, l);
       });
       break;
@@ -111954,14 +111988,14 @@ function Due({ xy: t, offline: e }) {
         const K = Se(z),
           ne = Ei(K, r);
         (ne == null ? void 0 : ne.type) === "WheatFarm" &&
-          Et(N.next.tileMultipliers, K, { storage: 5, output: 5, source: l });
+          Et(Tick.next.tileMultipliers, K, { storage: 5, output: 5, source: l });
       }
       const j = xa("Hatshepsut", r);
       j > 0 &&
-        S.GreatPerson.Hatshepsut.tick(
-          S.GreatPerson.Hatshepsut,
+        Config.GreatPerson.Hatshepsut.tick(
+          Config.GreatPerson.Hatshepsut,
           j,
-          `${l}: ${S.GreatPerson.Hatshepsut.name()}`,
+          `${l}: ${Config.GreatPerson.Hatshepsut.name()}`,
           Li.None
         );
       break;
@@ -111972,11 +112006,11 @@ function Due({ xy: t, offline: e }) {
         const ne = Se(K);
         on(($ = Ei(ne, r)) == null ? void 0 : $.type) && ++j;
       }
-      N.next.globalMultipliers.happiness.push({ value: j, source: l });
+      Tick.next.globalMultipliers.happiness.push({ value: j, source: l });
       const z = xa("RamessesII", r);
       z > 0 &&
-        N.next.globalMultipliers.builderCapacity.push({
-          value: S.GreatPerson.RamessesII.value(z),
+        Tick.next.globalMultipliers.builderCapacity.push({
+          value: Config.GreatPerson.RamessesII.value(z),
           source: l,
         });
       break;
@@ -111985,12 +112019,12 @@ function Due({ xy: t, offline: e }) {
       for (const j of o.getRange(xe(t), 2)) {
         const z = Se(j),
           K = (X = r.tiles.get(z)) == null ? void 0 : X.building;
-        if (K && ((q = S.BuildingTier[K.type]) != null ? q : 0) > 1) {
+        if (K && ((q = Config.BuildingTier[K.type]) != null ? q : 0) > 1) {
           const ne = K.type;
           let Ae = 0;
           for (const vt of o.getNeighbors(j))
             ((re = Ei(Se(vt), r)) == null ? void 0 : re.type) === ne && ++Ae;
-          Et(N.next.tileMultipliers, z, {
+          Et(Tick.next.tileMultipliers, z, {
             input: r.festival ? 0 : Ae,
             output: Ae,
             source: l,
@@ -112006,23 +112040,23 @@ function Due({ xy: t, offline: e }) {
           ne = (V = r.tiles.get(K)) == null ? void 0 : V.building;
         ne &&
           lj(K, r) &&
-          (S.Building[ne.type].input.Culture ||
-            S.Building[ne.type].output.Culture) &&
+          (Config.Building[ne.type].input.Culture ||
+            Config.Building[ne.type].output.Culture) &&
           ++j;
       }
-      N.next.globalMultipliers.happiness.push({ value: j + 5, source: l });
+      Tick.next.globalMultipliers.happiness.push({ value: j + 5, source: l });
       break;
     }
     case "GoldenGateBridge": {
-      Q(S.Building, (j, z) => {
+      forEach(Config.Building, (j, z) => {
         z.output.Power && st(j, { output: 1 }, l);
       });
-      for (const j of o.getNeighbors(xe(t))) N.next.powerPlants.add(Se(j));
+      for (const j of o.getNeighbors(xe(t))) Tick.next.powerPlants.add(Se(j));
       break;
     }
     case "CristoRedentor": {
       for (const j of o.getRange(xe(t), 2))
-        N.next.happinessExemptions.add(Se(j));
+        Tick.next.happinessExemptions.add(Se(j));
       break;
     }
     case "SagradaFamilia": {
@@ -112033,13 +112067,13 @@ function Due({ xy: t, offline: e }) {
         const vt = Se(Ae),
           wn = (Z = Ei(vt, r)) == null ? void 0 : Z.type;
         if (!wn || yr(wn)) continue;
-        const Gr = (ee = S.BuildingTier[wn]) != null ? ee : 0;
+        const Gr = (ee = Config.BuildingTier[wn]) != null ? ee : 0;
         Gr <= 0 || ((z = Math.min(z, Gr)), (K = Math.max(K, Gr)));
       }
       const ne = K - z;
       if (ne > 0)
         for (const Ae of j.getRange(xe(t), 2))
-          Et(N.next.tileMultipliers, Se(Ae), {
+          Et(Tick.next.tileMultipliers, Se(Ae), {
             output: ne,
             storage: ne,
             worker: ne,
@@ -112049,7 +112083,7 @@ function Due({ xy: t, offline: e }) {
     }
     case "YellowCraneTower": {
       for (const j of o.getRange(xe(t), dj(t, r)))
-        Et(N.next.tileMultipliers, Se(j), {
+        Et(Tick.next.tileMultipliers, Se(j), {
           output: 1,
           storage: 1,
           worker: 1,
@@ -112059,10 +112093,10 @@ function Due({ xy: t, offline: e }) {
     }
     case "UnitedNations": {
       if (
-        (Q(S.BuildingTier, (j, z) => {
+        (forEach(Config.BuildingTier, (j, z) => {
           z >= 4 && z <= 6 && st(j, { output: 1, worker: 1, storage: 1 }, l);
         }),
-        Date.now() - rI > rk &&
+        Date.now() - rI > MINUTE &&
           ((rI = Date.now()),
           (Md === null || zL() !== Md.id) &&
             qe.getVotedBoosts().then((j) => {
@@ -112083,15 +112117,15 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "MountTai": {
-      Q(S.Building, (z, K) => {
+      forEach(Config.Building, (z, K) => {
         !yr(z) && K.output.Science && st(z, { output: 1 }, l);
       });
       const j = xa("Confucius", r);
       j > 0 &&
-        S.GreatPerson.Confucius.tick(
-          S.GreatPerson.Confucius,
+        Config.GreatPerson.Confucius.tick(
+          Config.GreatPerson.Confucius,
           j,
-          `${l}: ${S.GreatPerson.Confucius.name()}`,
+          `${l}: ${Config.GreatPerson.Confucius.name()}`,
           Li.None
         );
       break;
@@ -112112,7 +112146,7 @@ function Due({ xy: t, offline: e }) {
             Gr.building.capacity > 0 &&
             ++Ae;
         }
-        Ae > 0 && Et(N.next.tileMultipliers, ne, { output: Ae, source: l });
+        Ae > 0 && Et(Tick.next.tileMultipliers, ne, { output: Ae, source: l });
       };
       (ve = a.get("UraniumEnrichmentPlant")) == null || ve.forEach(j),
         (ce = a.get("AtomicFacility")) == null || ce.forEach(j);
@@ -112126,7 +112160,7 @@ function Due({ xy: t, offline: e }) {
         st(
           "AtomicFacility",
           { storage: We(z, 1, 5), output: We(z, 1, 5) },
-          S.GreatPerson.MahatmaGandhi.name()
+          Config.GreatPerson.MahatmaGandhi.name()
         );
       break;
     }
@@ -112134,9 +112168,9 @@ function Due({ xy: t, offline: e }) {
       for (const j of o.getRange(xe(t), hj(t, r))) {
         const z = Ei(Se(j), r);
         if (!z || yr(z.type)) continue;
-        let K = Math.abs(S.TechAge[Sr(r)].idx - S.TechAge[H_(z.type)].idx);
+        let K = Math.abs(Config.TechAge[Sr(r)].idx - Config.TechAge[H_(z.type)].idx);
         r.festival && (K *= 2),
-          Et(N.next.tileMultipliers, Se(j), {
+          Et(Tick.next.tileMultipliers, Se(j), {
             output: K,
             storage: K,
             worker: K,
@@ -112147,31 +112181,31 @@ function Due({ xy: t, offline: e }) {
     }
     case "YangtzeRiver": {
       const j =
-        (_e = (he = we().greatPeople.WuZetian) == null ? void 0 : he.level) !=
+        (_e = (he = getGameOptions().greatPeople.WuZetian) == null ? void 0 : he.level) !=
         null
           ? _e
           : 0;
-      Q(S.Building, (K, ne) => {
+      forEach(Config.Building, (K, ne) => {
         ne.input.Water
           ? st(K, { output: 1, worker: 1, storage: 1 + j }, l)
           : j > 0 && st(K, { storage: j }, l);
       });
       const z = xa("ZhengHe", r);
       z > 0 &&
-        S.GreatPerson.ZhengHe.tick(
-          S.GreatPerson.ZhengHe,
+        Config.GreatPerson.ZhengHe.tick(
+          Config.GreatPerson.ZhengHe,
           z,
-          `${l}: ${S.GreatPerson.ZhengHe.name()}`,
+          `${l}: ${Config.GreatPerson.ZhengHe.name()}`,
           Li.None
         );
       break;
     }
     case "PorcelainTower": {
-      N.next.globalMultipliers.happiness.push({ value: 5, source: l }),
+      Tick.next.globalMultipliers.happiness.push({ value: 5, source: l }),
         r.festival &&
-          Q(r.greatPeople, (j, z) => {
+          forEach(r.greatPeople, (j, z) => {
             if (z > 0) {
-              const K = S.GreatPerson[j];
+              const K = Config.GreatPerson[j];
               K.tick(K, 1, `${h(d.Festival)}: ${K.name()}`, Li.Unstable);
             }
           });
@@ -112182,41 +112216,41 @@ function Due({ xy: t, offline: e }) {
       for (const K of o.getRange(xe(t), 2)) {
         const ne = Se(K);
         if (ne !== t) {
-          j += (et = N.current.scienceProduced.get(ne)) != null ? et : 0;
+          j += (et = Tick.current.scienceProduced.get(ne)) != null ? et : 0;
           const Ae = Ei(ne, r);
           Ae &&
-            S.Building[Ae.type].output.Science &&
-            Et(N.next.tileMultipliers, ne, { output: 5, source: l });
+            Config.Building[Ae.type].output.Science &&
+            Et(Tick.next.tileMultipliers, ne, { output: 5, source: l });
         }
       }
       const z =
-        (je = N.current.specialBuildings.get("Headquarter")) == null
+        (je = Tick.current.specialBuildings.get("Headquarter")) == null
           ? void 0
           : je.building.resources;
       z &&
-        (Tt(z, "Science", j),
-        hr(N.next.wonderProductions, "Science", j),
-        N.next.scienceProduced.set(t, j));
+        (safeAdd(z, "Science", j),
+        hr(Tick.next.wonderProductions, "Science", j),
+        Tick.next.scienceProduced.set(t, j));
       break;
     }
     case "CNTower": {
-      ($e = oa("MovieStudio", r)) == null ||
+      ($e = getBuildingsByType("MovieStudio", r)) == null ||
         $e.forEach((j, z) => {
-          N.next.happinessExemptions.add(z);
+          Tick.next.happinessExemptions.add(z);
         }),
-        (rt = oa("RadioStation", r)) == null ||
+        (rt = getBuildingsByType("RadioStation", r)) == null ||
           rt.forEach((j, z) => {
-            N.next.happinessExemptions.add(z);
+            Tick.next.happinessExemptions.add(z);
           }),
-        (St = oa("TVStation", r)) == null ||
+        (St = getBuildingsByType("TVStation", r)) == null ||
           St.forEach((j, z) => {
-            N.next.happinessExemptions.add(z);
+            Tick.next.happinessExemptions.add(z);
           }),
-        Q(S.BuildingTechAge, (j, z) => {
+        forEach(Config.BuildingTechAge, (j, z) => {
           var K;
           if (z === "WorldWarAge" || z === "ColdWarAge") {
             const ne = Math.abs(
-              S.TechAge[z].idx + 1 - ((K = S.BuildingTier[j]) != null ? K : 1)
+              Config.TechAge[z].idx + 1 - ((K = Config.BuildingTier[j]) != null ? K : 1)
             );
             st(j, { output: ne, storage: ne, worker: ne }, l);
           }
@@ -112225,10 +112259,10 @@ function Due({ xy: t, offline: e }) {
     }
     case "SpaceNeedle": {
       let j = 0;
-      N.current.specialBuildings.forEach((z, K) => {
+      Tick.current.specialBuildings.forEach((z, K) => {
         on(K) && ++j;
       }),
-        N.next.globalMultipliers.happiness.push({ value: j, source: l });
+        Tick.next.globalMultipliers.happiness.push({ value: j, source: l });
       break;
     }
     case "ApolloProgram": {
@@ -112242,7 +112276,7 @@ function Due({ xy: t, offline: e }) {
           ((Ae = Ei(wn, r)) == null ? void 0 : Ae.type) === "RocketFactory" &&
             ++ne;
         }
-        ne > 0 && Et(N.next.tileMultipliers, K, { output: ne, source: l });
+        ne > 0 && Et(Tick.next.tileMultipliers, K, { output: ne, source: l });
       };
       (sr = a.get("SatelliteFactory")) == null || sr.forEach(j),
         (Yt = a.get("SpacecraftFactory")) == null || Yt.forEach(j),
@@ -112252,10 +112286,10 @@ function Due({ xy: t, offline: e }) {
     case "ChoghaZanbil": {
       const j = n;
       if (j.tradition) {
-        const z = S.Tradition[j.tradition].content;
+        const z = Config.Tradition[j.tradition].content;
         for (let K = 0; K < j.level; K++) {
           const ne = z[K],
-            Ae = S.Upgrade[ne];
+            Ae = Config.Upgrade[ne];
           r.unlockedUpgrades[ne] ||
             ((r.unlockedUpgrades[ne] = !0),
             (ui = Ae.onUnlocked) == null || ui.call(Ae, r)),
@@ -112265,16 +112299,16 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "LuxorTemple": {
-      N.next.globalMultipliers.sciencePerBusyWorker.push({
+      Tick.next.globalMultipliers.sciencePerBusyWorker.push({
         value: 1,
         source: l,
       });
       const j = n;
       if (j.religion) {
-        const z = S.Religion[j.religion].content;
+        const z = Config.Religion[j.religion].content;
         for (let K = 0; K < j.level; K++) {
           const ne = z[K],
-            Ae = S.Upgrade[ne];
+            Ae = Config.Upgrade[ne];
           r.unlockedUpgrades[ne] ||
             ((r.unlockedUpgrades[ne] = !0),
             (cr = Ae.onUnlocked) == null || cr.call(Ae, r)),
@@ -112284,16 +112318,16 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "BigBen": {
-      N.next.globalMultipliers.sciencePerBusyWorker.push({
+      Tick.next.globalMultipliers.sciencePerBusyWorker.push({
         value: 2,
         source: l,
       });
       const j = n;
       if (j.ideology) {
-        const z = S.Ideology[j.ideology].content;
+        const z = Config.Ideology[j.ideology].content;
         for (let K = 0; K < j.level; K++) {
           const ne = z[K],
-            Ae = S.Upgrade[ne];
+            Ae = Config.Upgrade[ne];
           r.unlockedUpgrades[ne] ||
             ((r.unlockedUpgrades[ne] = !0),
             (xn = Ae.onUnlocked) == null || xn.call(Ae, r)),
@@ -112304,7 +112338,7 @@ function Due({ xy: t, offline: e }) {
     }
     case "Broadway": {
       n.greatPeople.forEach((z) => {
-        const K = S.GreatPerson[z],
+        const K = Config.GreatPerson[z],
           ne = xa(z, r, i);
         ne > 0 && K.tick(K, ne, `${l}: ${K.name()}`, Li.Unstable);
       });
@@ -112315,9 +112349,9 @@ function Due({ xy: t, offline: e }) {
         ((Lr = (_r = n.resources) == null ? void 0 : _r.Teleport) != null
           ? Lr
           : 0) < GP &&
-        Tt(n.resources, "Teleport", 1);
+        safeAdd(n.resources, "Teleport", 1);
       for (const j of o.getRange(xe(t), 2))
-        Et(N.next.tileMultipliers, Se(j), {
+        Et(Tick.next.tileMultipliers, Se(j), {
           output: 1,
           worker: 1,
           storage: 1,
@@ -112332,22 +112366,22 @@ function Due({ xy: t, offline: e }) {
         if (ne && ne.status === "completed") {
           let Ae = !1;
           if (
-            ((S.Building[ne.type].output.Coin ||
-              S.Building[ne.type].output.Banknote ||
-              S.Building[ne.type].output.Bond ||
-              S.Building[ne.type].output.Stock ||
-              S.Building[ne.type].output.Forex) &&
+            ((Config.Building[ne.type].output.Coin ||
+              Config.Building[ne.type].output.Banknote ||
+              Config.Building[ne.type].output.Bond ||
+              Config.Building[ne.type].output.Stock ||
+              Config.Building[ne.type].output.Forex) &&
               (Ae = !0),
             r.festival &&
-              (S.Building[ne.type].output.MutualFund ||
-                S.Building[ne.type].output.HedgeFund ||
-                S.Building[ne.type].output.Bitcoin) &&
+              (Config.Building[ne.type].output.MutualFund ||
+                Config.Building[ne.type].output.HedgeFund ||
+                Config.Building[ne.type].output.Bitcoin) &&
               (Ae = !0),
             Ae)
           ) {
             let vt = Math.round(mb(r.id + r.lastPriceUpdated + K)() * 4 + 1);
             r.festival && (vt *= 2),
-              Et(N.next.tileMultipliers, K, {
+              Et(Tick.next.tileMultipliers, K, {
                 unstable: !0,
                 output: vt,
                 source: l,
@@ -112358,38 +112392,38 @@ function Due({ xy: t, offline: e }) {
       r.festival && st("ResearchFund", { output: 5 }, l);
       const j = xa("JohnDRockefeller", r, i);
       j > 0 &&
-        S.GreatPerson.JohnDRockefeller.tick(
-          S.GreatPerson.JohnDRockefeller,
+        Config.GreatPerson.JohnDRockefeller.tick(
+          Config.GreatPerson.JohnDRockefeller,
           j,
-          `${l}: ${S.GreatPerson.JohnDRockefeller.name()}`,
+          `${l}: ${Config.GreatPerson.JohnDRockefeller.name()}`,
           Li.None
         );
       break;
     }
     case "Shenandoah": {
       const j = Sr(r);
-      Q(S.BuildingTechAge, (K, ne) => {
+      forEach(Config.BuildingTechAge, (K, ne) => {
         ne === j && st(K, { output: 2, unstable: !0 }, l);
       });
       const z = xa("JPMorgan", r, i);
       z > 0 &&
-        S.GreatPerson.JPMorgan.tick(
-          S.GreatPerson.JPMorgan,
+        Config.GreatPerson.JPMorgan.tick(
+          Config.GreatPerson.JPMorgan,
           z,
-          `${l}: ${S.GreatPerson.JPMorgan.name()}`,
+          `${l}: ${Config.GreatPerson.JPMorgan.name()}`,
           Li.None
         );
       break;
     }
     case "NiagaraFalls": {
       const j = Sr(r),
-        z = S.TechAge[j].idx + 1;
+        z = Config.TechAge[j].idx + 1;
       st("Warehouse", { storage: z }, l),
         st("Market", { storage: z }, l),
         st("Caravansary", { storage: z }, l);
       const K =
         xa("AlbertEinstein", r, i) +
-        ((Je = i.ageWisdom[S.GreatPerson.AlbertEinstein.age]) != null ? Je : 0);
+        ((Je = i.ageWisdom[Config.GreatPerson.AlbertEinstein.age]) != null ? Je : 0);
       K > 0 && st("ResearchFund", { output: K }, l);
       break;
     }
@@ -112398,19 +112432,19 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "ProphetsMosque": {
-      S.GreatPerson.HarunAlRashid.tick(
-        S.GreatPerson.HarunAlRashid,
+      Config.GreatPerson.HarunAlRashid.tick(
+        Config.GreatPerson.HarunAlRashid,
         xa("HarunAlRashid", r, i),
-        `${l}: ${S.GreatPerson.HarunAlRashid.name()}`,
+        `${l}: ${Config.GreatPerson.HarunAlRashid.name()}`,
         Li.None
       ),
         oy(t, "Mosque", r);
       break;
     }
     case "GreatDagonPagoda": {
-      (Pr = oa("Pagoda", r)) == null ||
+      (Pr = getBuildingsByType("Pagoda", r)) == null ||
         Pr.forEach((j, z) => {
-          N.next.happinessExemptions.add(z);
+          Tick.next.happinessExemptions.add(z);
         }),
         oy(t, "Pagoda", r);
       break;
@@ -112418,14 +112452,14 @@ function Due({ xy: t, offline: e }) {
     case "Pantheon": {
       for (const j of o.getRange(xe(t), 2)) {
         const z = Se(j);
-        Et(N.next.tileMultipliers, z, { worker: 1, storage: 1, source: l });
+        Et(Tick.next.tileMultipliers, z, { worker: 1, storage: 1, source: l });
       }
       oy(t, "Shrine", r);
       break;
     }
     case "ZigguratOfUr": {
       const j =
-          (Cn = (kr = N.current.happiness) == null ? void 0 : kr.value) != null
+          (Cn = (kr = Tick.current.happiness) == null ? void 0 : kr.value) != null
             ? Cn
             : 0,
         z = Sr(r);
@@ -112433,11 +112467,11 @@ function Due({ xy: t, offline: e }) {
         const K = We(
           Math.floor(j / 10),
           1,
-          Math.floor((S.TechAge[z].idx + 1) / 2)
+          Math.floor((Config.TechAge[z].idx + 1) / 2)
         );
-        (r.festival ? zt(S.BuildingTechAge) : U_(Sr(r))).forEach((Ae) => {
+        (r.festival ? keysOf(Config.BuildingTechAge) : U_(Sr(r))).forEach((Ae) => {
           !yr(Ae) &&
-            !S.Building[Ae].output.Worker &&
+            !Config.Building[Ae].output.Worker &&
             st(Ae, { output: K, unstable: !0 }, l);
         });
       }
@@ -112448,7 +112482,7 @@ function Due({ xy: t, offline: e }) {
       for (const z of o.getRange(xe(t), 1)) {
         const K = Se(z),
           ne = Ei(K, r);
-        ne && !N.current.notProducingReasons.has(K) && j.add(ne.type);
+        ne && !Tick.current.notProducingReasons.has(K) && j.add(ne.type);
       }
       j.forEach((z) => {
         st(z, { output: 2, unstable: !0 }, l);
@@ -112457,8 +112491,8 @@ function Due({ xy: t, offline: e }) {
     }
     case "WallOfBabylon": {
       const j = Sr(r);
-      N.next.globalMultipliers.storage.push({
-        value: Math.floor((S.TechAge[j].idx + 1) / 2),
+      Tick.next.globalMultipliers.storage.push({
+        value: Math.floor((Config.TechAge[j].idx + 1) / 2),
         source: l,
       });
       break;
@@ -112476,7 +112510,7 @@ function Due({ xy: t, offline: e }) {
           r
         ),
           ne < 5 &&
-            Et(N.next.tileMultipliers, K, {
+            Et(Tick.next.tileMultipliers, K, {
               output: 2,
               unstable: !0,
               source: l,
@@ -112484,23 +112518,23 @@ function Due({ xy: t, offline: e }) {
       }
       const j = xa("NebuchadnezzarII", r, i);
       j > 0 &&
-        S.GreatPerson.NebuchadnezzarII.tick(
-          S.GreatPerson.NebuchadnezzarII,
+        Config.GreatPerson.NebuchadnezzarII.tick(
+          Config.GreatPerson.NebuchadnezzarII,
           j,
-          `${l}: ${S.GreatPerson.NebuchadnezzarII.name()}`,
+          `${l}: ${Config.GreatPerson.NebuchadnezzarII.name()}`,
           Li.None
         );
       break;
     }
     case "EuphratesRiver": {
-      const j = Rg(r),
+      const j = getTransportStat(r),
         z =
-          ((Pt = N.current.workersUsed.get("Worker")) != null ? Pt : 0) -
+          ((Pt = Tick.current.workersUsed.get("Worker")) != null ? Pt : 0) -
           j.totalFuel,
         K =
-          ((jr = N.current.workersAvailable.get("Worker")) != null ? jr : 0) *
+          ((jr = Tick.current.workersAvailable.get("Worker")) != null ? jr : 0) *
           ((Mi =
-            (Pn = N.current.happiness) == null
+            (Pn = Tick.current.happiness) == null
               ? void 0
               : Pn.workerPercentage) != null
             ? Mi
@@ -112508,91 +112542,91 @@ function Due({ xy: t, offline: e }) {
         ne = Math.floor((z * 10) / K),
         Ae = Sr(r);
       if (Number.isFinite(ne) && ne > 0) {
-        const vt = We(ne, 1, Math.floor((S.TechAge[Ae].idx + 1) / 2));
-        (r.festival ? zt(S.BuildingTechAge) : U_(Sr(r))).forEach((Gr) => {
+        const vt = We(ne, 1, Math.floor((Config.TechAge[Ae].idx + 1) / 2));
+        (r.festival ? keysOf(Config.BuildingTechAge) : U_(Sr(r))).forEach((Gr) => {
           !yr(Gr) &&
-            !S.Building[Gr].output.Worker &&
+            !Config.Building[Gr].output.Worker &&
             st(Gr, { output: vt, unstable: !0 }, l);
         });
       }
       break;
     }
     case "InternationalSpaceStation": {
-      N.next.globalMultipliers.storage.push({
+      Tick.next.globalMultipliers.storage.push({
         value: 5 + (n.level - 1),
         source: l,
       });
       break;
     }
     case "MarinaBaySands": {
-      N.next.globalMultipliers.worker.push({
+      Tick.next.globalMultipliers.worker.push({
         value: 5 + 1 * (n.level - 1),
         source: l,
       });
       break;
     }
     case "PalmJumeirah": {
-      N.next.globalMultipliers.builderCapacity.push({
+      Tick.next.globalMultipliers.builderCapacity.push({
         value: 10 + 2 * (n.level - 1),
         source: l,
       });
       break;
     }
     case "AldersonDisk": {
-      N.next.globalMultipliers.happiness.push({
+      Tick.next.globalMultipliers.happiness.push({
         value: 25 + 5 * (n.level - 1),
         source: l,
       });
       break;
     }
     case "DysonSphere": {
-      N.next.globalMultipliers.output.push({
+      Tick.next.globalMultipliers.output.push({
         value: 5 + 1 * (n.level - 1),
         source: l,
       });
       break;
     }
     case "MatrioshkaBrain": {
-      N.next.globalMultipliers.sciencePerBusyWorker.push({
+      Tick.next.globalMultipliers.sciencePerBusyWorker.push({
         value: 5 + 1 * (n.level - 1),
         source: l,
       }),
-        N.next.globalMultipliers.sciencePerIdleWorker.push({
+        Tick.next.globalMultipliers.sciencePerIdleWorker.push({
           value: 5 + 1 * (n.level - 1),
           source: l,
         });
-      const j = N.current.specialBuildings.get("Headquarter");
+      const j = Tick.current.specialBuildings.get("Headquarter");
       if (j) {
         const z =
           ((Ii = (Ri = j.building.resources) == null ? void 0 : Ri.Science) !=
           null
             ? Ii
             : 0) * bb;
-        (N.next.totalValue += z),
-          hr(N.next.resourceValueByTile, t, z),
-          hr(N.next.resourceValues, "Science", z);
+        (Tick.next.totalValue += z),
+          hr(Tick.next.resourceValueByTile, t, z),
+          hr(Tick.next.resourceValues, "Science", z);
       }
       n.level > 1 &&
-        Q(S.Building, (z, K) => {
+        forEach(Config.Building, (z, K) => {
           K.output.Science && st(z, { output: n.level - 1 }, l);
         });
       break;
     }
     case "LargeHadronCollider": {
       const j = 2 + n.level - 1;
-      Q(S.GreatPerson, (z, K) => {
+      forEach(Config.GreatPerson, (z, K) => {
         K.age === "InformationAge" &&
           K.tick(K, j, `${l}: ${K.name()}`, Li.None);
       });
       break;
     }
     case "OsakaCastle": {
-      for (const j of o.getRange(xe(t), 1)) N.next.powerPlants.add(Se(j));
+      for (const j of o.getRange(xe(t), 1)) Tick.next.powerPlants.add(Se(j));
       break;
     }
     case "Kanagawa": {
       const j = Sr(r);
-      Q(S.GreatPerson, (z, K) => {
+      forEach(Config.GreatPerson, (z, K) => {
         K.age === j && K.tick(K, 1, `${l}: ${K.name()}`, Li.Unstable);
       });
       break;
@@ -112600,13 +112634,13 @@ function Due({ xy: t, offline: e }) {
     case "MountFuji": {
       if (Math.min(bx, (Date.now() - iI) / 1e3) >= 60) {
         (bx = 0), (iI = Date.now());
-        const z = N.current.specialBuildings.get("Petra"),
-          K = N.current.specialBuildings.get("Headquarter");
+        const z = Tick.current.specialBuildings.get("Petra"),
+          K = Tick.current.specialBuildings.get("Headquarter");
         if (K && z) {
           const ne = Qf(r),
             Ae = r.festival ? 40 : 20;
           ne - ((Sn = K.building.resources.Warp) != null ? Sn : 0) >= Ae &&
-            Tt(K.building.resources, "Warp", Ae);
+            safeAdd(K.building.resources, "Warp", Ae);
         }
       } else bx++;
       break;
@@ -112617,18 +112651,18 @@ function Due({ xy: t, offline: e }) {
         const z = Se(j),
           K = (vt = r.tiles.get(z)) == null ? void 0 : vt.building;
         if (!K) return;
-        const ne = S.Building[K.type].input;
+        const ne = Config.Building[K.type].input;
         let Ae = 0;
         o.getNeighbors(j).forEach((wn) => {
           var go;
           const Gr = (go = r.tiles.get(Se(wn))) == null ? void 0 : go.building;
           !Gr ||
             Gr.capacity <= 0 ||
-            Q(S.Building[Gr.type].output, (Qe) => {
+            forEach(Config.Building[Gr.type].output, (Qe) => {
               if (ne[Qe]) return ++Ae, !0;
             });
         }),
-          Et(N.next.tileMultipliers, z, {
+          Et(Tick.next.tileMultipliers, z, {
             output: Ae,
             unstable: !0,
             source: l,
@@ -112644,7 +112678,7 @@ function Due({ xy: t, offline: e }) {
         const ne = (ie = r.tiles.get(K)) == null ? void 0 : ie.building;
         (ne == null ? void 0 : ne.status) === "completed" && xk(ne.type) && ++j;
       }
-      N.next.globalMultipliers.happiness.push({ value: j * 2, source: l });
+      Tick.next.globalMultipliers.happiness.push({ value: j * 2, source: l });
       break;
     }
     case "Elbphilharmonie": {
@@ -112657,21 +112691,21 @@ function Due({ xy: t, offline: e }) {
           const vt = Ei(Se(Ae), r);
           vt &&
             !yr(vt.type) &&
-            S.BuildingTier[K.type] !== S.BuildingTier[vt.type] &&
+            Config.BuildingTier[K.type] !== Config.BuildingTier[vt.type] &&
             ++ne;
         }
-        Et(N.next.tileMultipliers, z, { output: ne, source: l });
+        Et(Tick.next.tileMultipliers, z, { output: ne, source: l });
       }
       break;
     }
     case "CologneCathedral": {
-      Q(S.Building, (j, z) => {
+      forEach(Config.Building, (j, z) => {
         !yr(j) && z.output.Science && st(j, { output: n.level }, l);
       });
       break;
     }
     case "BlackForest": {
-      Q(S.Building, (j, z) => {
+      forEach(Config.Building, (j, z) => {
         !yr(j) && (z.input.Wood || z.input.Lumber) && st(j, { output: 5 }, l);
       });
       break;
@@ -112681,10 +112715,10 @@ function Due({ xy: t, offline: e }) {
         z = new Map(),
         K = Sr(r);
       j.greatPeople.forEach((ne, Ae) => {
-        S.TechAge[Ae].idx <= S.TechAge[K].idx && hr(z, ne, 1);
+        Config.TechAge[Ae].idx <= Config.TechAge[K].idx && hr(z, ne, 1);
       }),
         z.forEach((ne, Ae) => {
-          const vt = S.GreatPerson[Ae];
+          const vt = Config.GreatPerson[Ae];
           vt.tick(
             vt,
             r.festival ? ne * 2 : ne,
@@ -112695,30 +112729,30 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "Lapland": {
-      const j = S.TechAge[Sr(r)].idx + 1;
+      const j = Config.TechAge[Sr(r)].idx + 1;
       for (const z of o.getRange(xe(t), 2))
-        Et(N.next.tileMultipliers, Se(z), { output: j, source: l });
+        Et(Tick.next.tileMultipliers, Se(z), { output: j, source: l });
       break;
     }
     case "RockefellerCenterChristmasTree": {
-      const j = S.TechAge[Sr(r)].idx + 1;
-      N.next.globalMultipliers.happiness.push({ value: j * 3, source: l });
+      const j = Config.TechAge[Sr(r)].idx + 1;
+      Tick.next.globalMultipliers.happiness.push({ value: j * 3, source: l });
       break;
     }
     case "YearOfTheSnake": {
       for (const j of o.getRange(xe(t), 2))
-        Et(N.next.tileMultipliers, Se(j), { output: n.level, source: l });
+        Et(Tick.next.tileMultipliers, Se(j), { output: n.level, source: l });
       break;
     }
     case "CambridgeUniversity": {
-      Q(S.TechAge, (j, z) => {
-        z.idx < S.TechAge.RenaissanceAge.idx ||
+      forEach(Config.TechAge, (j, z) => {
+        z.idx < Config.TechAge.RenaissanceAge.idx ||
           S0(j).forEach((K) => {
-            const ne = S.GreatPerson[K];
+            const ne = Config.GreatPerson[K];
             ne.tick(
               ne,
               1,
-              h(d.CambridgeUniversitySource, { age: S.TechAge[j].name() }),
+              h(d.CambridgeUniversitySource, { age: Config.TechAge[j].name() }),
               Li.None
             );
           });
@@ -112726,10 +112760,10 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "TowerBridge": {
-      Tt(n.resources, "Cycle", r.festival ? 1.2 : 1);
+      safeAdd(n.resources, "Cycle", r.festival ? 1.2 : 1);
       let j = !1;
       for (; ((ke = n.resources.Cycle) != null ? ke : 0) >= Tb; ) {
-        Tt(n.resources, "Cycle", -Tb);
+        safeAdd(n.resources, "Cycle", -Tb);
         const z = In(RJ(r), r.city, Yn());
         z && (r.greatPeopleChoicesV2.push(z), (j = !0));
       }
@@ -112738,13 +112772,13 @@ function Due({ xy: t, offline: e }) {
     }
     case "EastIndiaCompany": {
       ((Ve = n.resources.TradeValue) != null ? Ve : 0) > OP &&
-        (Tt(n.resources, "TradeValue", -OP),
-        (xt = oa("Caravansary", r)) == null ||
+        (safeAdd(n.resources, "TradeValue", -OP),
+        (xt = getBuildingsByType("Caravansary", r)) == null ||
           xt.forEach((j, z) => {
             j.building.status !== "completed" ||
               j.building.capacity <= 0 ||
               o.getNeighbors(xe(z)).forEach((K) => {
-                Et(N.next.tileMultipliers, Se(K), {
+                Et(Tick.next.tileMultipliers, Se(K), {
                   output: r.festival ? 2 * n.level : n.level,
                   source: l,
                   unstable: !0,
@@ -112757,15 +112791,15 @@ function Due({ xy: t, offline: e }) {
 }
 function Rue(t) {
   var i, n;
-  const e = kt(),
+  const e = getGameState(),
     r = (i = e.tiles.get(t)) == null ? void 0 : i.building;
   if (Mp(r == null ? void 0 : r.type))
     switch (r == null ? void 0 : r.type) {
       case "GrottaAzzurra": {
-        qn(e).forEach((a) => {
+        getXyBuildings(e).forEach((a) => {
           yr(a.type) ||
             (a.status === "completed" &&
-              S.BuildingTier[a.type] === 1 &&
+              Config.BuildingTier[a.type] === 1 &&
               (a.level += 5));
         });
         break;
@@ -112782,10 +112816,10 @@ function Rue(t) {
       case "MountTai": {
         const a = M0(e),
           o =
-            (n = N.current.specialBuildings.get("Headquarter")) == null
+            (n = Tick.current.specialBuildings.get("Headquarter")) == null
               ? void 0
               : n.building.resources;
-        a && o && Tt(o, "Science", ks(a));
+        a && o && safeAdd(o, "Science", ks(a));
         break;
       }
       case "EuphratesRiver": {
@@ -112846,20 +112880,20 @@ function gg(t, e) {
   if (!e && !iO()) return;
   (zm = 0),
     e || (Bh.forEach((i) => NP(i, fg, t, !1)), oI(t, !1)),
-    (N.next.tick = ++Lue),
-    (N.current = fL(N.next)),
-    (N.next = DP()),
-    bL(),
-    Q(t.unlockedTech, (i) => {
-      const n = S.Tech[i];
+    (Tick.next.tick = ++Lue),
+    (Tick.current = freezeTickData(Tick.next)),
+    (Tick.next = EmptyTickData()),
+    clearIntraTickCache(),
+    forEach(t.unlockedTech, (i) => {
+      const n = Config.Tech[i];
       Gm(n, h(d.SourceResearch, { tech: n.name() }), t);
     }),
-    Q(t.greatPeople, (i, n) => {
-      const a = S.GreatPerson[i];
+    forEach(t.greatPeople, (i, n) => {
+      const a = Config.GreatPerson[i];
       a.tick(a, kp(n), h(d.SourceGreatPerson, { person: a.name() }), Li.None);
     }),
-    Q(we().greatPeople, (i, n) => {
-      const a = S.GreatPerson[i];
+    forEach(getGameOptions().greatPeople, (i, n) => {
+      const a = Config.GreatPerson[i];
       a.tick(
         a,
         n.level,
@@ -112867,13 +112901,13 @@ function gg(t, e) {
         Li.None
       );
     }),
-    Q(we().ageWisdom, (i, n) => {
+    forEach(getGameOptions().ageWisdom, (i, n) => {
       S0(i).forEach((a) => {
-        const o = S.GreatPerson[a];
+        const o = Config.GreatPerson[a];
         o.tick(
           o,
           n,
-          h(d.AgeWisdomSource, { age: S.TechAge[i].name(), person: o.name() }),
+          h(d.AgeWisdomSource, { age: Config.TechAge[i].name(), person: o.name() }),
           Li.None
         );
       });
@@ -112890,8 +112924,8 @@ function gg(t, e) {
 }
 function jue(t) {
   if (t.tick % 10 !== 0 || Bk()) return;
-  const e = we();
-  Q(tg, (r, i) => {
+  const e = getGameOptions();
+  forEach(tg, (r, i) => {
     if (!e.disabledTutorials.has(r) && i.condition(t))
       return It(s.jsx(L4, { advisor: r })), !0;
   });
@@ -112901,19 +112935,19 @@ let nI = Date.now(),
   y1 = it.Tribune;
 function oI(t, e) {
   var a, o, l;
-  Oue(t), vJ(t), (N.next.happiness = mee(t));
+  Oue(t), vJ(t), (Tick.next.happiness = mee(t));
   const { scienceFromWorkers: r } = Pu(),
     i =
-      (a = N.current.specialBuildings.get("Headquarter")) == null
+      (a = Tick.current.specialBuildings.get("Headquarter")) == null
         ? void 0
         : a.building.resources;
-  i && Tt(i, "Science", r);
+  i && safeAdd(i, "Science", r);
   let n = t.valueTrackers.get(uf.EmpireValue);
   for (
     n ||
       ((n = { accumulated: 0, history: [] }),
       t.valueTrackers.set(uf.EmpireValue, n)),
-      n.accumulated += N.next.totalValue,
+      n.accumulated += Tick.next.totalValue,
       t.tick % 3600 === 0 &&
         (n.history.push(n.accumulated / 3600), (n.accumulated = 0)),
       t.valueTrackers.set(uf.EmpireValue, n),
@@ -112925,7 +112959,7 @@ function oI(t, e) {
   if (!e) {
     const u = be().ticker.speedUp;
     t.tick % u === 0 &&
-      (vL.emit(N.current),
+      (vL.emit(Tick.current),
       (o = be().sceneManager.getCurrent(At)) == null || o.flushFloater(u),
       Ze()),
       t.tick % (Fue * u) === 0 && Jn().catch(console.error),
@@ -112942,11 +112976,11 @@ function oI(t, e) {
               ((aI = !0), Dk(), It(s.jsx(B4, { rank: y1, user: p }))));
         }));
   }
-  N.current.totalValue > 0 &&
-    N.current.tick > 10 &&
+  Tick.current.totalValue > 0 &&
+    Tick.current.tick > 10 &&
     Dn.add(
       t.tick,
-      N.current.totalValue,
+      Tick.current.totalValue,
       (l = i == null ? void 0 : i.Science) != null ? l : 0
     );
 }
@@ -112964,13 +112998,13 @@ o1.on(Due);
 EL.on((t) => {
   var r, i;
   const e =
-    (i = (r = oa("Market", t)) == null ? void 0 : r.size) != null ? i : 0;
+    (i = (r = getBuildingsByType("Market", t)) == null ? void 0 : r.size) != null ? i : 0;
   e > 0 && (ct(h(d.MarketRefreshMessage, { count: e })), kte());
 });
 RL.on(({ permanent: t }) => {
   Da(), It(s.jsx(Ra, { permanent: t }));
 });
-const nO = Fs(vL, () => N.current),
+const nO = Fs(vL, () => Tick.current),
   Gue = Fs(IL, () => y1);
 function Oue(t) {
   var e, r;
@@ -112979,7 +113013,7 @@ function Oue(t) {
       (r = (e = t.tiles.get(i.xy)) == null ? void 0 : e.building) == null
         ? void 0
         : r.resources;
-    n && Tt(n, i.resource, i.amount);
+    n && safeAdd(n, i.resource, i.amount);
   }
   fg.length = 0;
 }
@@ -113019,10 +113053,10 @@ aO.onmessage = (t) => {
 };
 function CM(t) {
   return ae(this, null, function* () {
-    (Wi.current = new $L()), (Wi.current.city = t), pj(Wi.current, Wi.options);
+    (savedGame.current = new $L()), (savedGame.current.city = t), pj(savedGame.current, savedGame.options);
     try {
       yield Promise.race([
-        qe.tickV2(Wi.current.id, Wi.current.tick),
+        qe.tickV2(savedGame.current.id, savedGame.current.tick),
         nk(10, "Connection timeout"),
       ]);
     } catch (e) {
@@ -113031,10 +113065,10 @@ function CM(t) {
   });
 }
 function sO(t) {
-  Object.assign(Wi, t);
+  Object.assign(savedGame, t);
 }
-const Uue = new or(),
-  lO = new or();
+const Uue = new TypedEvent(),
+  lO = new TypedEvent();
 function uO(t) {
   switch (
     (t.useModernUI
@@ -113053,7 +113087,7 @@ function uO(t) {
     default:
       document.body.classList.add("old-fashioned-cursor");
   }
-  Uue.emit(we().useModernUI);
+  Uue.emit(getGameOptions().useModernUI);
 }
 function zue(t, e) {
   const r = tT() || rT() ? e.sidePanelWidthMobile : e.sidePanelWidth;
@@ -113087,7 +113121,7 @@ function Jn() {
 function cO(t) {
   return ae(this, null, function* () {
     try {
-      const e = yield iT(Wi);
+      const e = yield iT(savedGame);
       oi()
         ? yield ht.fileWriteBytes(Eh, e)
         : tT() || rT()
@@ -113103,7 +113137,7 @@ function cO(t) {
   });
 }
 function iT() {
-  return ae(this, arguments, function* (t = Wi) {
+  return ae(this, arguments, function* (t = savedGame) {
     return yield kS(new TextEncoder().encode(aQ(t)));
   });
 }
@@ -113134,21 +113168,21 @@ function Vue() {
   });
 }
 function que(t) {
-  return Wi.options.version !== t.options.version
+  return savedGame.options.version !== t.options.version
     ? !1
     : (hee(t),
-      Object.assign(Wi.current, t.current),
+      Object.assign(savedGame.current, t.current),
       (t.options.themeColors = Object.assign(
-        Wi.options.themeColors,
+        savedGame.options.themeColors,
         t.options.themeColors
       )),
-      Object.assign(Wi.options, t.options),
+      Object.assign(savedGame.options, t.options),
       !0);
 }
-const gi = Fs(Zh, kt),
-  ki = Fs(Jf, we);
+const gi = Fs(GameStateChanged, getGameState),
+  ki = Fs(GameOptionsChanged, getGameOptions);
 let dO = !1;
-const Vb = new or();
+const Vb = new TypedEvent();
 Vb.on((t) => {
   dO = t;
 });
@@ -113351,10 +113385,10 @@ class Zue {
     this.shouldSendBytes() && kS(this.data).then((e) => qe.fullHeartbeat(e));
   }
   shouldSendBytes() {
-    return !(kt().isOffline || !cu());
+    return !(getGameState().isOffline || !cu());
   }
   update(e) {
-    const r = kt();
+    const r = getGameState();
     if (!this.shouldSendBytes()) {
       qe.tickV2(r.id, r.tick);
       return;
@@ -113452,8 +113486,8 @@ let So = !1;
 function cI() {
   var a, o;
   const t = Yj(),
-    e = fo(),
-    r = !jt(t == null ? void 0 : t.connectedUserId),
+    e = useUser(),
+    r = !isNullOrUndefined(t == null ? void 0 : t.connectedUserId),
     [i, n] = se.useState(So);
   return s.jsx("div", {
     className: "cloud-save-page",
@@ -113651,7 +113685,7 @@ function cI() {
                       children: h(d.CheckInCloudSave),
                     })
                   : s.jsx("button", {
-                      disabled: !e || !t || !jt(e.saveOwner) || !r || i,
+                      disabled: !e || !t || !isNullOrUndefined(e.saveOwner) || !r || i,
                       className: "text-strong f1",
                       style: { flex: "2" },
                       onClick: () =>
@@ -113728,7 +113762,7 @@ function ece({ before: t, after: e, time: r }) {
             className: "row mv5",
             children: [
               s.jsx("div", { className: "f1", children: h(d.OfflineTime) }),
-              s.jsx("div", { className: "text-strong", children: cc(r * 1e3) }),
+              s.jsx("div", { className: "text-strong", children: formatHM(r * 1e3) }),
             ],
           }),
           s.jsx("div", {
@@ -113749,7 +113783,7 @@ function ece({ before: t, after: e, time: r }) {
                     const a = n.building;
                     if (!a) return null;
                     const o = {};
-                    Q(a.resources, (f, m) => {
+                    forEach(a.resources, (f, m) => {
                       var v, y, x;
                       const g =
                         (x =
@@ -113779,7 +113813,7 @@ function ece({ before: t, after: e, time: r }) {
                           {
                             children: [
                               s.jsx("td", {
-                                children: S.Building[a.type].name(),
+                                children: Config.Building[a.type].name(),
                               }),
                               s.jsx("td", {
                                 children:
@@ -113797,7 +113831,7 @@ function ece({ before: t, after: e, time: r }) {
                                     {
                                       className: "mr10",
                                       children: [
-                                        S.Resource[f].name(),
+                                        Config.Resource[f].name(),
                                         ":",
                                         s.jsxs("span", {
                                           className: Ke({
@@ -113916,8 +113950,8 @@ function ice(t, e, r, i) {
       }
     } else a = !0;
     n(Ts, { stage: Ks.CheckSave });
-    const l = kt(),
-      u = we();
+    const l = getGameState(),
+      u = getGameOptions();
     a && pj(l, u),
       sce(r, l.city),
       n(Ts, { stage: Ks.CheckSave }),
@@ -114000,34 +114034,34 @@ function nce(t) {
   const e = wk();
   if (e === null) return;
   const r = new Date(e);
-  Q(tk, (i, n) => {
-    n.condition(r) && wZ(S.Tech[n.tech], "unlockBuilding", i);
+  forEach(tk, (i, n) => {
+    n.condition(r) && wZ(Config.Tech[n.tech], "unlockBuilding", i);
   });
 }
 function ace(t) {
-  const e = S.City[t.city];
-  Q(e.buildingNames, (r, i) => {
-    S.Building[r].name = i;
+  const e = Config.City[t.city];
+  forEach(e.buildingNames, (r, i) => {
+    Config.Building[r].name = i;
   }),
-    qa(S.Building),
-    Q(e.uniqueBuildings, (r, i) => {
-      S.Tech[i].unlockBuilding || (S.Tech[i].unlockBuilding = []),
-        S.Tech[i].unlockBuilding.push(r);
+    qa(Config.Building),
+    forEach(e.uniqueBuildings, (r, i) => {
+      Config.Tech[i].unlockBuilding || (Config.Tech[i].unlockBuilding = []),
+        Config.Tech[i].unlockBuilding.push(r);
     }),
-    Q(e.uniqueMultipliers, (r, i) => {
-      const n = S.Tech[r];
+    forEach(e.uniqueMultipliers, (r, i) => {
+      const n = Config.Tech[r];
       i.globalMultiplier &&
         (n.globalMultiplier
-          ? Q(i.globalMultiplier, (a, o) => {
-              Tt(n.globalMultiplier, a, o);
+          ? forEach(i.globalMultiplier, (a, o) => {
+              safeAdd(n.globalMultiplier, a, o);
             })
           : (n.globalMultiplier = structuredClone(i.globalMultiplier))),
         i.buildingMultiplier &&
-          Q(i.buildingMultiplier, (a, o) => {
+          forEach(i.buildingMultiplier, (a, o) => {
             n.buildingMultiplier || (n.buildingMultiplier = {}),
               n.buildingMultiplier[a]
-                ? Q(o, (l, u) => {
-                    Tt(n.buildingMultiplier[a], l, u);
+                ? forEach(o, (l, u) => {
+                    safeAdd(n.buildingMultiplier[a], l, u);
                   })
                 : (n.buildingMultiplier[a] = structuredClone(o));
           });
@@ -114039,18 +114073,18 @@ function oce(t, e) {
   });
 }
 function sce(t, e) {
-  Q(S.Building, (r, i) => {
+  forEach(Config.Building, (r, i) => {
     Qj(r, t, e) || console.warn(`Missing texture for building ${r}`),
-      !jt(i.max) &&
-        jt(i.special) &&
+      !isNullOrUndefined(i.max) &&
+        isNullOrUndefined(i.special) &&
         console.warn(
           `Building ${r} has "max" defined but "special" undefined. Please define "special"!`
         );
   }),
-    Q(aL, (r, i) => {
+    forEach(aL, (r, i) => {
       e4(r, t) || console.warn(`Missing texture for deposit ${r}`);
     }),
-    Q(S.GreatPerson, (r, i) => {
+    forEach(Config.GreatPerson, (r, i) => {
       t[`Person_${r}`] ||
         console.warn(`Missing texture for great person: ${r}`);
     });
@@ -114529,117 +114563,148 @@ const dce = [
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAA7ESURBVHgBzZtprFXVFcf34wECMisIyKiWUcAWZdJG0oIai9RoiKlpHRs+FBSIRk3axNr6oVoTFQgpNG0am7ZRWmNNygcMhRQMk6ZAqcoQg0VGmeeZ/n8n9/+yejwX3uOdZ7qS/c655557zlr/Ne699qtJXxE99dRTV586dequZs2a3aqPN2n00GiucbimpuaTCxcurNP5sk6dOr3/wgsvnExfEdWkJqZp06YNl9A/0ekkCdnyiiuuSB06dEht2rRJup7OnTuXTpw4kY4cOZIdBcZB3bdA3815/fXX16cmpiYD4Jlnnmknjf9SwvywefPmtX379k3XXXdduv766zMArrzyylRbW5vOnz+fjh8/ng4cOJA2b96cNm7cmHbv3p1Onz59XmC8KcCefvnll3ekJqImAWDq1Kn9Jdy7Oh1www03pBtvvDETvlu3bpnWBcqXfsM1CZy++OKL9MEHH6SPP/44A0IA7dPXD82aNWthagKqTSXTjBkzbpIgS1u2bNl77NixmfAMtA4hKAPN++iBO+AiWAtgHDt2DOtoo+8eGDVq1OerVq1am0qmUgGQ8H3F7JJWrVp1vf3221P37t3TwIEDk1wg+/5SwnucPXs2de3aNcmF0v79+zk20/0Tb7nllrWrV6/emEqkZqkkev7555tLkDdl4t3QfLt27VKfPn2y7yxkkdAIe+bMmewov8+EPnnyZDaGDBmS2rdvb7eplVW8Iffqk0qk0gA4ePDgdDE5cvjw4Zm5w7jcoE5wE6YNRa1beAPAICMAwuDBg7PPfCfqIGualUqkUgB44okn2kvIH1911VWZ1hESABAuAmDhIVuDLSBqH+HJDAzAxIVsFfrdPbKCMakkKgUAmehDYqzToEGD6oSFaYQDBPu+v7Pw0QWs+QgCQZDRtm3b7L7Dhw/z2xplmB+lkqgUAMTU92ASCzBZuzbz6Pt54W3+FtwWgPBHjx7Nnsf93MN1vW+SrO6KVAI1T42kKVOmdJBpjyTiW8MIiCZbtGhRdx/fEcwghImCW/P+HAHhPgCxBQGAiqj2eifl9KrUSGo0ACppB0ug5h07dswEt5/DaOvWres0jrZdBPE5+n0c8RoA8PnQoUN1hVIlGPJ5aPp/AECM9OZIaYtmrWVM17U+wlP2GpxqFmCBHfAYlMh8ZwsyiHpWz1QCNRoAabM1giGgfR0msQCukQrNOPfBfFHqs+CxDmDs2LGjTvt+XuVz+1QCNRoAMXKcowWzpmBYtUFmGf6cByAfAPMA7Nu3z6kvewYAMIusWNK5VAI1GgAxtiWauUGASZhGOOr7aAEM7o9WYKGdAUh5DCyq8p7sOU6JetbeVAI1GgAVKhuk6SNivB3MGQzIWkdAMoLjgwMjFhCtgAEAxA9AcLqE+D3ax6IIivru81QCNboO0OrNaWn0fbTlAAXTMajlA5uv2QqiO3CMxRNEUaUJVja/cGoVAKXMDMuaCyzcs2dPxhzM2sSt4TjhiROj/LpAvGbr4ZmYPqW1lstsXbv1vk9SCVQKAGJqgdLVGbROlLa5x4BXJLSFhOI02fGDZ2Hy1BidO3fO5gWVcvidBQsWlBIESwFg7ty5u1i+2rJlS2aq+CpFEEBEAaN2HQ/yghNIGfwewa+++upsbaBLly6Z8AKUh8xLJVGjg6BJAvx0+/bt9/fr1681jFsQrAIBOXcmgPKzRL63f2PyuBJHgHAq3bBhA1//efbs2f9MJVFpK0JaqTkwevToQ/LNu1kHtAXEgUkzEM4AeXCd3xDoAJCByXsFed26dYC5V8Ddq3cdSSVR6YuiTz755BwFq6kTJkyoqwscAyAXNNESbA1x/SC6yZo1a6gIT+r6d+bMmfP3VCKV5gKmnTt3sjLUftGiRT+48847M42aLFS+NI4TJud+zyiXL1+edu3atVf3PVC28BlPqQnokUceaSXBF8mHvynK1vYcA3zMAxDrAca2bdvSsmXLaJic1L3fV5PkbT36QiqZSgVAawMtlAUe1+lzYroPGQHiOHLkyMR6IefEgAiAhUfj69evT0uWLEl79+7N4gbXqDAF3L8E1K8VEN946aWXDqWSqDQAtE43QUzOFtMDMHtPWihrqf4c6Fg4IaVxD9eo/lj6/vTTT9NHH32Utcg86SH3A5ayS1YIVZ55WK/7jZ71i1deeWVPaiQ1GgBaYKrfZ0nwh3v06FFD6sKkYZi63pWcJzle6/M5GnaVGCdS/A5rofpD8M8++yzLDFgDv9P9B/X6aUqJf0iNoEalwenTpw8TI4t79er1bXV/ajz379mzZ6a5a665JktjNnfHAJfMMQ3G+GDXcKUIAFgOhRDP0/u4t5WAvG/MmDGde/fu/Z6s57Liw2UDoK7vJAmx8LbbbutG98fpS8xkwlG9oXkLYQE9uAcgIgBOjTFF+jOaxxqwHKyLXiNVojLEKMWFYWqdvaP6oMHl8WUBIM0/rqLl95MnT26FNjyvt9CsDiOghTcAEQgffZ8pnkN2C+7FBXg+RAy59tprs26z3GOg3OgbAuEvDQWhwQCo/zdFTMx/7LHHajFxC+8ZW5yyWqA8EDENRnDy/QPIBRKEiwEyQZXymEFApR+xadOmr4mXwXKXt7du3Xq+vvI0CACZ/WRp7HdKd83wybi4idYBwRoqmvVVEzwul+Wny/EaRGBEaEAAcMpnssWAAQNIoYMEUDd1kf9WT5HqD4DMfpSY/OuDDz7Yon///nVFCxEZphCcY1HvvwiIKDSU7xLngfA1XMZ9R9wCK7DbYZGaMI3QnOSUQFheH7nqBQD7e/Tyxer6XkVl52rNi5j4ZlwDyLfBHNGhKLwp3zKPIBS109E6VkBAJDgCAO8nHnFNdcM4xYPVAmHLpWSr13qAtD1PEbfXHXfc8T9LW9a+I3re34uCXswA+Zmiz50i4zMgQEFAqkRSIoJ75ZjBd+PHj8caUOwbctXujQZApn+/UL9v4sSJdb05BhUeA3OMkTwfxX0txgCD4BEF9zE/a4SwAneKaJhwL0Bw7j4i3zMJE3URQHMvJd9FXaDSgHxXUbbj0KFDv9S5hVFM0Zud4rQ2ukLeJeIx+r5dy4HV1WHRBgveTcZhAIDjD/fjIlzTGHjzzTdrNr1mczUZL2oBQv9Rjb7Dhg3LmhwgD+KcM/B9m2fUko9FaS0fC+LsMD9yvNQ9F2B4P3MIBIcnTcMz/swjGysqz3+RlnpqKAD8SDSDYsMv9ABdJi1E3nz+vtRqbwyIRTHD1+Mx/yz4wQLxf4SlQlRFmO0wMwhYCVlB9HW58beqyVl1QUQ/GqOXDaDcRGAodnUpSNBeFLAod0fhncurgZQHLH8tfgcP8IUVsATHHkM3Ydw/pD4AGJ0/qp8uLpKzqgXoYffwIAhE8xYAAEX+GY8+rwZSfhTl/6K6wgsotgJiEooiO2AFgAKf7lZLlrvHjRvXvEEA6MW34l+O+Jg85mYTcyUYg1g8FgWuCEq8HvN+vgYoCqAGgYCMoPDGJAzBAQFQOGdUYgnbdwbXG4CK/w/BxL1lJc7nmZ6Sg+MWmGpbYfJgFLlDkYUU/S4PAO9HOSjEcxAHR6yUc2+oUNYYUm8AZs6c2UEv62SUXfE5DRJc3MeLixlFIBT5cpGQ+e10MRtUS6O8C36wAI7sULOleqC0CnUpkrXQLyRUB2m/xl3eiDgCk/sBACb47J0g+ZGPB3lNVgMgP2v08Kww/h6eEBIA1JRJS5cuzXhybRIySet6AyBTqo0rtRFxBCe6GgDuw/TisnY1062WJYq0n2+ceOdJkSvZMtljzGfc1NWpA7l+e77eAIhO8CdqMfbqiQEA4Gu8HBDywctCm9Ei4fObKfNzhhgc3Wjxc12DeJ8hn9mRziKqhTcAesbRegMgk9qrIMd/bbRy4WGzpvqL3R5ftytUS11F7lBk9nGyFN3Jbfe4CyUfDxhkJ/YV8XtKYkYF2MIV5MIgOH/+/DNiaKNfGKs0Jj/5rW1YAAHH+/rixoeimBBHHSMSPj9LzE+UqpXMEXjiExZKVvCyung/q/evSPW1gAq9JwaHe38PJs8RAKL5W1BeDhieHlur+bK2mub5TZwURZeKm6qjpXDO7zyV5jMAUKQBANepCURvq622o0EA6CW/1ctnSthaam0zYQDMqLVs4QxCfntc0T4Bf+81RJuyewtReFd1BgoCBO9H4H28gxUi0iHXabaI9onPp6vJWXU6vHLlyr1qZ7ELfCwvBFVvU4GJ/HbWaO6eysZ/jymKCwYhLnpA+Uoxn2EsPIITk6LWUQD3IrzOD+q5E6X9fzcYAEhILtZD2+qBo1VV1XiCgca8JBY3O8XgZKYdrU35VaJozgzn7qIy2SB6BwnKYA4AAPCF1teuXZu12MTfOj3nLjVVL7qZ6qIA0G3Rutoira/xkJHKr528CBFdIC5cGIDo+87hRc2R2CGygEULowYO98DMER6hAcDtMxSyYsUKSr+ndT5l7ty5l+wd1rs3+NZbb9WqV/+iXvbciBEj6rbCeXps07SfOoI7F8d1P38fzd79hfyGSZfhBtnP97Y5L4py7cMPP6RJ8q76hd+tr1wNao4+++yzHcTYOiHfhxUXhLEFRE3lFz5hMAKRX/iMLmNA47ZZB10DEJ/pKpH/N1RzZL/YHD1r1qzNTQIApHXCwWJ6If1/oi0j3wmqZgURAPcFYx8wv384bqg0wPmNVlR9/I+h6pD/6NK9Dd1AdVntcbXHOurlP9Pp42KoDdUXa/KUodGnrem8C0QLaBb+hyC/SyRusow1Af9QyQ4StcCwkGMC5FdyiZ9fzsaJRu0P0LS5s5h6WONRMTHUXWGA4Mi0mdSZr+5iDIhr/rHgOVf5n2Lm9gjMTlSOLHFV/q12pX72R4H4p1dffXV/ukwqbYeIwBgipieJsfHS6Ehdaotm0To9fQKWG5r23WjKLG+haW+eYDEDACp+f7ZSmq/Uvf8QeO+99tprO1MJ1CSbpObNm9dCPbqvifEhYrivLvWTAF00euhzVx2vlDAtdSQNU0Yy9yB97df3O3S+Xefb9PutAgXBNymlHU1NQP8F/3kID4yChKcAAAAASUVORK5CYII=";
 
 // ***** requireOfflineRun
-function fce() {
-  if (rS()) throw new Error("Command is only available for trial run");
+function requireOfflineRun() {
+  if (canEarnGreatPeopleFromReborn()) throw new Error("Command is only available for trial run");
 }
 
 // ***** requireDevelopment
-function hI() {
+function requireDevelopment() {
   throw new Error("Command is only available for development");
 }
 
 
+
+
 // handleChatCommand
-function gce(t) {
+function handleChatCommand(command) {
   return ae(this, null, function* () {
+
+//addSystemMessage("handleChatCommand called "+JSON.stringify(command));
+
     var r, i, n;
-    const parts = t.split(" ");
+    const parts = command.split(" ");
     switch (parts[0]) {
+      case "test0": {
+
+        let gameState = getGameState();
+        addSystemMessage("gameState = "+JSON.stringify(gameState));
+
+        break;
+      }
+      case "test1": {
+
+        let gameState = getGameState();
+
+        let buyResources = keysOf(unlockedResources(gameState)).filter((T) => !NoStorage[T] && !NoPrice[T]);
+        addSystemMessage("buyResources = "+JSON.stringify(buyResources));
+
+        let availableResources = combineResources(
+          Array.from(Tick.current.playerTradeBuildings.values()).map((T) => T.resources));
+        addSystemMessage("availableResources = "+JSON.stringify(availableResources));
+
+        let sellResources = keysOf(availableResources);
+        addSystemMessage("sellResources = "+JSON.stringify(sellResources));
+
+        let seenResources = getSeenResourceKeys();
+        addSystemMessage("seenResources = "+JSON.stringify(seenResources));
+
+        break;
+      }
       case "timetravel": {
-        fce();
+        requireOfflineRun();
         const a = We(xi(parts[1], 30), 0, 60 * 4);
-        Lt(
+        addSystemMessage(
           `Time travel ${a} minutes. This could take a while, please be patient...`
         ),
           setTimeout(() => {
             const o = performance.now(),
-              l = kt();
+              l = getGameState();
             for (let u = 0; u < 60 * a; u++) gg(l, !0);
-            Lt(`Completed in ${pr((performance.now() - o) / 1e3)}s`);
+            addSystemMessage(`Completed in ${pr((performance.now() - o) / 1e3)}s`);
           }, 500);
         break;
       }
       case "loadsave": {
-        hI();
+        requireDevelopment();
         const [a] = yield window.showOpenFilePicker(),
           l = yield (yield a.getFile()).arrayBuffer(),
           u = yield Cf(new Uint8Array(l));
         (u.options.userId = `web:${pb()}`),
           sO(u),
           yield Jn(),
-          Lt("Load save file"),
+          addSystemMessage("Load save file"),
           window.location.reload();
         break;
       }
       case "exportsave": {
-        hI();
+        requireDevelopment();
         const a = yield window.showSaveFilePicker();
-        Wi.options.userId = null;
-        const o = yield iT(Wi),
+        savedGame.options.userId = null;
+        const o = yield iT(savedGame),
           l = yield a.createWritable();
         yield l.write(o), yield l.close();
         break;
       }
       case "playtime": {
         const a = yield qe.getPlayTime();
-        Lt(`You have played actively and online for ${cc(a * 1e3)}`);
+        addSystemMessage(`You have played actively and online for ${formatHM(a * 1e3)}`);
         break;
       }
       case "clear": {
-        _te();
+        clearSystemMessages();
         break;
       }
       case "playercount": {
         const a = yield qe.getOnlinePlayerCount(),
           o = yield qe.getTotalPlayerCount();
-        Lt(`There are ${o} players, ${a} of them are current online`);
+        addSystemMessage(`There are ${o} players, ${a} of them are current online`);
         break;
       }
       case "recoverprogress": {
         if (parts[1] === "confirm") {
           const o = yield qe.doGreatPeopleRecovery();
-          (we().greatPeople = {}),
-            (we().greatPeopleChoicesV2 = uk(
+          (getGameOptions().greatPeople = {}),
+            (getGameOptions().greatPeopleChoicesV2 = uk(
               o,
-              Math.floor(o / Tr(S.GreatPerson)),
+              Math.floor(o / Tr(Config.GreatPerson)),
               IP,
               gQ,
-              kt().city
+              getGameState().city
             )),
-            yield CM(qf(S.City)),
+            yield CM(qf(Config.City)),
             yield Jn(),
             window.location.reload();
         }
         const a = yield qe.getGreatPeopleRecovery();
-        Lt(
+        addSystemMessage(
           `Your pending progress recovery request will grant you ${a} great people. Type "/recoverprogress confirm" to claim them. Your current progress (this run and permanent great people) will be reset`
         );
         break;
       }
       case "togglearrow": {
-        (we().showTransportArrow = !we().showTransportArrow),
+        (getGameOptions().showTransportArrow = !getGameOptions().showTransportArrow),
           yield Jn(),
           window.location.reload();
         break;
       }
       case "randomcolor": {
-        N4(we()), Lt("Assign random colors to buildings and resources");
+        N4(getGameOptions()), addSystemMessage("Assign random colors to buildings and resources");
         break;
       }
       case "locate": {
         if (!parts[1]) throw new Error("Invalid command format");
-        const a = Array.from(kt().tiles)
+        const a = Array.from(getGameState().tiles)
           .filter(
             ([, o]) =>
               o.explored &&
               o.building &&
-              S.Building[o.building.type]
+              Config.Building[o.building.type]
                 .name()
                 .toLowerCase()
                 .includes(parts[1].toLowerCase())
           )
           .map(([o]) => o);
-        Lt(`Found ${a.length} building(s) that contains "${parts[1]}"`),
+        addSystemMessage(`Found ${a.length} building(s) that contains "${parts[1]}"`),
           (r = be().sceneManager.getCurrent(At)) == null ||
             r.drawSelection(null, a);
         break;
@@ -114667,7 +114732,7 @@ function gce(t) {
         // if (!hasFound) {
           if (matches.length === 1) {
             const match = matches[0];
-            Lt(`Found player ${match.handle}, panning camera to the tile`);
+            addSystemMessage(`Found player ${match.handle}, panning camera to the tile`);
             be().sceneManager.getCurrent(ap)?.lookAt(match.xy);
           } else if (matches.length > 1) {
             const maxDisplay = 8;
@@ -114683,9 +114748,9 @@ function gce(t) {
             } else {
                message += ". Please specify further.";
             }
-            Lt(message);
+            addSystemMessage(message);
           } else {
-            Lt(`Failed to find player ${parts[1]}`);
+            addSystemMessage(`Failed to find player ${parts[1]}`);
           }
 //        }
         break;
@@ -114694,30 +114759,30 @@ function gce(t) {
       case "changelevel": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
         yield qe.changePlayerLevel(parts[1], Number.parseInt(parts[2], 10)),
-          Lt("Player level has been changed");
+          addSystemMessage("Player level has been changed");
         break;
       }
       case "setplayhour": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
         const a = Number.parseInt(parts[2], 10);
-        Lt(`Play time has been changed to ${a}h`),
+        addSystemMessage(`Play time has been changed to ${a}h`),
           yield qe.setPlayTime(parts[1], a * 60 * 60);
         break;
       }
       case "makemod": {
         if (!parts[1]) throw new Error("Invalid command format");
-        yield qe.makeMod(parts[1], !0), Lt(`${parts[1]} is now a mod`);
+        yield qe.makeMod(parts[1], !0), addSystemMessage(`${parts[1]} is now a mod`);
         break;
       }
       case "tabulate": {
         const a = yield qe.tabulateVotedBoost();
-        Lt(JSON.stringify(a));
+        addSystemMessage(JSON.stringify(a));
         break;
       }
       case "queryplayer": {
         if (!parts[1]) throw new Error("Invalid command format");
         const a = yield qe.queryPlayer(parts[1]);
-        Lt(JSON.stringify(a));
+        addSystemMessage(JSON.stringify(a));
         break;
       }
       case "playersave": {
@@ -114729,14 +114794,14 @@ function gce(t) {
             })).createWritable();
           yield l.write(a), yield l.close();
         } catch (a) {
-          Lt(String(a));
+          addSystemMessage(String(a));
         }
         break;
       }
       case "getplayerattr": {
         if (!parts[1]) throw new Error("Invalid command format");
         const a = yield qe.getPlayerAttr(parts[1]);
-        Lt(
+        addSystemMessage(
           [
             `Flag=${a.toString(2)}`,
             `Mod=${ot(a, Ir.Mod)}`,
@@ -114752,7 +114817,7 @@ function gce(t) {
       case "setplayerattr": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
         const a = yield qe.setPlayerAttr(parts[1], Number.parseInt(parts[2], 2));
-        Lt(
+        addSystemMessage(
           [
             `Flag=${a.toString(2)}`,
             `Mod=${ot(a, Ir.Mod)}`,
@@ -114773,7 +114838,7 @@ function gce(t) {
       }
       case "unmakemod": {
         if (!parts[1]) throw new Error("Invalid command format");
-        yield qe.makeMod(parts[1], !1), Lt(`${parts[1]} is no longer a mod`);
+        yield qe.makeMod(parts[1], !1), addSystemMessage(`${parts[1]} is no longer a mod`);
         break;
       }
       case "gprank": {
@@ -114781,8 +114846,8 @@ function gce(t) {
         const a = yield qe.getGreatPeopleLevelRank(xi(parts[1], 10)),
           o = JSON.stringify(a);
         navigator.clipboard.writeText(o),
-          Lt(o),
-          Lt(
+          addSystemMessage(o),
+          addSystemMessage(
             `<code>${a.map((l) => {
               var p;
               const c =
@@ -114806,8 +114871,8 @@ function gce(t) {
         const a = yield qe.getEmpireValueRank(xi(parts[1], 10)),
           o = JSON.stringify(a);
         navigator.clipboard.writeText(o),
-          Lt(o),
-          Lt(
+          addSystemMessage(o),
+          addSystemMessage(
             `<code>${a.map((l) => {
               var c;
               const u = l.empireValues[l.empireValues.length - 1];
@@ -114828,13 +114893,13 @@ function gce(t) {
       }
       case "modlist": {
         const a = yield qe.getMods();
-        Lt(`Current moderators: ${a.join(", ")}`);
+        addSystemMessage(`Current moderators: ${a.join(", ")}`);
         break;
       }
       case "muteplayer": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
-        const a = yield qe.mutePlayer(parts[1], Number.parseInt(parts[2], 10) * rk);
-        Lt(
+        const a = yield qe.mutePlayer(parts[1], Number.parseInt(parts[2], 10) * MINUTE);
+        addSystemMessage(
           `Player ${parts[1]} has been muted until ${new Date(a).toLocaleString()}`
         );
         break;
@@ -114843,59 +114908,59 @@ function gce(t) {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
         const a = yield qe.slowPlayer(
           parts[1],
-          Number.parseInt(parts[2], 10) * _a,
-          Number.parseInt((n = parts[3]) != null ? n : 0, 10) * Fo
+          Number.parseInt(parts[2], 10) * HOUR,
+          Number.parseInt((n = parts[3]) != null ? n : 0, 10) * SECOND
         );
-        Lt(
+        addSystemMessage(
           `Player ${parts[1]} has been slowed until ${new Date(
             a.time
-          ).toLocaleString()} for ${Math.ceil(a.interval / Fo)}s`
+          ).toLocaleString()} for ${Math.ceil(a.interval / SECOND)}s`
         );
         break;
       }
       case "mutelist": {
         (yield qe.getMutedPlayers()).forEach((o) => {
-          Lt(`${o.handle} muted until ${new Date(o.time).toLocaleString()}`);
+          addSystemMessage(`${o.handle} muted until ${new Date(o.time).toLocaleString()}`);
         });
         break;
       }
       case "removetrade": {
         if (!parts[1]) throw new Error("Invalid command format");
         const a = yield qe.removeTrade(parts[1]);
-        Lt(`${a} trades has been removed`);
+        addSystemMessage(`${a} trades has been removed`);
         break;
       }
       case "slowlist": {
         (yield qe.getSlowedPlayer()).forEach((o) => {
           const l = new Date(o.time).toLocaleString(),
-            u = Math.ceil(o.interval / Fo);
-          Lt(`${o.handle} slowed for ${u}s until ${l}`);
+            u = Math.ceil(o.interval / SECOND);
+          addSystemMessage(`${o.handle} slowed for ${u}s until ${l}`);
         });
         break;
       }
       case "rename": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
         const a = yield qe.renamePlayer(parts[1], parts[2]);
-        Lt(`Player ${parts[1]} renamed to ${a}`);
+        addSystemMessage(`Player ${parts[1]} renamed to ${a}`);
         break;
       }
       case "setgprec": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
         const a = Number.parseInt(parts[2], 10),
           o = yield qe.setGreatPeopleRecovery(parts[1], a);
-        Lt(`Will grant Player ${parts[1]} ${o} great people`);
+        addSystemMessage(`Will grant Player ${parts[1]} ${o} great people`);
         break;
       }
       case "getgprec": {
         if (!parts[1]) throw new Error("Invalid command format");
         const a = yield qe.queryGreatPeopleRecovery(parts[1]);
-        Lt(`Player ${parts[1]} will receive ${a} great people`);
+        addSystemMessage(`Player ${parts[1]} will receive ${a} great people`);
         break;
       }
       case "clearconnection": {
         if (!parts[1]) throw new Error("Invalid command format");
         yield qe.clearConnection(parts[1]),
-          Lt("Cross Platform connections have been cleared");
+          addSystemMessage("Cross Platform connections have been cleared");
         break;
       }
       case "cloudsave": {
@@ -114907,12 +114972,12 @@ function gce(t) {
             })).createWritable();
           yield l.write(a), yield l.close();
         } catch (a) {
-          Lt(String(a));
+          addSystemMessage(String(a));
         }
         break;
       }
       default: {
-        Lt("Command not found");
+        addSystemMessage("Command not found: "+JSON.stringify(command));
         break;
       }
     }
@@ -114997,7 +115062,7 @@ function vce({ show: t, style: e, onClose: r }) {
       })
     : null;
 }
-const hO = new or();
+const hO = new TypedEvent();
 function yce() {
   const t = ki();
   t.chatChannels.size === 0 && t.chatChannels.add(qf(Ig));
@@ -115005,7 +115070,7 @@ function yce() {
     r = qj().filter((c) => !("channel" in c) || t.chatChannels.has(c.channel)),
     [i, n] = se.useTransition(),
     [a, o] = se.useState(!1),
-    l = fo();
+    l = useUser();
   uo(lO, (c) => {
     o(c);
   });
@@ -115072,7 +115137,7 @@ function bce({ show: t, channel: e, style: r, onClose: i, onMinimize: n }) {
     o = se.useRef(!1),
     l = qj().filter((m) => !("channel" in m) || e === m.channel),
     u = l.length > 0 ? l[l.length - 1] : null,
-    c = fo();
+    c = useUser();
   se.useEffect(() => {
     var m;
     o.current &&
@@ -115150,14 +115215,14 @@ function bce({ show: t, channel: e, style: r, onClose: i, onMinimize: n }) {
 }
 function Tce({ onChatSend: t, channel: e }) {
   var c;
-  const r = fo(),
+  const r = useUser(),
     [i, n] = se.useState(""),
     a = se.useRef(null),
     o = () => {
       if (i) {
         if (i.startsWith("/")) {
           const p = i.substring(1);
-          Lt(`$ ${p}`), gce(p).catch((f) => Lt(`${p}: ${f}`));
+          addSystemMessage(`$ ${p}`), handleChatCommand(p).catch((f) => addSystemMessage(`${p}: ${f}`));
         } else
           qe.chat(cce(i), e).catch((p) => {
             ze(), ct(String(p));
@@ -115449,7 +115514,7 @@ function Sce() {
   let m;
   return (
     i && (m = { position: "absolute", top: 0, left: 0, zIndex: 301 }),
-    uo(Zh, () => {
+    uo(GameStateChanged, () => {
       if (!i || !n.current) return;
       const k = n.current.getBoundingClientRect();
       ht.setSize(Math.round(k.width), Math.round(k.height));
@@ -115523,10 +115588,10 @@ function Sce() {
                   className: Ke({ "menu-popover": !0, active: p }),
                   children: Array.from(e.favoriteTiles)
                     .sort((k, w) =>
-                      S.Building[e.tiles.get(k).building.type]
+                      Config.Building[e.tiles.get(k).building.type]
                         .name()
                         .localeCompare(
-                          S.Building[e.tiles.get(w).building.type].name()
+                          Config.Building[e.tiles.get(w).building.type].name()
                         )
                     )
                     .map((k) => {
@@ -115547,7 +115612,7 @@ function Sce() {
                               children: [
                                 s.jsx("div", {
                                   className: "f1",
-                                  children: S.Building[w.type].name(),
+                                  children: Config.Building[w.type].name(),
                                 }),
                                 yr(w.type)
                                   ? null
@@ -115571,7 +115636,7 @@ function Sce() {
               onClick: () => {
                 var w, B;
                 const k =
-                  (w = N.current.specialBuildings.get("Headquarter")) == null
+                  (w = Tick.current.specialBuildings.get("Headquarter")) == null
                     ? void 0
                     : w.tile;
                 k &&
@@ -115609,7 +115674,7 @@ function Sce() {
         s.jsx("div", { className: "separator-vertical" }),
         s.jsx(Te, {
           disabled: i,
-          content: S.City[e.city].festivalDesc(),
+          content: Config.City[e.city].festivalDesc(),
           children: s.jsxs("div", {
             className: Ke({
               section: !0,
@@ -115630,7 +115695,7 @@ function Sce() {
                 children: s.jsx(te, {
                   value: Math.floor(
                     ((y =
-                      (v = N.current.specialBuildings.get("Headquarter")) ==
+                      (v = Tick.current.specialBuildings.get("Headquarter")) ==
                       null
                         ? void 0
                         : v.building.resources.Festival) != null
@@ -115733,7 +115798,7 @@ function Sce() {
                   s.jsxs("span", {
                     className: Ke({ "text-red": c < 0, "text-green": c > 0 }),
                     style: { fontWeight: "normal", textAlign: "left" },
-                    children: [Yh(c), s.jsx(te, { value: Math.abs(c) })],
+                    children: [mathSign(c), s.jsx(te, { value: Math.abs(c) })],
                   }),
                 ],
               }),
@@ -115789,7 +115854,7 @@ function Sce() {
                   s.jsxs("span", {
                     className: Ke({ "text-red": u < 0, "text-green": u > 0 }),
                     style: { fontWeight: "normal", textAlign: "left" },
-                    children: [Yh(u), s.jsx(te, { value: Math.abs(u) })],
+                    children: [mathSign(u), s.jsx(te, { value: Math.abs(u) })],
                   }),
                 ],
               }),
@@ -115845,9 +115910,9 @@ function Sce() {
 }
 function wce() {
   const t = gi();
-  if (!N.current.specialBuildings.has("Statistics")) return null;
+  if (!Tick.current.specialBuildings.has("Statistics")) return null;
   const e = new Map(),
-    { theoreticalInput: r, theoreticalOutput: i } = TL(t);
+    { theoreticalInput: r, theoreticalOutput: i } = getResourceIO(t);
   return (
     r.forEach((n, a) => {
       var l;
@@ -115860,7 +115925,7 @@ function wce() {
           className: "section pointer",
           onClick: () => {
             var a;
-            const n = N.current.specialBuildings.get("Statistics");
+            const n = Tick.current.specialBuildings.get("Statistics");
             n &&
               ((a = be().sceneManager.getCurrent(At)) == null ||
                 a.lookAtTile(n.tile, Oc.Select));
@@ -115880,7 +115945,7 @@ function wce() {
                   Array.from(e)
                     .sort(([n, a], [o, l]) => OA(o) / l - OA(n) / a)
                     .map(([n, a]) => {
-                      const o = Ko((1e3 * OA(n)) / Math.abs(a));
+                      const o = formatHMS((1e3 * OA(n)) / Math.abs(a));
                       return s.jsxs(
                         "div",
                         {
@@ -115888,7 +115953,7 @@ function wce() {
                           children: [
                             s.jsx("div", {
                               className: "f1",
-                              children: S.Resource[n].name(),
+                              children: Config.Resource[n].name(),
                             }),
                             s.jsx("div", {
                               className: "ml20",
@@ -115924,7 +115989,7 @@ kz({
   autoSessionTracking: !1,
   integrations: [zU({ levels: ["warn", "error", "assert"] })],
 });
-const pO = new or();
+const pO = new TypedEvent();
 Cp(document.getElementById("game-ui")).render(s.jsx(uce, { event: pO }));
 Cp(document.getElementById("chat-panel")).render(s.jsx(yce, {}));
 Cp(document.getElementById("resource-panel")).render(s.jsx(Sce, {}));
