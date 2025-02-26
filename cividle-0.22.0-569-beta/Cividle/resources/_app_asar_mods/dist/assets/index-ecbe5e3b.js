@@ -79278,7 +79278,7 @@ function Om() {
 function ec() {
   return Ej;
 }
-function Fs(t, e) {
+function makeObservableHook(t, e) {
   return function () {
     const [i, n] = se.useState(0);
     function a(o) {
@@ -80910,22 +80910,22 @@ typeof IPCBridge != "undefined" &&
         ze(), ct(String(t));
       });
   });
-let Ca = null,
-  eS = null;
-const Nc = new TypedEvent(),
-  Uj = new TypedEvent(),
-  R0 = new TypedEvent(),
-  Ik = new TypedEvent(),
-  Nk = new TypedEvent(),
+let user = null,
+  platformInfo = null;
+const OnUserChanged = new TypedEvent(),
+  OnPlatformInfoChanged = new TypedEvent(),
+  OnChatMessage = new TypedEvent(),
+  OnTradeChanged = new TypedEvent(),
+  OnPlayerMapChanged = new TypedEvent(),
   zj = new TypedEvent(),
   Vj = new TypedEvent(),
   Mte = Bp("PlayGames"),
   Bte = Bp("GameCenter");
-let Io = [];
+let chatMessages = [];
 const tS = new Map(),
-  hf = new Map();
+  playerMap = new Map();
 function Xl() {
-  return hf;
+  return playerMap;
 }
 let pn = null;
 const qe = kj({
@@ -80941,37 +80941,37 @@ const qe = kj({
 function cy() {
   return "wss://de.cividle.com";
 }
-function kb() {
+function getTrades() {
   return Array.from(tS.values()).filter(
     (t) => !!(Config.Resource[t.buyResource] && Config.Resource[t.sellResource])
   );
 }
-const jg = Fs(Nk, () => hf),
-  qj = Fs(R0, () => Io),
-  useTrades = Fs(Ik, kb),
-  useUser = Fs(Nc, I0),
-  Yj = Fs(Uj, Ete);
-function I0() {
-  return Ca;
+const usePlayerMap = makeObservableHook(OnPlayerMapChanged, () => playerMap),
+  useChatMessages = makeObservableHook(OnChatMessage, () => chatMessages),
+  useTrades = makeObservableHook(OnTradeChanged, getTrades),
+  useUser = makeObservableHook(OnUserChanged, getUser),
+  usePlatformInfo = makeObservableHook(OnPlatformInfoChanged, getPlatformInfo);
+function getUser() {
+  return user;
 }
-function Ete() {
-  return eS;
+function getPlatformInfo() {
+  return platformInfo;
 }
-function cu() {
+function isOnlineUser() {
   var t;
   return (
-    ((t = Ca == null ? void 0 : Ca.level) != null ? t : it.Tribune) > it.Tribune
+    ((t = user == null ? void 0 : user.level) != null ? t : it.Tribune) > it.Tribune
   );
 }
 function canEarnGreatPeopleFromReborn() {
-  return cu() ? (getGameState().isOffline = !1) : (getGameState().isOffline = !0), !0;
+  return isOnlineUser() ? (getGameState().isOffline = !1) : (getGameState().isOffline = !0), !0;
 }
 let iS = 0;
 function addSystemMessage(t) {
-  Io.push({ id: ++iS, message: t }), R0.emit(Io);
+  chatMessages.push({ id: ++iS, message: t }), OnChatMessage.emit(chatMessages);
 }
 function clearSystemMessages() {
-  (Io = Io.filter((t) => "channel" in t)), R0.emit(Io);
+  (chatMessages = chatMessages.filter((t) => "channel" in t)), OnChatMessage.emit(chatMessages);
 }
 const sD = "CIVIDLE_CLIENT_ID";
 let Fk = 0,
@@ -81057,30 +81057,30 @@ function $j() {
             console.log("[ChatMessageAsJson]",JSON.stringify(u));
 
             u.flush
-              ? (Io = u.chat.map((c) => Ie(U({}, c), { id: ++iS })))
+              ? (chatMessages = u.chat.map((c) => Ie(U({}, c), { id: ++iS })))
               : u.chat.forEach((c) => {
                   const p =
-                      Ca &&
+                      user &&
                       c.message
                         .toLowerCase()
-                        .includes(` @${Ca.handle.toLowerCase()}`),
+                        .includes(` @${user.handle.toLowerCase()}`),
                     f = ot(c.attr, Ul.Announce);
                   (p || f) && (Rk(), ct(`${c.name}: ${c.message}`)),
-                    Io.push(Ie(U({}, c), { id: ++iS }));
+                    chatMessages.push(Ie(U({}, c), { id: ++iS }));
                 }),
-              (Io = KQ(Io)),
-              R0.emit(Io);
+              (chatMessages = KQ(chatMessages)),
+              OnChatMessage.emit(chatMessages);
             break;
           }
           case Uu.Welcome: {
             const u = o;
-            Ca = u.user;
+            user = u.user;
             const c = getGameOptions();
-            c.userId || (c.userId = Ca.userId),
+            c.userId || (c.userId = user.userId),
               Jn().catch(console.error),
-              Nc.emit(Ca),
-              (eS = u.platformInfo),
-              Uj.emit(eS);
+              OnUserChanged.emit(user),
+              (platformInfo = u.platformInfo),
+              OnPlatformInfoChanged.emit(platformInfo);
             const p = getGameState().tick,
               f = We(
                 u.lastGameTick + u.offlineTime - p,
@@ -81113,7 +81113,7 @@ function $j() {
                 u.remove.forEach((c) => {
                   tS.delete(c);
                 }),
-              Ik.emit(kb());
+              OnTradeChanged.emit(getTrades());
             break;
           }
           case Uu.Map: {
@@ -81121,22 +81121,22 @@ function $j() {
             zj.emit(u),
               u.upsert &&
                 forEach(u.upsert, (c, p) => {
-                  hf.set(c, p);
+                  playerMap.set(c, p);
                 }),
               u.remove &&
                 u.remove.forEach((c) => {
-                  hf.delete(c);
+                  playerMap.delete(c);
                 }),
-              Nk.emit(U({}, hf));
+              OnPlayerMapChanged.emit(U({}, playerMap));
             break;
           }
           case Uu.PendingClaim: {
             const u = o;
-            Ca &&
-              u.claims[Ca.userId] &&
+            user &&
+              u.claims[user.userId] &&
               (getGameOptions().tradeFilledSound && Fg(),
               ct(
-                h(d.PlayerTradeClaimAvailable, { count: u.claims[Ca.userId] })
+                h(d.PlayerTradeClaimAvailable, { count: u.claims[user.userId] })
               ),
               Vj.emit());
             break;
@@ -81153,8 +81153,8 @@ function $j() {
       (pn.onclose = (a) => {
         switch (
           ((pn = null),
-          (Ca = null),
-          Nc.emit(null),
+          (user = null),
+          OnUserChanged.emit(null),
           console.log("WebSocket connection closed. Code:", a.code),
           a.code)
         ) {
@@ -89426,7 +89426,7 @@ function w4() {
             className: "text-small mb10",
             children: s.jsx(mt, { html: h(d.AgeWisdomDescHTML) }),
           }),
-          cu()
+          isOnlineUser()
             ? null
             : s.jsx(Xt, {
                 icon: "info",
@@ -89543,7 +89543,7 @@ function Xk() {
       s.jsxs("div", {
         className: "window-body",
         children: [
-          cu()
+          isOnlineUser()
             ? null
             : s.jsx(Xt, {
                 className: "mb10",
@@ -89777,13 +89777,13 @@ function ane({ greatPerson: t }) {
         children: n
           ? s.jsx("button", {
               style: { padding: "0 3px" },
-              disabled: !cu(),
+              disabled: !isOnlineUser(),
               onClick: () => {
-                cu() &&
+                isOnlineUser() &&
                   (Le(), (n.amount += Kf(t, n.level)), (n.level = 0), ut());
               },
               children: s.jsx(Te, {
-                content: cu()
+                content: isOnlineUser()
                   ? h(d.PermanentGreatPeopleUpgradeUndo, {
                       amount: Kf(t, n.level),
                     })
@@ -90408,7 +90408,7 @@ function k4() {
       (Db[o] = c), (Rb[l] = c);
     }
 }
-Nk.on(k4);
+OnPlayerMapChanged.on(k4);
 UL.on(k4);
 function HD(t, e) {
   return t.length === 0
@@ -90432,7 +90432,7 @@ function dne(t) {
 function Lc() {
   var r;
   const t = Xl(),
-    e = (r = I0()) == null ? void 0 : r.userId;
+    e = (r = getUser()) == null ? void 0 : r.userId;
   if (!e) return null;
   for (const [i, n] of t) if (n.userId === e) return i;
   return null;
@@ -90883,7 +90883,7 @@ function bne() {
                       yield qe.changeHandle(e, i),
                         (t.handle = e),
                         (t.flag = i),
-                        Nc.emit(U({}, t)),
+                        OnUserChanged.emit(U({}, t)),
                         Qt();
                     } catch (o) {
                       ze(), ct(String(o));
@@ -91010,8 +91010,8 @@ function E4() {
                             try {
                               const u = xi(l.target.value, 0);
                               (t.color = u),
-                                Nc.emit(U({}, t)),
-                                Nc.emit(yield qe.changeColor(u));
+                                OnUserChanged.emit(U({}, t)),
+                                OnUserChanged.emit(yield qe.changeColor(u));
                             } catch (u) {
                               ct(String(u)), ze();
                             }
@@ -91405,7 +91405,7 @@ function ln({ children: t }) {
 }
 function Ane({ xy: t }) {
   var n, a, o;
-  const e = jg(),
+  const e = usePlayerMap(),
     [r, i] = se.useState(
       (a = (n = e.get(t)) == null ? void 0 : n.tariffRate) != null ? a : 0
     );
@@ -91498,7 +91498,7 @@ function Cne({ xy: t }) {
 }
 function _4({ xy: t }) {
   _j(GameStateChanged);
-  const e = jg(),
+  const e = usePlayerMap(),
     r = Lc();
   let i = sJ;
   if (!r) i = 0;
@@ -91596,7 +91596,7 @@ function _4({ xy: t }) {
 // export function FillPlayerTradeModal({ tradeId, xy }: { tradeId: string; xy?: Tile }): React.ReactNode
 function D4({ tradeId: tradeId, xy: xy }) {
   const [tiles, setTiles] = se.useState([]),
-    map = jg(),
+    map = usePlayerMap(),
     gs = gi(),
     trade = useTrades().find((D) => D.id === tradeId),
     myXy = Lc(),
@@ -92206,7 +92206,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
   });
 }
 function Pne({ xy: t }) {
-  const r = jg().get(t);
+  const r = usePlayerMap().get(t);
   if (!r) return null;
   const i = useTrades(),
     n = GL(r);
@@ -92388,7 +92388,7 @@ function Sne({ xy: t }) {
   });
 }
 function wne({ xy: t }) {
-  const e = jg(),
+  const e = usePlayerMap(),
     r = Lc();
   return (
     fn(
@@ -92825,11 +92825,11 @@ class ap extends H0 {
   onEnable() {
     if (
       (this._idToTradeCount.clear(),
-      kb().forEach((i) => {
+      getTrades().forEach((i) => {
         hr(this._idToTradeCount, i.fromId, 1);
       }),
-      this.onTradeChanged(kb()),
-      this._listeners.push(Ik.on(this.onTradeChanged.bind(this))),
+      this.onTradeChanged(getTrades()),
+      this._listeners.push(OnTradeChanged.on(this.onTradeChanged.bind(this))),
       !vy)
     ) {
       const i = this.viewport.getZoomRange();
@@ -92951,7 +92951,7 @@ class Ene extends Pi {
     super();
     const { textures: a } = n,
       { x: o, y: l } = e,
-      u = r.userId === ((v = I0()) == null ? void 0 : v.userId),
+      u = r.userId === ((v = getUser()) == null ? void 0 : v.userId),
       c = GL(r),
       p = hc.get(r.color);
     if (p) {
@@ -94958,7 +94958,7 @@ function rae({ submitEvent: t }) {
               yield qe.changeHandle(r, n),
               (e.handle = r),
               (e.flag = n),
-              Nc.emit(U({}, e)))
+              OnUserChanged.emit(U({}, e)))
             : (ze(), ct(h(d.OfflineErrorMessage)));
         } catch (c) {
           ze(), ct(String(c));
@@ -95139,7 +95139,7 @@ function An() {
   const [t, e] = se.useState(null),
     r = se.useRef(null),
     i = useUser(),
-    n = Yj();
+    n = usePlatformInfo();
   return (
     nT(),
     se.useEffect(() => {
@@ -97131,7 +97131,7 @@ function mae() {
                     try {
                       yield Promise.race([qe.rebirth(), nk(10)]);
                     } catch (x) {
-                      if ((console.error(x), cu())) {
+                      if ((console.error(x), isOnlineUser())) {
                         ze(), ct(h(d.RebornOfflineWarning));
                         return;
                       }
@@ -112966,7 +112966,7 @@ function oI(t, e) {
       t.tick % (Nue * u) === 0 &&
         (be().heartbeat.update(E0()),
         qe.queryRankUp().then((c) => {
-          const p = I0();
+          const p = getUser();
           p &&
             c > p.level &&
             ((y1 = c),
@@ -113004,8 +113004,8 @@ EL.on((t) => {
 RL.on(({ permanent: t }) => {
   Da(), It(s.jsx(Ra, { permanent: t }));
 });
-const nO = Fs(vL, () => Tick.current),
-  Gue = Fs(IL, () => y1);
+const nO = makeObservableHook(vL, () => Tick.current),
+  Gue = makeObservableHook(IL, () => y1);
 function Oue(t) {
   var e, r;
   for (const i of fg) {
@@ -113179,14 +113179,14 @@ function que(t) {
       Object.assign(savedGame.options, t.options),
       !0);
 }
-const gi = Fs(GameStateChanged, getGameState),
-  ki = Fs(GameOptionsChanged, getGameOptions);
+const gi = makeObservableHook(GameStateChanged, getGameState),
+  ki = makeObservableHook(GameOptionsChanged, getGameOptions);
 let dO = !1;
 const Vb = new TypedEvent();
 Vb.on((t) => {
   dO = t;
 });
-const nT = Fs(Vb, () => dO);
+const nT = makeObservableHook(Vb, () => dO);
 function sI(t) {
   return t & 255;
 }
@@ -113385,7 +113385,7 @@ class Zue {
     this.shouldSendBytes() && kS(this.data).then((e) => qe.fullHeartbeat(e));
   }
   shouldSendBytes() {
-    return !(getGameState().isOffline || !cu());
+    return !(getGameState().isOffline || !isOnlineUser());
   }
   update(e) {
     const r = getGameState();
@@ -113485,7 +113485,7 @@ function Jue() {
 let So = !1;
 function cI() {
   var a, o;
-  const t = Yj(),
+  const t = usePlatformInfo(),
     e = useUser(),
     r = !isNullOrUndefined(t == null ? void 0 : t.connectedUserId),
     [i, n] = se.useState(So);
@@ -114610,6 +114610,17 @@ function handleChatCommand(command) {
 
         break;
       }
+      case "test2": {
+        let trades = getTrades();
+        addSystemMessage("getTrades():");
+        addSystemMessage(""+JSON.stringify(trades));
+        break;
+      }
+      case "test3": {
+        addSystemMessage("chatMessages:");
+        addSystemMessage(""+JSON.stringify(chatMessages));
+        break;
+      }
       case "timetravel": {
         requireOfflineRun();
         const a = We(xi(parts[1], 30), 0, 60 * 4);
@@ -115067,7 +115078,7 @@ function yce() {
   const t = ki();
   t.chatChannels.size === 0 && t.chatChannels.add(qf(Ig));
   const e = nT(),
-    r = qj().filter((c) => !("channel" in c) || t.chatChannels.has(c.channel)),
+    r = useChatMessages().filter((c) => !("channel" in c) || t.chatChannels.has(c.channel)),
     [i, n] = se.useTransition(),
     [a, o] = se.useState(!1),
     l = useUser();
@@ -115135,7 +115146,7 @@ function bce({ show: t, channel: e, style: r, onClose: i, onMinimize: n }) {
   var f;
   const a = se.useRef(null),
     o = se.useRef(!1),
-    l = qj().filter((m) => !("channel" in m) || e === m.channel),
+    l = useChatMessages().filter((m) => !("channel" in m) || e === m.channel),
     u = l.length > 0 ? l[l.length - 1] : null,
     c = useUser();
   se.useEffect(() => {
