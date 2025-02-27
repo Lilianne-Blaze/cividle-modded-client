@@ -83696,20 +83696,27 @@ function Ti(t, e) {
   if (!e[t]) throw new Error(`Cannot find texture ${t}`);
   return e[t];
 }
-let ag = null;
-function Xte(t) {
-  ag != null &&
+
+// SOURCE src/scripts/utilities/Singleton.ts
+
+let singletons = null;
+
+function Xte(s) {
+  singletons != null &&
     console.warn(
       "Singletons are already initialized, you are trying to initialize it again!"
     ),
-    (ag = t);
+    (singletons = s);
 }
-function Zte() {
-  return ag !== null;
+
+function isSingletonReady() {
+  return singletons !== null;
 }
-function be() {
-  if (ag == null) throw new Error("Singletons are not initialized yet!");
-  return ag;
+
+// obfus be at 569
+function Singleton() {
+  if (singletons == null) throw new Error("Singletons are not initialized yet!");
+  return singletons;
 }
 var va = "top",
   co = "bottom",
@@ -86312,7 +86319,7 @@ function li({ gameState: t, xy: e }) {
                 ((m = p.building) == null ? void 0 : m.type) === i.type &&
                   u.push(f);
               }),
-                (c = be().sceneManager.getCurrent(WorldScene)) == null ||
+                (c = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                   c.drawSelection(tileToPoint(e), u);
             },
             children: "search",
@@ -86376,7 +86383,7 @@ function FD({ resource: t, buildingColor: e }) {
               n.tiles.forEach((u, c) => {
                 u.explored && t in u.deposit && o.push(c);
               }),
-                (l = be().sceneManager.getCurrent(WorldScene)) == null ||
+                (l = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                   l.drawSelection(null, o);
             },
             children: "search",
@@ -86673,7 +86680,7 @@ function Yk(r) {
   return (
     se.useEffect(() => {
       setTimeout(() => {
-        jie(t, be().sceneManager.getContext()).then((a) => {
+        jie(t, Singleton().sceneManager.getContext()).then((a) => {
           n.current && (n.current.src = URL.createObjectURL(a));
         });
       }, 0);
@@ -86832,7 +86839,7 @@ function gn({ xy: t, getOptions: e, gameState: r, flags: i }) {
                 style: { width: 27, padding: 0 },
                 onMouseEnter: () => {
                   var p;
-                  (p = be().sceneManager.getCurrent(WorldScene)) == null ||
+                  (p = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                     p.drawSelection(
                       null,
                       getGrid(r)
@@ -86853,7 +86860,7 @@ function gn({ xy: t, getOptions: e, gameState: r, flags: i }) {
                 },
                 onMouseLeave: () => {
                   var p;
-                  (p = be().sceneManager.getCurrent(WorldScene)) == null ||
+                  (p = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                     p.drawSelection(null, []);
                 },
                 onClick: () => {
@@ -87575,7 +87582,7 @@ function G0({ gameState: t, xy: e }) {
   if (!r || !i || yr(i.type)) return null;
   const n = () => {
     delete r.building,
-      be().sceneManager.enqueue(WorldScene, (o) => o.resetTile(r.tile)),
+      Singleton().sceneManager.enqueue(WorldScene, (o) => o.resetTile(r.tile)),
       clearTransportSourceCache(),
       Ze();
   };
@@ -87601,7 +87608,7 @@ function G0({ gameState: t, xy: e }) {
               style: { width: 27, padding: 0 },
               onMouseEnter: () => {
                 var l;
-                (l = be().sceneManager.getCurrent(WorldScene)) == null ||
+                (l = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                   l.drawSelection(
                     null,
                     getGrid(t)
@@ -87622,7 +87629,7 @@ function G0({ gameState: t, xy: e }) {
               },
               onMouseLeave: () => {
                 var l;
-                (l = be().sceneManager.getCurrent(WorldScene)) == null ||
+                (l = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                   l.drawSelection(null, []);
               },
               onClick: () => {
@@ -87652,7 +87659,7 @@ function G0({ gameState: t, xy: e }) {
                               : p.type) === i.type &&
                               (delete c.building,
                               ++u,
-                              be().sceneManager.enqueue(WorldScene, (f) =>
+                              Singleton().sceneManager.enqueue(WorldScene, (f) =>
                                 f.resetTile(c.tile)
                               ));
                           }),
@@ -88061,7 +88068,7 @@ function O0({ gameState: t, xy: e }) {
             P.add(w);
         }),
         a(P),
-        (M = be().sceneManager.getCurrent(WorldScene)) == null ||
+        (M = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
           M.drawSelection(null, Array.from(P));
     },
     g = (A, C) => {
@@ -88175,7 +88182,7 @@ function O0({ gameState: t, xy: e }) {
                 switch (A.target.value) {
                   case "0": {
                     a(new Set([e])),
-                      (C = be().sceneManager.getCurrent(WorldScene)) == null ||
+                      (C = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                         C.drawSelection(null, []);
                     break;
                   }
@@ -88190,7 +88197,7 @@ function O0({ gameState: t, xy: e }) {
                         k.add(B);
                     }),
                       a(k),
-                      (P = be().sceneManager.getCurrent(WorldScene)) == null ||
+                      (P = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                         P.drawSelection(null, Array.from(k));
                     break;
                   }
@@ -88206,7 +88213,7 @@ function O0({ gameState: t, xy: e }) {
                         k.add(B);
                     }),
                       a(k),
-                      (M = be().sceneManager.getCurrent(WorldScene)) == null ||
+                      (M = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                         M.drawSelection(null, Array.from(k));
                     break;
                   }
@@ -88298,7 +88305,7 @@ function O0({ gameState: t, xy: e }) {
                 ae(this, null, function* () {
                   var M, k, w;
                   Le(), ct(h(d.MoveBuildingSelectTileToastHTML), 1e7), p(!0);
-                  const A = yield (M = be().sceneManager.getCurrent(WorldScene)) == null
+                  const A = yield (M = Singleton().sceneManager.getCurrent(WorldScene)) == null
                     ? void 0
                     : M.hijackSelectGrid();
                   if (
@@ -88324,7 +88331,7 @@ function O0({ gameState: t, xy: e }) {
                       Ze(),
                       clearTransportSourceCache(),
                       clearIntraTickCache(),
-                      (w = be().sceneManager.getCurrent(WorldScene)) == null ||
+                      (w = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                         w.selectGrid(A))
                     : (ct(d.MoveBuildingFail), ze());
                 }),
@@ -89156,7 +89163,7 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
                       onPointerDown: () => {
                         var v;
                         Le(),
-                          (v = be().sceneManager.getCurrent(WorldScene)) == null ||
+                          (v = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                             v.lookAtTile(u.xy, Oc.Select);
                       },
                       children: "open_in_new",
@@ -89248,7 +89255,7 @@ function Qie({ allMarketTrades: t, gs: e }) {
                   onPointerDown: () => {
                     var u;
                     Le(),
-                      (u = be().sceneManager.getCurrent(WorldScene)) == null ||
+                      (u = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                         u.lookAtTile(r.xy, Oc.Select);
                   },
                   children: "open_in_new",
@@ -92510,7 +92517,7 @@ function wne({ xy: t }) {
     fn(
       "PlayerMapPageGoBackToCity",
       () => {
-        be().sceneManager.loadScene(WorldScene);
+        Singleton().sceneManager.loadScene(WorldScene);
       },
       [t]
     ),
@@ -93042,7 +93049,7 @@ class ap extends H0 {
       const c = M4(xyToPoint(o), { x: r, y: i });
       this.drawPath(c);
     } else this.clearPath();
-    be().routeTo(wne, { xy: u });
+    Singleton().routeTo(wne, { xy: u });
   }
   addOrReplaceTile(r, i) {
     var o;
@@ -93222,7 +93229,7 @@ function Dne() {
   });
 }
 function Rne() {
-  const { app: t } = be().sceneManager.getContext(),
+  const { app: t } = Singleton().sceneManager.getContext(),
     e = t.view.getContext("webgl2");
   if (!e) return "";
   const r = e.getExtension("WEBGL_debug_renderer_info");
@@ -94553,7 +94560,7 @@ function Une() {
                             value: t.fontSizeScale,
                             onChange: (e) => {
                               (t.fontSizeScale = safeParseFloat(e.target.value, 1)),
-                                MS(be().sceneManager.getContext().app, t),
+                                MS(Singleton().sceneManager.getContext().app, t),
                                 ut(t);
                             },
                             children: [
@@ -94583,7 +94590,7 @@ function Une() {
                             value: t.fontSizeScaleMobile,
                             onChange: (e) => {
                               (t.fontSizeScaleMobile = safeParseFloat(e.target.value, 1)),
-                                MS(be().sceneManager.getContext().app, t),
+                                MS(Singleton().sceneManager.getContext().app, t),
                                 ut(t);
                             },
                             children: [
@@ -95292,20 +95299,20 @@ function An() {
                     s.jsx("div", {
                       className: "menu-popover-item",
                       onPointerDown: (a) => {
-                        be().sceneManager.loadScene(WorldScene), e(null);
+                        Singleton().sceneManager.loadScene(WorldScene), e(null);
                       },
                       children: s.jsx(Hn, {
-                        check: be().sceneManager.isCurrent(WorldScene),
+                        check: Singleton().sceneManager.isCurrent(WorldScene),
                         children: h(d.CityViewMap),
                       }),
                     }),
                     s.jsx("div", {
                       className: "menu-popover-item",
                       onPointerDown: (a) => {
-                        be().sceneManager.loadScene(op), e(null);
+                        Singleton().sceneManager.loadScene(op), e(null);
                       },
                       children: s.jsx(Hn, {
-                        check: be().sceneManager.isCurrent(op),
+                        check: Singleton().sceneManager.isCurrent(op),
                         children: h(d.ResearchMenu),
                       }),
                     }),
@@ -95314,10 +95321,10 @@ function An() {
                       : s.jsx("div", {
                           className: "menu-popover-item",
                           onPointerDown: (a) => {
-                            be().sceneManager.loadScene(ap), e(null);
+                            Singleton().sceneManager.loadScene(ap), e(null);
                           },
                           children: s.jsx(Hn, {
-                            check: be().sceneManager.isCurrent(ap),
+                            check: Singleton().sceneManager.isCurrent(ap),
                             children: h(d.PlayerMapMenu),
                           }),
                         }),
@@ -95356,7 +95363,7 @@ function An() {
                     s.jsx("div", {
                       className: "menu-popover-item",
                       onPointerDown: () => {
-                        be().routeTo(Nne, {});
+                        Singleton().routeTo(Nne, {});
                       },
                       children: s.jsx(Hn, {
                         check: !1,
@@ -95366,14 +95373,14 @@ function An() {
                     s.jsx("div", {
                       className: "menu-popover-item",
                       onPointerDown: () => {
-                        be().routeTo(Une, {});
+                        Singleton().routeTo(Une, {});
                       },
                       children: s.jsx(Hn, { check: !1, children: h(d.Theme) }),
                     }),
                     s.jsx("div", {
                       className: "menu-popover-item",
                       onPointerDown: () => {
-                        be().routeTo(Gne, {});
+                        Singleton().routeTo(Gne, {});
                       },
                       children: s.jsx(Hn, {
                         check: !1,
@@ -95418,7 +95425,7 @@ function An() {
                     s.jsx("div", {
                       className: "menu-popover-item",
                       onPointerDown: () => {
-                        be().routeTo(iae, {});
+                        Singleton().routeTo(iae, {});
                       },
                       children: s.jsx(Hn, {
                         check: !1,
@@ -95428,7 +95435,7 @@ function An() {
                     s.jsx("div", {
                       className: "menu-popover-item",
                       onPointerDown: () => {
-                        be().routeTo(Lne, {});
+                        Singleton().routeTo(Lne, {});
                       },
                       children: s.jsx(Hn, {
                         check: !1,
@@ -95547,7 +95554,7 @@ function nae() {
           s.jsx(Xt, { icon: "info", children: h(d.ContentInDevelopmentDesc) }),
           s.jsxs("button", {
             className: "w100 row jcc mt10",
-            onClick: () => be().sceneManager.loadScene(WorldScene),
+            onClick: () => Singleton().sceneManager.loadScene(WorldScene),
             children: [
               s.jsx("div", {
                 className: "m-icon",
@@ -95804,7 +95811,7 @@ function aae({ definition: t, gameState: e }) {
 function oae({ id: t }) {
   const e = gi(),
     r = Config.Tech[t],
-    i = () => be().sceneManager.loadScene(WorldScene),
+    i = () => Singleton().sceneManager.loadScene(WorldScene),
     n = () => r.column <= fQ,
     a = () => {
       var g;
@@ -95844,7 +95851,7 @@ function oae({ id: t }) {
           ? (Da(), It(s.jsx(Ra, { permanent: !1 })))
           : Lg(),
         Ze(),
-        (g = be().sceneManager.getCurrent(op)) == null ||
+        (g = Singleton().sceneManager.getCurrent(op)) == null ||
           g.renderTechTree("animate", !0));
     };
   if (
@@ -96417,7 +96424,7 @@ class op extends H0 {
       .setValue(getGameOptions().themeColors.ResearchHighlightColor)
       .toNumber();
     (this._selectedTech = a),
-      n && be().routeTo(oae, { id: a }),
+      n && Singleton().routeTo(oae, { id: a }),
       (m = this._selectedGraphics) == null || m.lineStyle(KD);
     let l = [a];
     const u = new Set(),
@@ -97303,7 +97310,7 @@ function fae() {
               className: "w100 row jcc mb10",
               onClick: () => {
                 var n;
-                return be().routeTo(eT, {
+                return Singleton().routeTo(TilePage, {
                   xy:
                     (n = Tick.current.specialBuildings.get("Headquarter")) == null
                       ? void 0
@@ -97454,7 +97461,7 @@ function gae() {
                 className: "w100 row jcc",
                 onClick: () => {
                   var r;
-                  return be().routeTo(eT, {
+                  return Singleton().routeTo(TilePage, {
                     xy:
                       (r = Tick.current.specialBuildings.get("Headquarter")) ==
                       null
@@ -97939,7 +97946,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
                               className: "text-link",
                               onClick: () => {
                                 var A;
-                                (A = be().sceneManager.loadScene(op)) == null ||
+                                (A = Singleton().sceneManager.loadScene(op)) == null ||
                                   A.selectNode(x, "jump", !0);
                               },
                               children: h(d.View),
@@ -97963,7 +97970,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
         children: [
           s.jsx("legend", { children: h(d.SteamAchievement) }),
           s.jsxs("button", {
-            onClick: () => be().routeTo(fae, {}),
+            onClick: () => Singleton().routeTo(fae, {}),
             className: "jcc w100 row",
             children: [
               s.jsx("div", {
@@ -98230,7 +98237,7 @@ function bae({ gameState: t }) {
       }),
       s.jsxs("button", {
         className: "mt10 jcc w100 row",
-        onClick: () => be().routeTo(gae, {}),
+        onClick: () => Singleton().routeTo(gae, {}),
         children: [
           s.jsx("div", {
             className: "m-icon small",
@@ -99253,7 +99260,7 @@ function kae({ gameState: t, xy: e }) {
               s.jsx("div", { children: h(d.PlayerTradeClaimTileFirstWarning) }),
               s.jsx("div", {
                 className: "text-strong text-link row",
-                onClick: () => be().sceneManager.loadScene(ap),
+                onClick: () => Singleton().sceneManager.loadScene(ap),
                 children: h(d.PlayerTradeClaimTileFirst),
               }),
             ],
@@ -99629,7 +99636,7 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
           s.jsx("div", { children: h(d.PlayerTradeClaimTileFirstWarning) }),
           s.jsx("div", {
             className: "text-strong text-link row",
-            onClick: () => be().sceneManager.loadScene(ap),
+            onClick: () => Singleton().sceneManager.loadScene(ap),
             children: h(d.PlayerTradeClaimTileFirst),
           }),
         ],
@@ -100756,7 +100763,7 @@ function H4({ gameState: gameState, xy: xy }) {
                   building.resourceImportOptions,
                   mn.ManagedImport
                 )),
-                (f = be().sceneManager.getCurrent(WorldScene)) == null ||
+                (f = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                   f.drawSelection(null, []),
                 Ze();
             },
@@ -108034,57 +108041,62 @@ function gx({ title: t, data: e, series: r }) {
     })
   );
 }
-let _y = "empire";
-function rue({ gameState: t, xy: e }) {
+
+// SOURCE src/scripts/ui/StatisticsBuildingBody.tsx
+
+let savedStatisticsTab = "empire";
+
+function StatisticsBuildingBody({ gameState: t, xy: e }) {
   var l;
   if (((l = t.tiles.get(e)) == null ? void 0 : l.building) == null) return null;
-  const [i, n] = se.useState(_y);
-  let a = null,
-    o = "";
+  const [currentTab, setCurrentTab] = se.useState(savedStatisticsTab);
+  let content = null,
+    extraClass = "";
   return (
-    i === "resources"
-      ? ((o = "col f1"),
-        (_y = "resources"),
-        (a = s.jsx(oue, { gameState: t, xy: e })))
-      : i === "buildings"
-      ? ((o = "col f1"),
-        (_y = "buildings"),
-        (a = s.jsx(nue, { gameState: t, xy: e })))
-      : i === "empire" &&
-        ((_y = "empire"), (a = s.jsx(iue, { gameState: t, xy: e }))),
+    currentTab === "resources"
+      ? ((extraClass = "col f1"),
+        (savedStatisticsTab = "resources"),
+        (content = s.jsx(ResourcesTab, { gameState: t, xy: e })))
+      : currentTab === "buildings"
+      ? ((extraClass = "col f1"),
+        (savedStatisticsTab = "buildings"),
+        (content = s.jsx(BuildingTab, { gameState: t, xy: e })))
+      : currentTab === "empire" &&
+        ((savedStatisticsTab = "empire"), (content = s.jsx(EmpireTab, { gameState: t, xy: e }))),
     s.jsxs("div", {
-      className: `window-body ${o}`,
+      className: `window-body ${extraClass}`,
       children: [
         s.jsxs("menu", {
           role: "tablist",
           children: [
             s.jsx("button", {
-              onClick: () => n("empire"),
-              "aria-selected": i === "empire",
+              onClick: () => setCurrentTab("empire"),
+              "aria-selected": currentTab === "empire",
               children: h(d.StatisticsEmpire),
             }),
             s.jsx("button", {
-              onClick: () => n("resources"),
-              "aria-selected": i === "resources",
+              onClick: () => setCurrentTab("resources"),
+              "aria-selected": currentTab === "resources",
               children: h(d.StatisticsResources),
             }),
             s.jsx("button", {
-              onClick: () => n("buildings"),
-              "aria-selected": i === "buildings",
+              onClick: () => setCurrentTab("buildings"),
+              "aria-selected": currentTab === "buildings",
               children: h(d.StatisticsBuildings),
             }),
           ],
         }),
-        a,
-        i === "empire" ? s.jsx(li, { gameState: t, xy: e }) : null,
+        content,
+        currentTab === "empire" ? s.jsx(li, { gameState: t, xy: e }) : null,
       ],
     })
   );
 }
-function iue({ gameState: t, xy: e }) {
+
+function EmpireTab({ gameState: t, xy: e }) {
   var p, f, m, g, v;
-  const r = (p = t.tiles.get(e)) == null ? void 0 : p.building;
-  if (!r) return null;
+  const building = (p = t.tiles.get(e)) == null ? void 0 : p.building;
+  if (!building) return null;
   const i = mReduceOf(Tick.current.resourceValues, (y, x, T) => y + T, 0),
     n = mReduceOf(Tick.current.buildingValues, (y, x, T) => y + T, 0),
     a = getScienceFromBuildings(),
@@ -108412,7 +108424,7 @@ function iue({ gameState: t, xy: e }) {
                     s.jsx("div", {
                       className: "text-strong",
                       children: s.jsx(te, {
-                        value: (g = r.resources.Explorer) != null ? g : 0,
+                        value: (g = building.resources.Explorer) != null ? g : 0,
                       }),
                     }),
                   ],
@@ -108426,7 +108438,7 @@ function iue({ gameState: t, xy: e }) {
                           className: "f1",
                           children: h(d.NextExplorersIn),
                         }),
-                        ((v = r.resources.Explorer) != null ? v : 0) >= 10
+                        ((v = building.resources.Explorer) != null ? v : 0) >= 10
                           ? s.jsx("div", { children: "-" })
                           : s.jsxs("div", {
                               children: [jP - (t.tick % jP), "s"],
@@ -108453,13 +108465,15 @@ function iue({ gameState: t, xy: e }) {
     ],
   });
 }
-let Dy = du.None;
-function nue({ gameState: t }) {
-  const [e, r] = se.useState(Dy),
-    i = (o) => {
-      r(o), (Dy = o);
+
+let savedBuildingFilter = du.None;
+
+function BuildingTab({ gameState: t }) {
+  const [buildingFilter, _setBuildingFilter] = se.useState(savedBuildingFilter),
+    setBuildingFilter = (newFilter) => {
+      _setBuildingFilter(newFilter), (savedBuildingFilter = newFilter);
     },
-    [n, a] = se.useState("");
+    [search, setSearch] = se.useState("");
   return s.jsxs("article", {
     role: "tabpanel",
     className: "col",
@@ -108473,13 +108487,13 @@ function nue({ gameState: t }) {
             style: { flex: 1 },
             className: "mr5",
             placeholder: h(d.StatisticsBuildingsSearchText),
-            onChange: (o) => a(o.target.value),
+            onChange: (o) => setSearch(o.target.value),
           }),
           s.jsx(kh, {
-            filter: e,
+            filter: buildingFilter,
             current: du.Wonder,
-            savedFilter: Dy,
-            onFilterChange: i,
+            savedFilter: savedBuildingFilter,
+            onFilterChange: setBuildingFilter,
             children: s.jsx("div", {
               className: "m-icon small",
               children: "globe",
@@ -108489,10 +108503,10 @@ function nue({ gameState: t }) {
             s.jsx(
               kh,
               {
-                filter: e,
+                filter: buildingFilter,
                 current: 1 << o,
-                savedFilter: Dy,
-                onFilterChange: i,
+                savedFilter: savedBuildingFilter,
+                onFilterChange: setBuildingFilter,
                 children: numberToRoman(o),
               },
               o
@@ -108507,10 +108521,10 @@ function nue({ gameState: t }) {
           data: Array.from(getXyBuildings(t))
             .filter(([o, l]) => {
               if (Config.Building[l.type].special === tl.NaturalWonder) return !1;
-              let u = (e & 268435455) === 0;
+              let u = (buildingFilter & 268435455) === 0;
               for (let p = 0; p < 12; p++)
-                ot(e, 1 << p) && (u || (u = Config.BuildingTier[l.type] === p));
-              const c = n.toLowerCase();
+                ot(buildingFilter, 1 << p) && (u || (u = Config.BuildingTier[l.type] === p));
+              const c = search.toLowerCase();
               return u && Config.Building[l.type].name().toLowerCase().includes(c);
             })
             .sort(([o, l], [u, c]) =>
@@ -108595,7 +108609,7 @@ function nue({ gameState: t }) {
                         className: "pointer",
                         onClick: () => {
                           var y;
-                          (y = be().sceneManager.getCurrent(WorldScene)) == null ||
+                          (y = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                             y.lookAtTile(l, Oc.Highlight);
                         },
                         children: Config.Building[u.type].name(),
@@ -108656,30 +108670,34 @@ function nue({ gameState: t }) {
     ],
   });
 }
-const aue = { column: 0, asc: !0 };
-let Am = du.None;
-function oue({ gameState: t }) {
-  const [e, r] = se.useState(Am),
+
+const resourceTabSortingState = { column: 0, asc: !0 };
+
+let savedResourceTierFilter = du.None;
+
+// obfus oue at 569
+function ResourcesTab({ gameState: gameState }) {
+  const [resourceTierFilter, _setResourceTierFilter] = se.useState(savedResourceTierFilter),
     i = (g) => {
-      r(g), (Am = g);
+      _setResourceTierFilter(g), (savedResourceTierFilter = g);
     },
-    [n, a] = se.useState(""),
-    [o, l] = se.useState(!0),
-    u = unlockedResources(t),
-    c = getResourceIO(t),
-    p = o ? c.theoreticalInput : c.actualInput,
-    f = o ? c.theoreticalOutput : c.actualOutput,
-    m = (g, v) => {
+    [search, setSearch] = se.useState(""),
+    [showTheoreticalValue, setShowTheoreticalValue] = se.useState(true),
+    unlockedResourcesList = unlockedResources(gameState),
+    c = getResourceIO(gameState),
+    inputs = showTheoreticalValue ? c.theoreticalInput : c.actualInput,
+    outputs = showTheoreticalValue ? c.theoreticalOutput : c.actualOutput,
+    highlightResourcesUsed = (res, type) => {
       var x;
-      const y = [];
-      t.tiles.forEach((T, A) => {
-        const C = getBuildingIO(A, v, br.Multiplier | br.Capacity, t);
-        forEach(C, (P, M) => {
-          g === P && y.push(T.tile);
+      const inputOutputTiles = [];
+      gameState.tiles.forEach((tile, xy) => {
+        const inputOutput = getBuildingIO(xy, type, br.Multiplier | br.Capacity, gameState);
+        forEach(inputOutput, (r, amount) => {
+          res === r && inputOutputTiles.push(tile.tile);
         });
       }),
-        (x = be().sceneManager.getCurrent(WorldScene)) == null ||
-          x.drawSelection(null, y);
+        (x = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
+          x.drawSelection(null, inputOutputTiles);
     };
   return s.jsxs("article", {
     role: "tabpanel",
@@ -108694,15 +108712,15 @@ function oue({ gameState: t }) {
             style: { flex: 1 },
             className: "mr5",
             placeholder: h(d.StatisticsResourcesSearchText),
-            onChange: (g) => a(g.target.value),
+            onChange: (g) => setSearch(g.target.value),
           }),
           [1, 2, 3, 4, 5, 6, 7, 8].map((g) =>
             s.jsx(
               kh,
               {
-                filter: e,
+                filter: resourceTierFilter,
                 current: 1 << g,
-                savedFilter: Am,
+                savedFilter: savedResourceTierFilter,
                 onFilterChange: i,
                 children: numberToRoman(g),
               },
@@ -108710,12 +108728,12 @@ function oue({ gameState: t }) {
             )
           ),
           s.jsx(Te, {
-            content: h(o ? d.TheoreticalData : d.LiveData),
+            content: h(showTheoreticalValue ? d.TheoreticalData : d.LiveData),
             children: s.jsx("button", {
-              className: Ke({ active: !o }),
+              className: Ke({ active: !showTheoreticalValue }),
               style: { width: 27, padding: 0 },
               onClick: () => {
-                l(!o);
+                setShowTheoreticalValue(!showTheoreticalValue);
               },
               children: s.jsx("div", {
                 className: "m-icon small",
@@ -108733,12 +108751,12 @@ function oue({ gameState: t }) {
           { name: h(d.StatisticsResourcesDeficit), right: !0, sortable: !0 },
           { name: h(d.StatisticsResourcesRunOut), right: !0, sortable: !0 },
         ],
-        sortingState: aue,
-        data: keysOf(u).filter((g) => {
-          let v = (Am & 268435455) === 0;
+        sortingState: resourceTabSortingState,
+        data: keysOf(unlockedResourcesList).filter((g) => {
+          let v = (savedResourceTierFilter & 268435455) === 0;
           for (let x = 0; x < 12; x++)
-            ot(Am, 1 << x) && (v || (v = Config.ResourceTier[g] === x));
-          const y = n.toLowerCase();
+            ot(savedResourceTierFilter, 1 << x) && (v || (v = Config.ResourceTier[g] === x));
+          const y = search.toLowerCase();
           return v && Config.Resource[g].name().toLowerCase().includes(y);
         }),
         compareFunc: (g, v, y) => {
@@ -108751,18 +108769,18 @@ function oue({ gameState: t }) {
               );
             case 2:
               return (
-                ((A = f.get(g)) != null ? A : 0) -
-                ((C = p.get(g)) != null ? C : 0) -
-                (((P = f.get(v)) != null ? P : 0) -
-                  ((M = p.get(v)) != null ? M : 0))
+                ((A = outputs.get(g)) != null ? A : 0) -
+                ((C = inputs.get(g)) != null ? C : 0) -
+                (((P = outputs.get(v)) != null ? P : 0) -
+                  ((M = inputs.get(v)) != null ? M : 0))
               );
             case 3: {
               const L =
-                  ((k = f.get(g)) != null ? k : 0) -
-                  ((w = p.get(g)) != null ? w : 0),
+                  ((k = outputs.get(g)) != null ? k : 0) -
+                  ((w = inputs.get(g)) != null ? w : 0),
                 F =
-                  ((B = f.get(v)) != null ? B : 0) -
-                  ((_ = p.get(v)) != null ? _ : 0),
+                  ((B = outputs.get(v)) != null ? B : 0) -
+                  ((_ = inputs.get(v)) != null ? _ : 0),
                 W =
                   L < 0
                     ? ((D = Tick.current.resourceAmount.get(g)) != null ? D : 0) /
@@ -108781,61 +108799,70 @@ function oue({ gameState: t }) {
               return Config.Resource[g].name().localeCompare(Config.Resource[v].name());
           }
         },
-        renderRow: (g) => {
+        renderRow: (res) => {
           var P, M, k;
-          const v = Config.Resource[g];
-          if (NoPrice[g] || NoStorage[g]) return null;
-          const y = (P = f.get(g)) != null ? P : 0,
-            x = (M = p.get(g)) != null ? M : 0,
-            T = y - x,
-            A = (k = Tick.current.resourceAmount.get(g)) != null ? k : 0,
-            C = T < 0 ? Math.abs((1e3 * A) / T) : Number.POSITIVE_INFINITY;
+          const r = Config.Resource[res];
+          if (NoPrice[res] || NoStorage[res]) return null;
+          const output = (P = outputs.get(res)) != null ? P : 0,
+            input = (M = inputs.get(res)) != null ? M : 0,
+            deficit = output - input,
+            amount = (k = Tick.current.resourceAmount.get(res)) != null ? k : 0,
+            timeLeft = deficit < 0 ? Math.abs((1e3 * amount) / deficit) : Number.POSITIVE_INFINITY;
           return s.jsxs(
             "tr",
             {
               children: [
                 s.jsxs("td", {
+                  // ***** 2025-02-27
                   children: [
-                    s.jsx("div", { children: v.name() }),
+                    s.jsx("div", { children: r.name() }),
                     s.jsx(Te, {
                       content: h(d.EmpireValue),
                       children: s.jsx("span", {
                         className: "text-desc text-small",
-                        children: s.jsx(te, { value: Config.ResourcePrice[g] }),
+                        children: s.jsx(te, { value: Config.ResourcePrice[res] }),
+                      }),
+                    }),
+                    " / ",
+                    s.jsx(Te, {
+                      content: h(d.EmpireValue),
+                      children: s.jsx("span", {
+                        className: "text-desc text-small",
+                        children: s.jsx(te, { value: Config.ResourcePrice[res]*amount }),
                       }),
                     }),
                   ],
                 }),
                 s.jsx("td", {
                   className: "right",
-                  children: s.jsx(te, { value: A }),
+                  children: s.jsx(te, { value: amount }),
                 }),
                 s.jsxs("td", {
                   children: [
                     s.jsx("div", {
-                      className: Ke({ "text-right": !0, "text-red": T < 0 }),
-                      children: s.jsx(te, { value: T }),
+                      className: Ke({ "text-right": !0, "text-red": deficit < 0 }),
+                      children: s.jsx(te, { value: deficit }),
                     }),
                     s.jsx(Te, {
                       content: h(d.StatisticsResourcesDeficitDesc, {
-                        output: pr(y),
-                        input: pr(x),
+                        output: pr(output),
+                        input: pr(input),
                       }),
                       children: s.jsxs("div", {
                         className: "text-small text-right text-desc",
                         children: [
                           s.jsx("span", {
                             className: "pointer",
-                            onClick: () => m(g, "output"),
-                            children: s.jsx(te, { value: y }),
+                            onClick: () => highlightResourcesUsed(res, "output"),
+                            children: s.jsx(te, { value: output }),
                           }),
                           " ",
                           "-",
                           " ",
                           s.jsx("span", {
                             className: "pointer",
-                            onClick: () => m(g, "input"),
-                            children: s.jsx(te, { value: x }),
+                            onClick: () => highlightResourcesUsed(res, "input"),
+                            children: s.jsx(te, { value: input }),
                           }),
                         ],
                       }),
@@ -108844,14 +108871,14 @@ function oue({ gameState: t }) {
                 }),
                 s.jsx("td", {
                   className: Ke({
-                    "text-red": T < 0,
+                    "text-red": deficit < 0,
                     "text-right text-small": !0,
                   }),
-                  children: formatHMS(C),
+                  children: formatHMS(timeLeft),
                 }),
               ],
             },
-            g
+            res
           );
         },
       }),
@@ -109437,7 +109464,7 @@ function fue({ gameState: t, xy: e }) {
 const gue = {
   Headquarter: vae,
   Market: Pae,
-  Statistics: rue,
+  Statistics: StatisticsBuildingBody,
   Caravansary: Rae,
   Warehouse: mue,
   Petra: Sae,
@@ -109475,7 +109502,7 @@ const gue = {
 function vue(t) {
   var o;
   const { tile: e } = t; // const { tile } = props;
-  if (e.building == null) return be().routeTo(Ts, { stage: Ks.LoadSave }), null;
+  if (e.building == null) return Singleton().routeTo(Ts, { stage: Ks.LoadSave }), null;
   const r = e.building, // const building = tile.building;
     i = gi(), // const gs = useGameState();
     n = Config.Building[r.type], // const definition = Config.Building[building.type];
@@ -109914,7 +109941,7 @@ function Tue({ tile: t }) {
     var r;
     ((r = t.building) == null ? void 0 : r.status) === "building" &&
       (delete t.building,
-      be().sceneManager.enqueue(WorldScene, (i) => i.resetTile(t.tile)),
+      Singleton().sceneManager.enqueue(WorldScene, (i) => i.resetTile(t.tile)),
       Ze());
   };
   return (
@@ -110028,7 +110055,7 @@ function Cue({ tile: t }) {
                           e.tiles.forEach((x, T) => {
                             x.explored && x.deposit[m] && v.push(T);
                           }),
-                            (y = be().sceneManager.getCurrent(WorldScene)) == null ||
+                            (y = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                               y.drawSelection(tileToPoint(t.tile), v);
                         },
                         children: Config.Resource[m].name(),
@@ -110178,7 +110205,7 @@ function Cue({ tile: t }) {
                                     ? void 0
                                     : k.type) === m && A.push(M);
                                 }),
-                                  (C = be().sceneManager.getCurrent(WorldScene)) ==
+                                  (C = Singleton().sceneManager.getCurrent(WorldScene)) ==
                                     null || C.drawSelection(tileToPoint(t.tile), A);
                               },
                               children: numberToRoman(
@@ -110362,12 +110389,12 @@ function Sue({ xy: t, gameState: e }) {
       ((u = l.resources.Explorer) != null ? u : 0) > 0 &&
         safeAdd(l.resources, "Explorer", -1),
       Rc(t, e),
-      be().sceneManager.enqueue(WorldScene, (c) => c.revealTile(t)),
+      Singleton().sceneManager.enqueue(WorldScene, (c) => c.revealTile(t)),
       getGrid(e)
         .getRange(tileToPoint(t), getExplorerRange(e))
         .forEach((c) => {
           const p = pointToTile(c);
-          Rc(p, e), be().sceneManager.enqueue(WorldScene, (f) => f.revealTile(p));
+          Rc(p, e), Singleton().sceneManager.enqueue(WorldScene, (f) => f.revealTile(p));
         });
   };
   return (
@@ -110420,19 +110447,24 @@ function Sue({ xy: t, gameState: e }) {
     })
   );
 }
-function eT(t) {
-  const e = gi(),
+
+// SOURCE src/scripts/ui/TilePage.tsx
+
+function TilePage(t) {
+  const gameState = gi(),
     { xy: r } = t;
-  if (isNullOrUndefined(r) || !Zte()) return null;
-  const i = e.tiles.get(r);
-  return i != null && i.explored
-    ? i.building
-      ? i.building.status !== "completed"
-        ? s.jsx(bue, { tile: i })
-        : s.jsx(vue, Ie(U({}, t), { tile: i }))
-      : s.jsx(Cue, { tile: i })
-    : s.jsx(Sue, { xy: r, gameState: e });
+  if (isNullOrUndefined(r) || !isSingletonReady()) return null;
+  const tile = gameState.tiles.get(r);
+  return tile != null && tile.explored
+    ? tile.building
+      ? tile.building.status !== "completed"
+        ? s.jsx(bue, { tile: tile })
+        : s.jsx(vue, Ie(U({}, t), { tile: tile }))
+      : s.jsx(Cue, { tile: tile })
+    : s.jsx(Sue, { xy: r, gameState: gameState });
 }
+
+
 class wue extends Jc {
   constructor(r, i, n, a, o, l = aa.Linear) {
     super();
@@ -111217,7 +111249,7 @@ class WorldScene extends H0 {
     if (!getGrid(i).isValid(r)) return;
     const n = pointToTile(r);
     (this._selectedXy = n),
-      be().routeTo(eT, { xy: n }),
+      Singleton().routeTo(TilePage, { xy: n }),
       this.drawSelection(r, []),
       this.drawTransportation(i);
   }
@@ -111426,7 +111458,7 @@ function Bue(t) {
   var n, a, o;
   const e = getGameState();
   for (const l of KP(t, zQ(), e))
-    be().sceneManager.enqueue(WorldScene, (u) => u.revealTile(l));
+    Singleton().sceneManager.enqueue(WorldScene, (u) => u.revealTile(l));
   const r = (n = e.tiles.get(t)) == null ? void 0 : n.building;
   if (!r) return;
   const i = getGrid(e);
@@ -111434,7 +111466,7 @@ function Bue(t) {
     case "HatshepsutTemple": {
       e.tiles.forEach((l, u) => {
         l.deposit.Water &&
-          (Rc(u, e), be().sceneManager.enqueue(WorldScene, (c) => c.revealTile(u)));
+          (Rc(u, e), Singleton().sceneManager.enqueue(WorldScene, (c) => c.revealTile(u)));
       });
       break;
     }
@@ -111551,7 +111583,7 @@ function Bue(t) {
           !isNaturalWonder(c.building.type)
         )
           for (const f of KP(p, 1, e))
-            be().sceneManager.enqueue(WorldScene, (m) => m.revealTile(f));
+            Singleton().sceneManager.enqueue(WorldScene, (m) => m.revealTile(f));
       });
       break;
     }
@@ -111703,7 +111735,7 @@ function Due({ xy: t, offline: e }) {
         r.speedUp > 1 && ((m = n.resources.Warp) != null ? m : 0) > 0
           ? --n.resources.Warp
           : (r.speedUp = 1),
-        (be().ticker.speedUp = r.speedUp));
+        (Singleton().ticker.speedUp = r.speedUp));
       break;
     }
     case "HatshepsutTemple": {
@@ -112960,14 +112992,14 @@ function Rue(t) {
         }
         e.tiles.forEach((a, o) => {
           a.deposit.Wood &&
-            (Rc(o, e), be().sceneManager.enqueue(WorldScene, (l) => l.revealTile(o)));
+            (Rc(o, e), Singleton().sceneManager.enqueue(WorldScene, (l) => l.revealTile(o)));
         });
         break;
       }
       case "Lapland": {
         e.tiles.forEach((a, o) => {
           a.explored ||
-            (Rc(o, e), be().sceneManager.enqueue(WorldScene, (l) => l.revealTile(o)));
+            (Rc(o, e), Singleton().sceneManager.enqueue(WorldScene, (l) => l.revealTile(o)));
         });
         break;
       }
@@ -112989,12 +113021,12 @@ let timeSinceLastTick = 0;
 
 function tickEveryFrame(gs, number) {
   timeSinceLastTick = Math.min(timeSinceLastTick + number, 1);
-  const worldScene = be().sceneManager.getCurrent(WorldScene);
+  const worldScene = Singleton().sceneManager.getCurrent(WorldScene);
   if (worldScene) {
     for (const o of gs.tiles.keys()) worldScene.updateTile(o, number);
     worldScene.updateTransportVisual(gs, timeSinceLastTick);
   }
-  const i = Math.ceil(timeSinceLastTick * tickTileQueueSize * be().ticker.speedUp),
+  const i = Math.ceil(timeSinceLastTick * tickTileQueueSize * Singleton().ticker.speedUp),
     n = tickTileQueueSize - tickTileQueue.length,
     a = clamp(i - n, 0, tickTileQueue.length);
   tickTileQueue.splice(0, a).forEach((o) => transportAndConsumeResources(o, resourceProduced, gs, !1));
@@ -113103,14 +113135,14 @@ function postTickTiles(gs, offline) {
   )
     (lastTickTime += 1e3), ++gs.seconds;
   if (!offline) {
-    const u = be().ticker.speedUp;
+    const u = Singleton().ticker.speedUp;
     gs.tick % u === 0 &&
       (vL.emit(Tick.current),
-      (o = be().sceneManager.getCurrent(WorldScene)) == null || o.flushFloater(u),
+      (o = Singleton().sceneManager.getCurrent(WorldScene)) == null || o.flushFloater(u),
       Ze()),
       gs.tick % (saveFreq * u) === 0 && Jn().catch(console.error),
       gs.tick % (heartbeatFreq * u) === 0 &&
-        (be().heartbeat.update(E0()),
+        (Singleton().heartbeat.update(E0()),
         qe.queryRankUp().then((c) => {
           const p = getUser();
           p &&
@@ -113132,10 +113164,10 @@ function postTickTiles(gs, offline) {
 }
 jm.on(({ xy: t, amount: e }) => {
   var r;
-  (r = be().sceneManager.getCurrent(WorldScene)) == null || r.showFloater(t, e);
+  (r = Singleton().sceneManager.getCurrent(WorldScene)) == null || r.showFloater(t, e);
 });
 Zf.on((t) => {
-  be().sceneManager.enqueue(WorldScene, (e) => e.resetTile(t));
+  Singleton().sceneManager.enqueue(WorldScene, (e) => e.resetTile(t));
 });
 nj.on(Rue);
 fk.on(Bue);
@@ -114173,7 +114205,7 @@ function ice(t, e, r, i) {
           ? It(s.jsx(j4, {}))
           : u.greatPeopleChoicesV2.length > 0 &&
             It(s.jsx(Ra, { permanent: !0 }))),
-      be().heartbeat.init(),
+      Singleton().heartbeat.init(),
       tickEverySecond(l, !1),
       new URLSearchParams(location.href.split("?")[1]).get("scene"))
     ) {
@@ -114182,19 +114214,19 @@ function ice(t, e, r, i) {
         break;
       }
       case "Tech": {
-        be().sceneManager.loadScene(op);
+        Singleton().sceneManager.loadScene(op);
         break;
       }
       case "Trade": {
-        be().sceneManager.loadScene(ap);
+        Singleton().sceneManager.loadScene(ap);
         break;
       }
       default: {
-        be().sceneManager.loadScene(WorldScene);
+        Singleton().sceneManager.loadScene(WorldScene);
         break;
       }
     }
-    Ze(), be().ticker.start();
+    Ze(), Singleton().ticker.start();
   });
 }
 function nce(t) {
@@ -114892,7 +114924,7 @@ function handleChatCommand(command) {
           )
           .map(([o]) => o);
         addSystemMessage(`Found ${a.length} building(s) that contains "${parts[1]}"`),
-          (r = be().sceneManager.getCurrent(WorldScene)) == null ||
+          (r = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
             r.drawSelection(null, a);
         break;
       }
@@ -114920,7 +114952,7 @@ function handleChatCommand(command) {
           if (matches.length === 1) {
             const match = matches[0];
             addSystemMessage(`Found player ${match.handle}, panning camera to the tile`);
-            be().sceneManager.getCurrent(ap)?.lookAt(match.xy);
+            Singleton().sceneManager.getCurrent(ap)?.lookAt(match.xy);
           } else if (matches.length > 1) {
             const maxDisplay = 8;
             const displayedMatches = matches
@@ -115671,7 +115703,7 @@ function Sce() {
             )
         )
         .map(([B]) => B);
-      (w = be().sceneManager.getCurrent(WorldScene)) == null ||
+      (w = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
         w.drawSelection(null, k);
     };
   let u = 0,
@@ -115724,13 +115756,13 @@ function Sce() {
                           Vb.emit(!1),
                             yield ht.exitFloatingMode(),
                             yield ht.maximize(),
-                            be().routeTo(Ts, { stage: Ks.SteamSignIn }),
+                            Singleton().routeTo(Ts, { stage: Ks.SteamSignIn }),
                             setTimeout(() => {
-                              be().sceneManager.loadScene(WorldScene);
+                              Singleton().sceneManager.loadScene(WorldScene);
                             }, 1e3);
                         else if (
                           (Vb.emit(!0),
-                          be().sceneManager.loadScene(Pce),
+                          Singleton().sceneManager.loadScene(Pce),
                           yield ht.enterFloatingMode(),
                           yield ht.restore(),
                           n.current)
@@ -115793,7 +115825,7 @@ function Sce() {
                               onPointerDown: () => {
                                 var _;
                                 Le(),
-                                  (_ = be().sceneManager.getCurrent(WorldScene)) ==
+                                  (_ = Singleton().sceneManager.getCurrent(WorldScene)) ==
                                     null || _.lookAtTile(k, Oc.Select);
                               },
                               children: [
@@ -115827,9 +115859,9 @@ function Sce() {
                     ? void 0
                     : w.tile;
                 k &&
-                  ((B = be().sceneManager.getCurrent(WorldScene)) == null ||
+                  ((B = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                     B.lookAtTile(k, Oc.Select),
-                  be().routeTo(eT, { xy: k, expandHappiness: !0 }));
+                  Singleton().routeTo(TilePage, { xy: k, expandHappiness: !0 }));
               },
               children: [
                 s.jsx("div", {
@@ -115969,7 +116001,7 @@ function Sce() {
           : null,
         s.jsxs("div", {
           className: "section pointer",
-          onClick: () => be().sceneManager.loadScene(op),
+          onClick: () => Singleton().sceneManager.loadScene(op),
           children: [
             s.jsx("div", {
               className: Ke({ "m-icon": !0 }),
@@ -116114,7 +116146,7 @@ function wce() {
             var a;
             const n = Tick.current.specialBuildings.get("Statistics");
             n &&
-              ((a = be().sceneManager.getCurrent(WorldScene)) == null ||
+              ((a = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                 a.lookAtTile(n.tile, Oc.Select));
           },
           children: [
