@@ -63571,10 +63571,12 @@ function vJ(t) {
       });
   while (r !== Tick.next.powerGrid.size);
 }
-function yJ(t) {
+
+// obfuscated: yJ in b569
+function getSortedTiles(t) {
   return Array.from(getXyBuildings(t)).sort(([e, r], [i, n]) => {
     var l, u;
-    const a = K_(n, t) - K_(r, t);
+    const a = getCurrentPriority(n, t) - getCurrentPriority(r, t);
     return a !== 0
       ? a
       : ((l = Config.BuildingTier[r.type]) != null ? l : 0) -
@@ -74665,7 +74667,8 @@ function NQ(t) {
 // ***** 2025-02-22 / b569
 // make transports randomized for each priority. priorities still work as normal
 // TODO: make it switchable
-function K_(t, e) {
+// obfuscated as K_
+function getCurrentPriority(t, e) {
   if (!Ci(mi.BuildingProductionPriority, e)) return rn;
   switch (
     ((t.constructionPriority = We(t.constructionPriority, rn, vu)),
@@ -80893,7 +80896,7 @@ function Lg() {
 function pc() {
   getGameOptions().soundEffect && Si.play("success");
 }
-function oi() {
+function isSteam() {
   return typeof IPCBridge != "undefined";
 }
 const ht = kj({
@@ -80983,7 +80986,7 @@ function $j() {
   return ae(this, null, function* () {
     var i, n;
     const t = Ic.getPlatform();
-    if (oi()) {
+    if (isSteam()) {
       (!dy || Date.now() - lD > 30 * SECOND) &&
         ((dy = yield ht.getAuthSessionTicket()), (lD = Date.now()));
       const a = yield ht.getSteamId();
@@ -86196,7 +86199,7 @@ function li({ gameState: t, xy: e }) {
                 ((m = p.building) == null ? void 0 : m.type) === i.type &&
                   u.push(f);
               }),
-                (c = be().sceneManager.getCurrent(At)) == null ||
+                (c = be().sceneManager.getCurrent(WorldScene)) == null ||
                   c.drawSelection(xe(e), u);
             },
             children: "search",
@@ -86260,7 +86263,7 @@ function FD({ resource: t, buildingColor: e }) {
               n.tiles.forEach((u, c) => {
                 u.explored && t in u.deposit && o.push(c);
               }),
-                (l = be().sceneManager.getCurrent(At)) == null ||
+                (l = be().sceneManager.getCurrent(WorldScene)) == null ||
                   l.drawSelection(null, o);
             },
             children: "search",
@@ -86716,7 +86719,7 @@ function gn({ xy: t, getOptions: e, gameState: r, flags: i }) {
                 style: { width: 27, padding: 0 },
                 onMouseEnter: () => {
                   var p;
-                  (p = be().sceneManager.getCurrent(At)) == null ||
+                  (p = be().sceneManager.getCurrent(WorldScene)) == null ||
                     p.drawSelection(
                       null,
                       Mt(r)
@@ -86737,7 +86740,7 @@ function gn({ xy: t, getOptions: e, gameState: r, flags: i }) {
                 },
                 onMouseLeave: () => {
                   var p;
-                  (p = be().sceneManager.getCurrent(At)) == null ||
+                  (p = be().sceneManager.getCurrent(WorldScene)) == null ||
                     p.drawSelection(null, []);
                 },
                 onClick: () => {
@@ -87459,7 +87462,7 @@ function G0({ gameState: t, xy: e }) {
   if (!r || !i || yr(i.type)) return null;
   const n = () => {
     delete r.building,
-      be().sceneManager.enqueue(At, (o) => o.resetTile(r.tile)),
+      be().sceneManager.enqueue(WorldScene, (o) => o.resetTile(r.tile)),
       Kh(),
       Ze();
   };
@@ -87485,7 +87488,7 @@ function G0({ gameState: t, xy: e }) {
               style: { width: 27, padding: 0 },
               onMouseEnter: () => {
                 var l;
-                (l = be().sceneManager.getCurrent(At)) == null ||
+                (l = be().sceneManager.getCurrent(WorldScene)) == null ||
                   l.drawSelection(
                     null,
                     Mt(t)
@@ -87506,7 +87509,7 @@ function G0({ gameState: t, xy: e }) {
               },
               onMouseLeave: () => {
                 var l;
-                (l = be().sceneManager.getCurrent(At)) == null ||
+                (l = be().sceneManager.getCurrent(WorldScene)) == null ||
                   l.drawSelection(null, []);
               },
               onClick: () => {
@@ -87536,7 +87539,7 @@ function G0({ gameState: t, xy: e }) {
                               : p.type) === i.type &&
                               (delete c.building,
                               ++u,
-                              be().sceneManager.enqueue(At, (f) =>
+                              be().sceneManager.enqueue(WorldScene, (f) =>
                                 f.resetTile(c.tile)
                               ));
                           }),
@@ -87945,7 +87948,7 @@ function O0({ gameState: t, xy: e }) {
             P.add(w);
         }),
         a(P),
-        (M = be().sceneManager.getCurrent(At)) == null ||
+        (M = be().sceneManager.getCurrent(WorldScene)) == null ||
           M.drawSelection(null, Array.from(P));
     },
     g = (A, C) => {
@@ -88059,7 +88062,7 @@ function O0({ gameState: t, xy: e }) {
                 switch (A.target.value) {
                   case "0": {
                     a(new Set([e])),
-                      (C = be().sceneManager.getCurrent(At)) == null ||
+                      (C = be().sceneManager.getCurrent(WorldScene)) == null ||
                         C.drawSelection(null, []);
                     break;
                   }
@@ -88074,7 +88077,7 @@ function O0({ gameState: t, xy: e }) {
                         k.add(B);
                     }),
                       a(k),
-                      (P = be().sceneManager.getCurrent(At)) == null ||
+                      (P = be().sceneManager.getCurrent(WorldScene)) == null ||
                         P.drawSelection(null, Array.from(k));
                     break;
                   }
@@ -88090,7 +88093,7 @@ function O0({ gameState: t, xy: e }) {
                         k.add(B);
                     }),
                       a(k),
-                      (M = be().sceneManager.getCurrent(At)) == null ||
+                      (M = be().sceneManager.getCurrent(WorldScene)) == null ||
                         M.drawSelection(null, Array.from(k));
                     break;
                   }
@@ -88182,7 +88185,7 @@ function O0({ gameState: t, xy: e }) {
                 ae(this, null, function* () {
                   var M, k, w;
                   Le(), ct(h(d.MoveBuildingSelectTileToastHTML), 1e7), p(!0);
-                  const A = yield (M = be().sceneManager.getCurrent(At)) == null
+                  const A = yield (M = be().sceneManager.getCurrent(WorldScene)) == null
                     ? void 0
                     : M.hijackSelectGrid();
                   if (
@@ -88208,7 +88211,7 @@ function O0({ gameState: t, xy: e }) {
                       Ze(),
                       Kh(),
                       clearIntraTickCache(),
-                      (w = be().sceneManager.getCurrent(At)) == null ||
+                      (w = be().sceneManager.getCurrent(WorldScene)) == null ||
                         w.selectGrid(A))
                     : (ct(d.MoveBuildingFail), ze());
                 }),
@@ -89040,7 +89043,7 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
                       onPointerDown: () => {
                         var v;
                         Le(),
-                          (v = be().sceneManager.getCurrent(At)) == null ||
+                          (v = be().sceneManager.getCurrent(WorldScene)) == null ||
                             v.lookAtTile(u.xy, Oc.Select);
                       },
                       children: "open_in_new",
@@ -89132,7 +89135,7 @@ function Qie({ allMarketTrades: t, gs: e }) {
                   onPointerDown: () => {
                     var u;
                     Le(),
-                      (u = be().sceneManager.getCurrent(At)) == null ||
+                      (u = be().sceneManager.getCurrent(WorldScene)) == null ||
                         u.lookAtTile(r.xy, Oc.Select);
                   },
                   children: "open_in_new",
@@ -89285,7 +89288,7 @@ function tne({ gameState: t, xy: e }) {
   );
 }
 DL.on((t) => {
-  if (oi())
+  if (isSteam())
     switch (t) {
       case "Future": {
         ht.unlockAchievement("Future");
@@ -89294,7 +89297,7 @@ DL.on((t) => {
     }
 });
 function rne(t) {
-  if (oi())
+  if (isSteam())
     switch (t) {
       case "BronzeAge": {
         ht.unlockAchievement("Bronze");
@@ -89335,7 +89338,7 @@ function rne(t) {
     }
 }
 function ine(t, e) {
-  if (oi() && t >= 1)
+  if (isSteam() && t >= 1)
     switch (e.city) {
       case "Rome": {
         ht.unlockAchievement("PaxRomana");
@@ -90681,7 +90684,7 @@ function jc(t) {
   return t || (t = "EARTH"), (e = Ib[t]) != null ? e : "Earth";
 }
 function Xo(t) {
-  if (oi()) {
+  if (isSteam()) {
     ht.openUrl(t);
     return;
   }
@@ -91355,15 +91358,15 @@ function Tne() {
 function ln({ children: t }) {
   const [e, r] = se.useState(!1);
   return (
-    oi() &&
+    isSteam() &&
       ht.isMaximized().then((i) => {
         r(i);
       }),
     s.jsxs("div", {
-      className: Ke({ "title-bar": !0, "app-region-drag": oi() }),
+      className: Ke({ "title-bar": !0, "app-region-drag": isSteam() }),
       children: [
         s.jsx("div", { className: "title-bar-text", children: t }),
-        oi()
+        isSteam()
           ? s.jsxs("div", {
               className: "title-bar-controls app-region-none",
               children: [
@@ -92394,7 +92397,7 @@ function wne({ xy: t }) {
     fn(
       "PlayerMapPageGoBackToCity",
       () => {
-        be().sceneManager.loadScene(At);
+        be().sceneManager.loadScene(WorldScene);
       },
       [t]
     ),
@@ -93055,7 +93058,7 @@ function Dne() {
                     className: "text-small text-desc",
                     children: h(d.UserAgent, { driver: navigator.userAgent }),
                   }),
-                  oi()
+                  isSteam()
                     ? s.jsxs(s.Fragment, {
                         children: [
                           s.jsx("div", {
@@ -95176,10 +95179,10 @@ function An() {
                     s.jsx("div", {
                       className: "menu-popover-item",
                       onPointerDown: (a) => {
-                        be().sceneManager.loadScene(At), e(null);
+                        be().sceneManager.loadScene(WorldScene), e(null);
                       },
                       children: s.jsx(Hn, {
-                        check: be().sceneManager.isCurrent(At),
+                        check: be().sceneManager.isCurrent(WorldScene),
                         children: h(d.CityViewMap),
                       }),
                     }),
@@ -95363,7 +95366,7 @@ function An() {
                         children: h(d.EmailDeveloper),
                       }),
                     }),
-                    oi()
+                    isSteam()
                       ? s.jsx("div", {
                           className: "menu-popover-item",
                           onPointerDown: () => {
@@ -95379,7 +95382,7 @@ function An() {
                           }),
                         })
                       : null,
-                    oi() &&
+                    isSteam() &&
                     i &&
                     !isNullOrUndefined(n == null ? void 0 : n.connectedUserId) &&
                     mj(n, i)
@@ -95389,7 +95392,7 @@ function An() {
                             ae(this, null, function* () {
                               try {
                                 yield Jn(),
-                                  yield qe.checkInSave(yield iT()),
+                                  yield qe.checkInSave(yield compressSave()),
                                   ht.quit();
                               } catch (a) {
                                 ze(), ct(String(a));
@@ -95431,7 +95434,7 @@ function nae() {
           s.jsx(Xt, { icon: "info", children: h(d.ContentInDevelopmentDesc) }),
           s.jsxs("button", {
             className: "w100 row jcc mt10",
-            onClick: () => be().sceneManager.loadScene(At),
+            onClick: () => be().sceneManager.loadScene(WorldScene),
             children: [
               s.jsx("div", {
                 className: "m-icon",
@@ -95688,7 +95691,7 @@ function aae({ definition: t, gameState: e }) {
 function oae({ id: t }) {
   const e = gi(),
     r = Config.Tech[t],
-    i = () => be().sceneManager.loadScene(At),
+    i = () => be().sceneManager.loadScene(WorldScene),
     n = () => r.column <= fQ,
     a = () => {
       var g;
@@ -98606,9 +98609,9 @@ function Ts({ stage: t, onload: e, progress: r }) {
     }, [e]),
     uo(D0, (i) => {
       i.key === "d" && Xo(bk),
-        i.key === "s" && oi() && ht.openMainSaveFolder(),
-        i.key === "b" && oi() && ht.openBackupSaveFolder(),
-        i.key === "l" && oi() && ht.openLogFolder();
+        i.key === "s" && isSteam() && ht.openMainSaveFolder(),
+        i.key === "b" && isSteam() && ht.openBackupSaveFolder(),
+        i.key === "l" && isSteam() && ht.openLogFolder();
     }),
     s.jsxs("div", {
       className: "loading-page",
@@ -99773,7 +99776,7 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                     }),
                     s.jsx("div", {
                       className: "text-small text-strong text-desc",
-                      children: s.jsx(te, { value: "Offer: "+formatNumberTradeTable(A.buyAmount) }),
+                      children: s.jsx(te, { value: "Want: "+formatNumberTradeTable(A.buyAmount) }),
                     }),
                     s.jsx("div", {
                         className: "text-small text-strong text-desc",
@@ -99788,7 +99791,7 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                     }),
                     s.jsx("div", {
                         className: "text-small text-strong text-desc",
-                        children: s.jsx(te, { value: "Want: "+formatNumberTradeTable(A.sellAmount) }),
+                        children: s.jsx(te, { value: "Offer: "+formatNumberTradeTable(A.sellAmount) }),
                       }),
                     s.jsx("div", {
                       className: "text-small text-strong text-desc",
@@ -100640,7 +100643,7 @@ function H4({ gameState: gameState, xy: xy }) {
                   building.resourceImportOptions,
                   mn.ManagedImport
                 )),
-                (f = be().sceneManager.getCurrent(At)) == null ||
+                (f = be().sceneManager.getCurrent(WorldScene)) == null ||
                   f.drawSelection(null, []),
                 Ze();
             },
@@ -108479,7 +108482,7 @@ function nue({ gameState: t }) {
                         className: "pointer",
                         onClick: () => {
                           var y;
-                          (y = be().sceneManager.getCurrent(At)) == null ||
+                          (y = be().sceneManager.getCurrent(WorldScene)) == null ||
                             y.lookAtTile(l, Oc.Highlight);
                         },
                         children: Config.Building[u.type].name(),
@@ -108562,7 +108565,7 @@ function oue({ gameState: t }) {
           g === P && y.push(T.tile);
         });
       }),
-        (x = be().sceneManager.getCurrent(At)) == null ||
+        (x = be().sceneManager.getCurrent(WorldScene)) == null ||
           x.drawSelection(null, y);
     };
   return s.jsxs("article", {
@@ -109798,7 +109801,7 @@ function Tue({ tile: t }) {
     var r;
     ((r = t.building) == null ? void 0 : r.status) === "building" &&
       (delete t.building,
-      be().sceneManager.enqueue(At, (i) => i.resetTile(t.tile)),
+      be().sceneManager.enqueue(WorldScene, (i) => i.resetTile(t.tile)),
       Ze());
   };
   return (
@@ -109912,7 +109915,7 @@ function Cue({ tile: t }) {
                           e.tiles.forEach((x, T) => {
                             x.explored && x.deposit[m] && v.push(T);
                           }),
-                            (y = be().sceneManager.getCurrent(At)) == null ||
+                            (y = be().sceneManager.getCurrent(WorldScene)) == null ||
                               y.drawSelection(xe(t.tile), v);
                         },
                         children: Config.Resource[m].name(),
@@ -110062,7 +110065,7 @@ function Cue({ tile: t }) {
                                     ? void 0
                                     : k.type) === m && A.push(M);
                                 }),
-                                  (C = be().sceneManager.getCurrent(At)) ==
+                                  (C = be().sceneManager.getCurrent(WorldScene)) ==
                                     null || C.drawSelection(xe(t.tile), A);
                               },
                               children: numberToRoman(
@@ -110246,12 +110249,12 @@ function Sue({ xy: t, gameState: e }) {
       ((u = l.resources.Explorer) != null ? u : 0) > 0 &&
         safeAdd(l.resources, "Explorer", -1),
       Rc(t, e),
-      be().sceneManager.enqueue(At, (c) => c.revealTile(t)),
+      be().sceneManager.enqueue(WorldScene, (c) => c.revealTile(t)),
       Mt(e)
         .getRange(xe(t), qQ(e))
         .forEach((c) => {
           const p = Se(c);
-          Rc(p, e), be().sceneManager.enqueue(At, (f) => f.revealTile(p));
+          Rc(p, e), be().sceneManager.enqueue(WorldScene, (f) => f.revealTile(p));
         });
   };
   return (
@@ -110894,10 +110897,16 @@ class Mue extends tO {
     r.alpha = 0;
   }
 }
-let Bl = null,
-  yx = null;
-const Iu = 200;
-class At extends H0 {
+
+// SOURCE src/scripts/scenes/WorldScene.ts
+
+let viewportCenter = null,
+  viewportZoom = null;
+
+const MARGIN = 200;
+
+//obfuscated: At, H0 at b569
+class WorldScene extends H0 {
   constructor(r) {
     super(r);
     b(this, "_width");
@@ -110920,16 +110929,16 @@ class At extends H0 {
       a = Mt(getGameState()).maxPosition();
     (this._width = a.x),
       (this._height = a.y),
-      this.viewport.setWorldSize(this._width, this._height, Iu),
+      this.viewport.setWorldSize(this._width, this._height, MARGIN),
       this.viewport.setZoomRange(
         Math.max(
-          i.screen.width / (this._width + Iu * 2),
-          i.screen.height / (this._height + Iu * 2)
+          i.screen.width / (this._width + MARGIN * 2),
+          i.screen.height / (this._height + MARGIN * 2)
         ),
         2
       ),
       (this._bg = this.viewport.addChild(
-        new lw(Ti("Misc_Paper", n), this._width + Iu * 2, this._height + Iu * 2)
+        new lw(Ti("Misc_Paper", n), this._width + MARGIN * 2, this._height + MARGIN * 2)
       )),
       (this._bg.tint = Za(getGameOptions().themeColors.WorldBackground)),
       this._bg.position.set(
@@ -110970,12 +110979,12 @@ class At extends H0 {
     r && this.selectGrid(xe(r.tile)), super.onEnable();
   }
   restoreViewport() {
-    yx && (this.viewport.zoom = yx),
-      Bl || (Bl = { x: this._width / 2, y: this._height / 2 }),
-      (this.viewport.center = Bl);
+    viewportZoom && (this.viewport.zoom = viewportZoom),
+      viewportCenter || (viewportCenter = { x: this._width / 2, y: this._height / 2 }),
+      (this.viewport.center = viewportCenter);
   }
   onMoved(r) {
-    (Bl = this.viewport.center), (yx = this.viewport.zoom);
+    (viewportCenter = this.viewport.center), (viewportZoom = this.viewport.zoom);
   }
   hijackSelectGrid() {
     return new Promise((r) => {
@@ -111028,8 +111037,8 @@ class At extends H0 {
     const { app: n } = this.context;
     this.viewport.setZoomRange(
       Math.max(
-        n.screen.width / (this._width + Iu * 2),
-        n.screen.height / (this._height + Iu * 2)
+        n.screen.width / (this._width + MARGIN * 2),
+        n.screen.height / (this._height + MARGIN * 2)
       ),
       2
     );
@@ -111053,9 +111062,9 @@ class At extends H0 {
     (a = this.cameraMovement) == null || a.stop();
     const n = this.viewport.clampCenter(Mt(getGameState()).xyToPosition(r));
     (this.cameraMovement = new wue(
-      () => Bl,
+      () => viewportCenter,
       (o) => {
-        (Bl = o), (this.viewport.center = Bl);
+        (viewportCenter = o), (this.viewport.center = viewportCenter);
       },
       (o, l, u) => {
         if (o && l)
@@ -111063,15 +111072,15 @@ class At extends H0 {
         throw new Error(`Cannot interpolate from a = ${o} to b = ${l}`);
       },
       n,
-      lu(n).subtractSelf(Bl).length() / 2e3,
+      lu(n).subtractSelf(viewportCenter).length() / 2e3,
       aa.InOutSine
     ).start()),
       i === 0 ? this.drawSelection(null, [r]) : this.selectGrid(xe(r));
   }
-  drawSelection(r, i) {
+  drawSelection(selected, highlights) {
     if (!this._selectedGraphics || isNullOrUndefined(this._selectedXy)) return;
     this._selectedGraphics.clear(),
-      r != null || (r = xe(this._selectedXy)),
+      selected != null || (selected = xe(this._selectedXy)),
       this._selectedGraphics.lineStyle({
         color: 16777215,
         width: 2,
@@ -111080,9 +111089,9 @@ class At extends H0 {
         alignment: 0.5,
       });
     const n = Mt(getGameState());
-    vx(n, r, this._selectedGraphics),
-      i.length > 0
-        ? i.forEach((a) => {
+    vx(n, selected, this._selectedGraphics),
+      highlights.length > 0
+        ? highlights.forEach((a) => {
             this._selectedGraphics.lineStyle({ width: 0 }),
               this._selectedGraphics.beginFill(16777215, 0.2, !0),
               vx(n, xe(a), this._selectedGraphics),
@@ -111236,13 +111245,13 @@ class At extends H0 {
     for (const i of this._tiles.values()) i.flushFloater(r);
   }
   updateTransportVisual(r, i) {
-    const n = getGameOptions();
-    if (!n.showTransportArrow) {
+    const options = getGameOptions();
+    if (!options.showTransportArrow) {
       for (const [o, l] of this._transport)
         this._transportPool.release(l), this._transport.delete(o);
       return;
     }
-    const a = this.viewport.visibleWorldRect();
+    const worldRect = this.viewport.visibleWorldRect();
     this._ticked.clear(),
       r.transportationV2.forEach((o) => {
         var u;
@@ -111255,7 +111264,7 @@ class At extends H0 {
           ),
           (this._rect.x = this._pos.x),
           (this._rect.y = this._pos.y),
-          !a.intersects(this._rect))
+          !worldRect.intersects(this._rect))
         )
           return;
         let l = this._transport.get(o.id);
@@ -111264,7 +111273,7 @@ class At extends H0 {
             ((l = this._transportPool.allocate()),
             (l.position = o.fromPosition),
             (l.tint = Za(
-              (u = n.resourceColors[o.resource]) != null ? u : "#ffffff"
+              (u = options.resourceColors[o.resource]) != null ? u : "#ffffff"
             )),
             EZ(l, o.toPosition),
             this._transport.set(o.id, l)),
@@ -111274,7 +111283,7 @@ class At extends H0 {
           (c.position = this._pos),
             o.ticksSpent >= o.ticksRequired - 1 &&
               (c.alpha = dL(
-                n.themeColors.TransportIndicatorAlpha,
+                options.themeColors.TransportIndicatorAlpha,
                 0,
                 We(i - 0.5, 0, 0.5) * 2
               ));
@@ -111304,7 +111313,7 @@ function Bue(t) {
   var n, a, o;
   const e = getGameState();
   for (const l of KP(t, zQ(), e))
-    be().sceneManager.enqueue(At, (u) => u.revealTile(l));
+    be().sceneManager.enqueue(WorldScene, (u) => u.revealTile(l));
   const r = (n = e.tiles.get(t)) == null ? void 0 : n.building;
   if (!r) return;
   const i = Mt(e);
@@ -111312,7 +111321,7 @@ function Bue(t) {
     case "HatshepsutTemple": {
       e.tiles.forEach((l, u) => {
         l.deposit.Water &&
-          (Rc(u, e), be().sceneManager.enqueue(At, (c) => c.revealTile(u)));
+          (Rc(u, e), be().sceneManager.enqueue(WorldScene, (c) => c.revealTile(u)));
       });
       break;
     }
@@ -111429,7 +111438,7 @@ function Bue(t) {
           !Mp(c.building.type)
         )
           for (const f of KP(p, 1, e))
-            be().sceneManager.enqueue(At, (m) => m.revealTile(f));
+            be().sceneManager.enqueue(WorldScene, (m) => m.revealTile(f));
       });
       break;
     }
@@ -112838,49 +112847,63 @@ function Rue(t) {
         }
         e.tiles.forEach((a, o) => {
           a.deposit.Wood &&
-            (Rc(o, e), be().sceneManager.enqueue(At, (l) => l.revealTile(o)));
+            (Rc(o, e), be().sceneManager.enqueue(WorldScene, (l) => l.revealTile(o)));
         });
         break;
       }
       case "Lapland": {
         e.tiles.forEach((a, o) => {
           a.explored ||
-            (Rc(o, e), be().sceneManager.enqueue(At, (l) => l.revealTile(o)));
+            (Rc(o, e), be().sceneManager.enqueue(WorldScene, (l) => l.revealTile(o)));
         });
         break;
       }
     }
 }
-function iO() {
-  return oi() || !document.hidden;
+
+// SOURCE src/scripts/logic/ClientUpdate.tsx
+
+// ***** TODO is this what prevents game from working in dev in brower in background?
+function shouldTick() {
+  return isSteam() || !document.hidden;
 }
+
 pee.addListener("appStateChange", ({ isActive: t }) => {
-  oi() || (t ? Kj() : (Jn(), Rte()));
+  isSteam() || (t ? Kj() : (Jn(), Rte()));
 });
-let zm = 0;
-function Iue(t, e) {
-  zm = Math.min(zm + e, 1);
-  const r = be().sceneManager.getCurrent(At);
-  if (r) {
-    for (const o of t.tiles.keys()) r.updateTile(o, e);
-    r.updateTransportVisual(t, zm);
+
+let timeSinceLastTick = 0;
+
+function tickEveryFrame(gs, number) {
+  timeSinceLastTick = Math.min(timeSinceLastTick + number, 1);
+  const worldScene = be().sceneManager.getCurrent(WorldScene);
+  if (worldScene) {
+    for (const o of gs.tiles.keys()) worldScene.updateTile(o, number);
+    worldScene.updateTransportVisual(gs, timeSinceLastTick);
   }
-  const i = Math.ceil(zm * wS * be().ticker.speedUp),
-    n = wS - Bh.length,
-    a = We(i - n, 0, Bh.length);
-  Bh.splice(0, a).forEach((o) => NP(o, fg, t, !1));
+  const i = Math.ceil(timeSinceLastTick * tickTileQueueSize * be().ticker.speedUp),
+    n = tickTileQueueSize - tickTileQueue.length,
+    a = We(i - n, 0, tickTileQueue.length);
+  tickTileQueue.splice(0, a).forEach((o) => NP(o, resourceProduced, gs, !1));
 }
-const Nue = 60,
-  Fue = oi() ? 60 : 10;
-let Bh = [],
-  wS = 0;
-const fg = [];
-let Lue = 0;
-function gg(t, e) {
-  if (!e && !iO()) return;
-  (zm = 0),
-    e || (Bh.forEach((i) => NP(i, fg, t, !1)), oI(t, !1)),
-    (Tick.next.tick = ++Lue),
+
+const heartbeatFreq = 60,
+  saveFreq = isSteam() ? 60 : 10;
+
+
+let tickTileQueue = [],
+  tickTileQueueSize = 0;
+
+const resourceProduced = [];
+
+let currentSessionTick = 0;
+
+// obfuscated: gg in b569
+function tickEverySecond(t, e) {
+  if (!e && !shouldTick()) return;
+  (timeSinceLastTick = 0),
+    e || (tickTileQueue.forEach((i) => NP(i, resourceProduced, t, !1)), oI(t, !1)),
+    (Tick.next.tick = ++currentSessionTick),
     (Tick.current = freezeTickData(Tick.next)),
     (Tick.next = EmptyTickData()),
     clearIntraTickCache(),
@@ -112914,13 +112937,16 @@ function gg(t, e) {
     }),
     AJ(t),
     fJ(t);
-  const r = yJ(t);
+
+  // obfuscated: r in b569
+  const tiles = getSortedTiles(t);
+
   e
-    ? (r.forEach(function ([n, a]) {
-        NP(n, fg, t, e);
+    ? (tiles.forEach(function ([n, a]) {
+        NP(n, resourceProduced, t, e);
       }),
       oI(t, e))
-    : ((Bh = r.map(([i, n]) => i)), (wS = Bh.length), jue(t));
+    : ((tickTileQueue = tiles.map(([i, n]) => i)), (tickTileQueueSize = tickTileQueue.length), jue(t));
 }
 function jue(t) {
   if (t.tick % 10 !== 0 || Bk()) return;
@@ -112960,10 +112986,10 @@ function oI(t, e) {
     const u = be().ticker.speedUp;
     t.tick % u === 0 &&
       (vL.emit(Tick.current),
-      (o = be().sceneManager.getCurrent(At)) == null || o.flushFloater(u),
+      (o = be().sceneManager.getCurrent(WorldScene)) == null || o.flushFloater(u),
       Ze()),
-      t.tick % (Fue * u) === 0 && Jn().catch(console.error),
-      t.tick % (Nue * u) === 0 &&
+      t.tick % (saveFreq * u) === 0 && Jn().catch(console.error),
+      t.tick % (heartbeatFreq * u) === 0 &&
         (be().heartbeat.update(E0()),
         qe.queryRankUp().then((c) => {
           const p = getUser();
@@ -112986,10 +113012,10 @@ function oI(t, e) {
 }
 jm.on(({ xy: t, amount: e }) => {
   var r;
-  (r = be().sceneManager.getCurrent(At)) == null || r.showFloater(t, e);
+  (r = be().sceneManager.getCurrent(WorldScene)) == null || r.showFloater(t, e);
 });
 Zf.on((t) => {
-  be().sceneManager.enqueue(At, (e) => e.resetTile(t));
+  be().sceneManager.enqueue(WorldScene, (e) => e.resetTile(t));
 });
 nj.on(Rue);
 fk.on(Bue);
@@ -113008,19 +113034,19 @@ const nO = makeObservableHook(vL, () => Tick.current),
   Gue = makeObservableHook(IL, () => y1);
 function Oue(t) {
   var e, r;
-  for (const i of fg) {
+  for (const i of resourceProduced) {
     const n =
       (r = (e = t.tiles.get(i.xy)) == null ? void 0 : e.building) == null
         ? void 0
         : r.resources;
     n && safeAdd(n, i.resource, i.amount);
   }
-  fg.length = 0;
+  resourceProduced.length = 0;
 }
-function tT() {
+function isAndroid() {
   return Ic.getPlatform() === "android";
 }
-function rT() {
+function isIOS() {
   return Ic.getPlatform() === "ios";
 }
 const aO = new Worker(
@@ -113090,7 +113116,7 @@ function uO(t) {
   Uue.emit(getGameOptions().useModernUI);
 }
 function zue(t, e) {
-  const r = tT() || rT() ? e.sidePanelWidthMobile : e.sidePanelWidth;
+  const r = isAndroid() || isIOS() ? e.sidePanelWidthMobile : e.sidePanelWidth;
   document.documentElement.style.setProperty("--game-ui-width", `${r / 10}rem`),
     t.resize();
 }
@@ -113099,15 +113125,15 @@ function MS(t, e) {
     document.documentElement.style.setProperty("--base-font-size", "62.5%");
     return;
   }
-  const r = tT() || rT() ? e.fontSizeScaleMobile : e.fontSizeScale;
+  const r = isAndroid() || isIOS() ? e.fontSizeScaleMobile : e.fontSizeScale;
   document.documentElement.style.setProperty(
     "--base-font-size",
     `${r * 62.5}%`
   ),
     t.resize();
 }
-const Eh = "CivIdle",
-  ic = [];
+const SAVE_KEY = "CivIdle",
+  saveGameQueue = [];
 function Jn() {
   return ae(this, null, function* () {
     let t = null,
@@ -113115,28 +113141,47 @@ function Jn() {
     const r = new Promise((i, n) => {
       (t = i), (e = n);
     });
-    return ic.push({ resolve: t, reject: e }), ic.length === 1 && cO(ic[0]), r;
+    return saveGameQueue.push({ resolve: t, reject: e }), saveGameQueue.length === 1 && doSaveGame(saveGameQueue[0]), r;
   });
 }
-function cO(t) {
+function doSaveGame(t) {
   return ae(this, null, function* () {
     try {
-      const e = yield iT(savedGame);
-      oi()
-        ? yield ht.fileWriteBytes(Eh, e)
-        : tT() || rT()
-        ? yield yj.set({ key: Eh, value: FZ(e) })
-        : yield _k(Eh, e),
-        t.resolve();
+      const compressed = yield compressSave(savedGame);
+
+      if (isSteam()) {
+        yield ht.fileWriteBytes(SAVE_KEY, compressed);
+
+        try {
+          yield ht.fileWriteBytes("last_trades.json", JSON.stringify(getTrades()));
+          yield ht.fileWriteBytes("last_savegame.json", JSON.stringify(savedGame));
+          yield ht.fileWriteBytes("last_messages.json", JSON.stringify(chatMessages));
+          yield ht.fileWriteBytes("last_tiles.json", JSON.stringify(getGameState().tiles));
+          
+
+        }
+        catch(ee) {
+          addSystemMessage("ee "+ee);
+        }
+
+      } else if (isAndroid() || isIOS()) {
+        //yield Preferences.set({ key: SAVE_KEY, value: bytesToBase64(compressed) });
+        yield yj.set({ key: SAVE_KEY, value: FZ(compressed) });
+      } else {
+        //yield idbSet(SAVE_KEY, compressed);
+        yield _k(SAVE_KEY, compressed);
+      }
+
+      t.resolve();
     } catch (e) {
       t.reject(e);
     } finally {
-      const e = ic.indexOf(t);
-      e !== -1 && ic.splice(e, 1), ic.length > 0 && cO(ic[0]);
+      const e = saveGameQueue.indexOf(t);
+      e !== -1 && saveGameQueue.splice(e, 1), saveGameQueue.length > 0 && doSaveGame(saveGameQueue[0]);
     }
   });
 }
-function iT() {
+function compressSave() {
   return ae(this, arguments, function* (t = savedGame) {
     return yield kS(new TextEncoder().encode(aQ(t)));
   });
@@ -113149,15 +113194,15 @@ function Cf(t) {
 function Vue() {
   return ae(this, null, function* () {
     try {
-      if ((console.time("Loading Save file"), oi())) {
-        const e = yield ht.fileReadBytes(Eh);
+      if ((console.time("Loading Save file"), isSteam())) {
+        const e = yield ht.fileReadBytes(SAVE_KEY);
         return yield Cf(new Uint8Array(e));
       }
-      if (tT() || rT()) {
-        const e = (yield yj.get({ key: Eh })).value;
+      if (isAndroid() || isIOS()) {
+        const e = (yield yj.get({ key: SAVE_KEY })).value;
         return e ? yield Cf(NZ(e)) : null;
       }
-      const t = yield Ek(Eh);
+      const t = yield Ek(SAVE_KEY);
       if (!t) throw new Error("Save does not exists");
       return yield Cf(t);
     } catch (t) {
@@ -113676,7 +113721,7 @@ function cI() {
                             Le(),
                               (So = !0),
                               n(So),
-                              yield qe.checkInSave(yield iT()),
+                              yield qe.checkInSave(yield compressSave()),
                               (window.location.search = "");
                           } catch (l) {
                             ze(), ct(String(l)), (So = !1), n(So);
@@ -113869,9 +113914,9 @@ function tce() {
     uo(D0, (t) => {
       t.key === "d" && Xo(bk),
         t.key === "h" && Xo("https://cividle.com/images/recovery.png"),
-        t.key === "s" && oi() && ht.openMainSaveFolder(),
-        t.key === "b" && oi() && ht.openBackupSaveFolder(),
-        t.key === "l" && oi() && ht.openLogFolder();
+        t.key === "s" && isSteam() && ht.openMainSaveFolder(),
+        t.key === "b" && isSteam() && ht.openBackupSaveFolder(),
+        t.key === "l" && isSteam() && ht.openLogFolder();
     }),
     s.jsxs("div", {
       className: "error-page",
@@ -113893,14 +113938,14 @@ class rce {
   }
   start() {
     this._ticker.add(() => {
-      if (!iO()) return;
+      if (!shouldTick()) return;
       const e = (this._speedUp * this._ticker.elapsedMS) / 1e3;
-      gr.tick(e), Iue(this._gameState, e);
+      gr.tick(e), tickEveryFrame(this._gameState, e);
     }),
       this._interval &&
         (window.clearInterval(this._interval), (this._interval = 0)),
       (this._interval = window.setInterval(
-        gg.bind(null, this._gameState, !1),
+        tickEverySecond.bind(null, this._gameState, !1),
         1e3 / this._speedUp
       ));
   }
@@ -113913,7 +113958,7 @@ class rce {
       this._interval &&
         (window.clearInterval(this._interval), (this._interval = 0)),
       (this._interval = window.setInterval(
-        gg.bind(null, this._gameState, !1),
+        tickEverySecond.bind(null, this._gameState, !1),
         1e3 / this._speedUp
       )));
   }
@@ -113986,7 +114031,7 @@ function ice(t, e, r, i) {
         for (; C > 0; ) {
           const k = Math.min(C, lf / 100);
           yield pL(() => {
-            for (let w = 0; w < k; w++) gg(l, !0);
+            for (let w = 0; w < k; w++) tickEverySecond(l, !0);
           }),
             yield oce(1 - C / T, n),
             (C -= k);
@@ -114007,7 +114052,7 @@ function ice(t, e, r, i) {
           : u.greatPeopleChoicesV2.length > 0 &&
             It(s.jsx(Ra, { permanent: !0 }))),
       be().heartbeat.init(),
-      gg(l, !1),
+      tickEverySecond(l, !1),
       new URLSearchParams(location.href.split("?")[1]).get("scene"))
     ) {
       case "Save": {
@@ -114023,7 +114068,7 @@ function ice(t, e, r, i) {
         break;
       }
       default: {
-        be().sceneManager.loadScene(At);
+        be().sceneManager.loadScene(WorldScene);
         break;
       }
     }
@@ -114614,6 +114659,15 @@ function handleChatCommand(command) {
         let trades = getTrades();
         addSystemMessage("getTrades():");
         addSystemMessage(""+JSON.stringify(trades));
+
+        try
+        {
+          ht.fileWriteBytes("last_trades.json", JSON.stringify(trades));
+        }
+        catch(ee)
+        {
+        addSystemMessage("ee "+ee);
+        }
         break;
       }
       case "test3": {
@@ -114630,7 +114684,7 @@ function handleChatCommand(command) {
           setTimeout(() => {
             const o = performance.now(),
               l = getGameState();
-            for (let u = 0; u < 60 * a; u++) gg(l, !0);
+            for (let u = 0; u < 60 * a; u++) tickEverySecond(l, !0);
             addSystemMessage(`Completed in ${pr((performance.now() - o) / 1e3)}s`);
           }, 500);
         break;
@@ -114651,7 +114705,7 @@ function handleChatCommand(command) {
         requireDevelopment();
         const a = yield window.showSaveFilePicker();
         savedGame.options.userId = null;
-        const o = yield iT(savedGame),
+        const o = yield compressSave(savedGame),
           l = yield a.createWritable();
         yield l.write(o), yield l.close();
         break;
@@ -114716,7 +114770,7 @@ function handleChatCommand(command) {
           )
           .map(([o]) => o);
         addSystemMessage(`Found ${a.length} building(s) that contains "${parts[1]}"`),
-          (r = be().sceneManager.getCurrent(At)) == null ||
+          (r = be().sceneManager.getCurrent(WorldScene)) == null ||
             r.drawSelection(null, a);
         break;
       }
@@ -115495,7 +115549,7 @@ function Sce() {
             )
         )
         .map(([B]) => B);
-      (w = be().sceneManager.getCurrent(At)) == null ||
+      (w = be().sceneManager.getCurrent(WorldScene)) == null ||
         w.drawSelection(null, k);
     };
   let u = 0,
@@ -115535,7 +115589,7 @@ function Sce() {
       style: m,
       ref: n,
       children: [
-        oi()
+        isSteam()
           ? s.jsxs(s.Fragment, {
               children: [
                 s.jsx("div", {
@@ -115550,7 +115604,7 @@ function Sce() {
                             yield ht.maximize(),
                             be().routeTo(Ts, { stage: Ks.SteamSignIn }),
                             setTimeout(() => {
-                              be().sceneManager.loadScene(At);
+                              be().sceneManager.loadScene(WorldScene);
                             }, 1e3);
                         else if (
                           (Vb.emit(!0),
@@ -115617,7 +115671,7 @@ function Sce() {
                               onPointerDown: () => {
                                 var _;
                                 Le(),
-                                  (_ = be().sceneManager.getCurrent(At)) ==
+                                  (_ = be().sceneManager.getCurrent(WorldScene)) ==
                                     null || _.lookAtTile(k, Oc.Select);
                               },
                               children: [
@@ -115651,7 +115705,7 @@ function Sce() {
                     ? void 0
                     : w.tile;
                 k &&
-                  ((B = be().sceneManager.getCurrent(At)) == null ||
+                  ((B = be().sceneManager.getCurrent(WorldScene)) == null ||
                     B.lookAtTile(k, Oc.Select),
                   be().routeTo(eT, { xy: k, expandHappiness: !0 }));
               },
@@ -115938,7 +115992,7 @@ function wce() {
             var a;
             const n = Tick.current.specialBuildings.get("Statistics");
             n &&
-              ((a = be().sceneManager.getCurrent(At)) == null ||
+              ((a = be().sceneManager.getCurrent(WorldScene)) == null ||
                 a.lookAtTile(n.tile, Oc.Select));
           },
           children: [
