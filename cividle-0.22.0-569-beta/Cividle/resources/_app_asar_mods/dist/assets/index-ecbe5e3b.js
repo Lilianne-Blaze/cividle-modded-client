@@ -42608,7 +42608,7 @@ function Et(t, e, r) {
   const i = t.get(e);
   i ? i.push(r) : t.set(e, [r]);
 }
-function ws(t, e, r = () => []) {
+function mapOf(t, e, r = () => []) {
   const i = [];
   return t
     ? (forEach(t, (n, a) => {
@@ -62893,7 +62893,7 @@ function getBuildingIO(xy, type, options, gs) {
           });
     }
     if ("resourceImports" in l && type === "input") {
-      const f = Qh(l, da(xy, "output", 1, !1, gs)),
+      const f = getResourceImportCapacity(l, totalMultiplierFor(xy, "output", 1, !1, gs)),
         m = l,
         g = reduceOf(m.resourceImports, (y, x, T) => y + T.perCycle, 0),
         v = We(g > 0 ? f / g : 0, 0, 1);
@@ -62927,11 +62927,11 @@ function getBuildingIO(xy, type, options, gs) {
       ) {
         const v = !!(options & br.MultiplierStableOnly);
         l.type === "Market"
-          ? (g *= da(xy, "output", 1, v, gs))
+          ? (g *= totalMultiplierFor(xy, "output", 1, v, gs))
           : type === "output" &&
             (l.type === "CloneFactory" || l.type === "CloneLab")
-          ? (g = g * 0.5 + g * 0.5 * da(xy, "output", 1, v, gs))
-          : (g *= da(xy, type, 1, v, gs));
+          ? (g = g * 0.5 + g * 0.5 * totalMultiplierFor(xy, "output", 1, v, gs))
+          : (g *= totalMultiplierFor(xy, type, 1, v, gs));
       }
       safeAdd(o, f, g);
     });
@@ -63541,7 +63541,7 @@ function gJ(t, e, r) {
   const i = e.xyToPosition(t.fromXy),
     n = e.xyToPosition(t.toXy),
     a = e.distanceTile(t.fromXy, t.toXy);
-  return Dc(t.fuel)
+  return isTransportable(t.fuel)
     ? (t.ticksSpent++, (t.hasEnoughFuel = !0), t.ticksSpent >= a)
     : ((t.fuelCurrentTick = t.fuelPerTick),
       r &&
@@ -63583,135 +63583,136 @@ function getSortedTiles(t) {
           ((u = Config.BuildingTier[n.type]) != null ? u : 0);
   });
 }
-const GA = new Set();
-function NP(t, e, r, i) {
+const resourceSet = new Set();
+
+function transportAndConsumeResources(xy, result, gs, offline) {
   var M, k, w;
-  const n = r.tiles.get(t);
-  if (!n) return;
-  const a = n.building;
-  if (!a || (Mp(a.type) && !n.explored)) return;
-  const o = i || getGameOptions().enableTransportSourceCache;
+  const tile = gs.tiles.get(xy);
+  if (!tile) return;
+  const building = tile.building;
+  if (!building || (isNaturalWonder(building.type) && !tile.explored)) return;
+  const o = offline || getGameOptions().enableTransportSourceCache;
   s1 || Kh(),
-    a.desiredLevel > a.level
-      ? (a.status = a.level > 0 ? "upgrading" : "building")
-      : (a.desiredLevel = a.level);
-  const l = NQ(a);
-  hr(Tick.next.buildingValueByTile, t, l),
-    hr(Tick.next.buildingValues, a.type, l),
+    building.desiredLevel > building.level
+      ? (building.status = building.level > 0 ? "upgrading" : "building")
+      : (building.desiredLevel = building.level);
+  const l = NQ(building);
+  hr(Tick.next.buildingValueByTile, xy, l),
+    hr(Tick.next.buildingValues, building.type, l),
     (Tick.next.totalValue += l);
-  const { total: u, used: c } = Es(t, r),
-    p = getBuildingIO(t, "output", br.Multiplier | br.Capacity, r),
-    f = "resourceImports" in a;
+  const { total: u, used: c } = getStorageFor(xy, gs),
+    p = getBuildingIO(xy, "output", br.Multiplier | br.Capacity, gs),
+    f = "resourceImports" in building;
   if (
-    (GA.clear(),
-    forEach(a.resources, (B, _) => {
+    (resourceSet.clear(),
+    forEach(building.resources, (B, _) => {
       if (!Number.isFinite(_)) return;
       if (_ === 0) {
-        delete a.resources[B];
+        delete building.resources[B];
         return;
       }
       const D = PL(B, _);
       (Tick.next.totalValue += D),
-        hr(Tick.next.resourceValueByTile, t, D),
+        hr(Tick.next.resourceValueByTile, xy, D),
         hr(Tick.next.resourceValues, B, D),
-        a.status === "completed" && hr(Tick.next.resourceAmount, B, _),
+        building.status === "completed" && hr(Tick.next.resourceAmount, B, _),
         f ||
-          (GA.add(B),
+          (resourceSet.add(B),
           Et(Tick.next.resourcesByTile, B, {
-            tile: t,
+            tile: xy,
             amount: _,
             usedStoragePercentage: u === 0 ? 1 : c / u,
           }));
     }),
     forEach(p, (B) => {
-      GA.has(B) ||
+      resourceSet.has(B) ||
         Et(Tick.next.resourcesByTile, B, {
-          tile: t,
+          tile: xy,
           amount: 0,
           usedStoragePercentage: c / u,
         });
     }),
     f &&
-      Tick.next.resourceImportBuildings.set(t, {
-        building: a,
-        tile: t,
+      Tick.next.resourceImportBuildings.set(xy, {
+        building: building,
+        tile: xy,
         usedStoragePercentage: c / u,
       }),
-    (a.status === "completed" || a.status === "upgrading") &&
-      yr(a.type) &&
-      Tick.next.specialBuildings.set(a.type, n),
-    a.status === "building" || a.status === "upgrading")
+    (building.status === "completed" || building.status === "upgrading") &&
+      yr(building.type) &&
+      Tick.next.specialBuildings.set(building.type, tile),
+    building.status === "building" || building.status === "upgrading")
   ) {
-    const B = Ns(a),
-      _ = Ak(a, a.level, a.desiredLevel),
-      { total: D } = Pk(a, t, r),
+    const B = Ns(building),
+      _ = Ak(building, building.level, building.desiredLevel),
+      { total: D } = Pk(building, xy, gs),
       I = new Map();
     let L = !0;
     if (
       (forEach(B, function (W, H) {
         var V, Z;
-        const $ = (V = a.resources[W]) != null ? V : 0,
-          X = G_(t, W),
+        const $ = (V = building.resources[W]) != null ? V : 0,
+          X = G_(xy, W),
           q = getGameOptions().greedyTransport ? ((Z = _[W]) != null ? Z : 0) : H;
         if ((L && $ < H && (L = !1), $ >= q)) {
-          a.suspendedInput.set(W, gb.AutoSuspended);
+          building.suspendedInput.set(W, gb.AutoSuspended);
           return;
         }
         q - X - $ <= 0 ||
-          (a.suspendedInput.get(W) !== gb.ManualSuspended &&
-            (a.suspendedInput.delete(W), I.set(W, H)));
+          (building.suspendedInput.get(W) !== gb.ManualSuspended &&
+            (building.suspendedInput.delete(W), I.set(W, H)));
       }),
       I.size > 0)
     ) {
       const F = D / I.size;
       I.forEach(function (H, $) {
-        s1($, We(H, 0, F), F, t, r, X_(a, r), o);
+        s1($, We(H, 0, F), F, xy, gs, X_(building, gs), o);
       });
     }
-    a.status === "upgrading" && on(a.type) && o1.emit({ xy: t, offline: i }),
+    building.status === "upgrading" && isWorldWonder(building.type) && o1.emit({ xy: xy, offline: offline }),
       L &&
-        (a.level++,
+        (building.level++,
         forEach(B, (F, W) => {
-          safeAdd(a.resources, F, -W);
+          safeAdd(building.resources, F, -W);
         }),
-        a.suspendedInput.clear(),
-        a.status === "building" &&
-          ((a.status = a.desiredLevel > a.level ? "upgrading" : "completed"),
-          fk.emit(t)),
-        _L.emit(t),
-        a.status === "upgrading" &&
-          a.level >= a.desiredLevel &&
-          (a.status = "completed"));
+        building.suspendedInput.clear(),
+        building.status === "building" &&
+          ((building.status = building.desiredLevel > building.level ? "upgrading" : "completed"),
+          fk.emit(xy)),
+        _L.emit(xy),
+        building.status === "upgrading" &&
+          building.level >= building.desiredLevel &&
+          (building.status = "completed"));
     return;
   }
   if (
-    (r.unlockedTech.Banking &&
-      a.level >= 10 &&
-      Et(Tick.next.tileMultipliers, t, {
+    (gs.unlockedTech.Banking &&
+      building.level >= 10 &&
+      Et(Tick.next.tileMultipliers, xy, {
         storage: 1,
         source: h(d.SourceResearch, { tech: h(d.Banking) }),
       }),
-    a.type === "Caravansary" &&
-      (Tick.next.playerTradeBuildings.set(t, a), Ci(mi.WarehouseExtension, r)))
+    building.type === "Caravansary" &&
+      (Tick.next.playerTradeBuildings.set(xy, building), Ci(mi.WarehouseExtension, gs)))
   )
-    for (const B of Mt(r).getNeighbors(xe(t))) {
+    for (const B of Mt(gs).getNeighbors(xe(xy))) {
       const _ = Se(B),
-        D = (M = r.tiles.get(_)) == null ? void 0 : M.building;
+        D = (M = gs.tiles.get(_)) == null ? void 0 : M.building;
       (D == null ? void 0 : D.type) === "Warehouse" &&
         D.status === "completed" &&
         Tick.next.playerTradeBuildings.set(_, D);
     }
-  if ("resourceImports" in a) {
-    const B = a;
+  if ("resourceImports" in building) {
+    const B = building;
     if (ot(B.resourceImportOptions, mn.ManagedImport)) {
-      const _ = Es(t, r),
-        D = Qh(B, da(t, "output", 1, !1, r)),
+      const _ = getStorageFor(xy, gs),
+        D = getResourceImportCapacity(B, totalMultiplierFor(xy, "output", 1, !1, gs)),
         I = new Map();
       let L = 0;
-      for (const F of Mt(r).getRange(xe(t), B0)) {
+      for (const F of Mt(gs).getRange(xe(xy), B0)) {
         const W = Se(F);
-        Ei(W, r) &&
-          forEach(HA(getBuildingIO(W, "output", br.Capacity | br.Multiplier, r)), ($, X) => {
+        Ei(W, gs) &&
+          forEach(filterTransportable(getBuildingIO(W, "output", br.Capacity | br.Multiplier, gs)), ($, X) => {
             hr(I, $, X), (L += X);
           });
       }
@@ -63731,53 +63732,53 @@ function NP(t, e, r, i) {
   if (
     (Tick.current.totalValue > 0 &&
       u > 0 &&
-      Tick.next.storagePercentages.set(t, c / u),
-    !sj(Config.Building[a.type].deposit, t, r))
+      Tick.next.storagePercentages.set(xy, c / u),
+    !sj(Config.Building[building.type].deposit, xy, gs))
   ) {
-    Tick.next.notProducingReasons.set(t, Jt.NotOnDeposit);
+    Tick.next.notProducingReasons.set(xy, Jt.NotOnDeposit);
     return;
   }
-  if (a.capacity <= 0) {
-    Tick.next.notProducingReasons.set(t, Jt.TurnedOff);
+  if (building.capacity <= 0) {
+    Tick.next.notProducingReasons.set(xy, Jt.TurnedOff);
     return;
   }
-  const m = HA(getBuildingIO(t, "input", br.Multiplier | br.Capacity, r)),
-    g = UP(t, r),
-    v = da(t, "worker", 1, !1, r);
+  const m = filterTransportable(getBuildingIO(xy, "input", br.Multiplier | br.Capacity, gs)),
+    g = getWorkersFor(xy, gs),
+    v = totalMultiplierFor(xy, "worker", 1, !1, gs);
   let y = !1;
   if (
     (forEach(m, function (_, D) {
       var H, $, X;
-      let I = D * qP(a);
-      if (I <= 0 || c + (Dc(_) ? I : 0) > u) return;
-      let L = ej(a) * D;
-      if ("resourceImports" in a) {
-        const q = a;
+      let I = D * qP(building);
+      if (I <= 0 || c + (isTransportable(_) ? I : 0) > u) return;
+      let L = ej(building) * D;
+      if ("resourceImports" in building) {
+        const q = building;
         (I = D),
           (L =
             ($ = (H = q.resourceImports[_]) == null ? void 0 : H.cap) != null
               ? $
               : 0);
       }
-      let F = (X = a.resources[_]) != null ? X : 0;
+      let F = (X = building.resources[_]) != null ? X : 0;
       if (
-        (a.type === "CloneFactory" && (F = Math.min(F, a.transportedAmount)),
-        F + G_(t, _) > L)
+        (building.type === "CloneFactory" && (F = Math.min(F, building.transportedAmount)),
+        F + G_(xy, _) > L)
       )
         return;
-      let W = X_(a, r);
-      if ("resourceImports" in a) {
-        const re = a.resourceImports[_];
+      let W = X_(building, gs);
+      if ("resourceImports" in building) {
+        const re = building.resourceImports[_];
         re && !isNullOrUndefined(re.inputMode) && (W = re.inputMode);
       }
-      s1(_, I, v, t, r, W, o), (y = !0);
+      s1(_, I, v, xy, gs, W, o), (y = !0);
     }),
-    "resourceImports" in a &&
+    "resourceImports" in building &&
       !y &&
-      Tick.next.notProducingReasons.set(t, Jt.NoActiveTransports),
-    a.type === "Market")
+      Tick.next.notProducingReasons.set(xy, Jt.NoActiveTransports),
+    building.type === "Market")
   ) {
-    const B = a;
+    const B = building;
     let _ = 0;
     forEach(B.sellResources, function (I) {
       var H;
@@ -63787,62 +63788,62 @@ function NP(t, e, r, i) {
         return;
       }
       const F = We(
-          a.capacity * Ab(I, t, r),
+          building.capacity * Ab(I, xy, gs),
           0,
-          (H = a.resources[I]) != null ? H : 0
+          (H = building.resources[I]) != null ? H : 0
         ),
-        W = eg(I, F, L, t, r);
+        W = eg(I, F, L, xy, gs);
       if (c - F + W > u) {
-        Tick.next.notProducingReasons.set(t, Jt.StorageFull);
+        Tick.next.notProducingReasons.set(xy, Jt.StorageFull);
         return;
       }
-      safeAdd(a.resources, I, -F),
-        e.push({ xy: t, resource: L, amount: W }),
+      safeAdd(building.resources, I, -F),
+        result.push({ xy: xy, resource: L, amount: W }),
         (_ += W);
     }),
-      _ > 0 && (jm.emit({ xy: t, amount: _ }), o1.emit({ xy: t, offline: i }));
+      _ > 0 && (jm.emit({ xy: xy, amount: _ }), o1.emit({ xy: xy, offline: offline }));
     return;
   }
-  if ("resourceImports" in a) {
-    if (Ci(mi.WarehouseUpgrade, r) && "warehouseOptions" in a) {
-      const B = a;
-      ot(B.warehouseOptions, fs.Autopilot) && bJ(B, t, o, r);
+  if ("resourceImports" in building) {
+    if (Ci(mi.WarehouseUpgrade, gs) && "warehouseOptions" in building) {
+      const B = building;
+      ot(B.warehouseOptions, fs.Autopilot) && bJ(B, xy, o, gs);
     }
     return;
   }
-  if (a.type === "CloneFactory") {
-    const B = a,
+  if (building.type === "CloneFactory") {
+    const B = building,
       _ = (k = m[B.inputResource]) != null ? k : 0;
     if (
       Math.min(
         B.transportedAmount,
-        (w = a.resources[B.inputResource]) != null ? w : 0
+        (w = building.resources[B.inputResource]) != null ? w : 0
       ) < _
     ) {
-      Tick.next.notProducingReasons.set(t, Jt.NotEnoughResources);
+      Tick.next.notProducingReasons.set(xy, Jt.NotEnoughResources);
       return;
     }
     B.transportedAmount -= _;
   }
-  const x = Config.Building[a.type].power;
-  if (!(!x || Tick.current.powerGrid.has(t))) {
-    Tick.next.notProducingReasons.set(t, Jt.NoPower);
+  const x = Config.Building[building.type].power;
+  if (!(!x || Tick.current.powerGrid.has(xy))) {
+    Tick.next.notProducingReasons.set(xy, Jt.NoPower);
     return;
   }
-  if ((x && Tick.next.powerBuildings.add(t), !(uu("Worker") >= g.output))) {
-    Tick.next.notProducingReasons.set(t, Jt.NotEnoughWorkers);
+  if ((x && Tick.next.powerBuildings.add(xy), !(uu("Worker") >= g.output))) {
+    Tick.next.notProducingReasons.set(xy, Jt.NotEnoughWorkers);
     return;
   }
-  if (!BQ(a.resources, m)) {
-    Tick.next.notProducingReasons.set(t, Jt.NotEnoughResources);
+  if (!hasEnoughResources(building.resources, m)) {
+    Tick.next.notProducingReasons.set(xy, Jt.NotEnoughResources);
     return;
   }
-  if (!(mr(p) || c + Y_(p) + Y_(m) * qP(a) <= u)) {
+  if (!(mr(p) || c + Y_(p) + Y_(m) * qP(building) <= u)) {
     const B = DQ(p);
     if (Tr(B) > 0) {
-      const _ = UP(t, r);
-      cf("Worker", _.output, t),
-        q_(a.resources, m),
+      const _ = getWorkersFor(xy, gs);
+      cf("Worker", _.output, xy),
+        deductResources(building.resources, m),
         forEach(B, (D, I) => {
           var L;
           if (D === "Science") {
@@ -63851,38 +63852,38 @@ function NP(t, e, r, i) {
                 ? void 0
                 : L.building.resources;
             F &&
-              (jm.emit({ xy: t, amount: I }),
+              (jm.emit({ xy: xy, amount: I }),
               safeAdd(F, D, I),
-              Tick.next.scienceProduced.set(t, I));
+              Tick.next.scienceProduced.set(xy, I));
           } else
-            D === "Power" && Tick.next.powerPlants.add(t),
+            D === "Power" && Tick.next.powerPlants.add(xy),
               hr(Tick.next.workersAvailable, D, I);
         }),
-        mr(HA(p)) || Tick.next.notProducingReasons.set(t, Jt.StorageFull);
-    } else Tick.next.notProducingReasons.set(t, Jt.StorageFull);
+        mr(filterTransportable(p)) || Tick.next.notProducingReasons.set(xy, Jt.StorageFull);
+    } else Tick.next.notProducingReasons.set(xy, Jt.StorageFull);
     return;
   }
-  if (Ci(mi.Electricity, r) && Sk(a.type) && a.electrification > 0) {
-    let B = We(a.electrification, 0, a.level);
-    r.unlockedUpgrades.Liberalism5 && (B *= 2);
-    const _ = aj(a);
+  if (Ci(mi.Electricity, gs) && Sk(building.type) && building.electrification > 0) {
+    let B = We(building.electrification, 0, building.level);
+    gs.unlockedUpgrades.Liberalism5 && (B *= 2);
+    const _ = aj(building);
     uu("Power") >= _ &&
-      (cf("Power", _, t),
-      Et(Tick.next.tileMultipliers, t, {
+      (cf("Power", _, xy),
+      Et(Tick.next.tileMultipliers, xy, {
         source: h(d.Electrification),
-        input: B * uj(a.type),
+        input: B * uj(building.type),
         output: B,
         unstable: !0,
       }),
-      Tick.next.electrified.add(t));
+      Tick.next.electrified.add(xy));
   }
-  cf("Worker", g.output, t),
-    q_(a.resources, m),
+  cf("Worker", g.output, xy),
+    deductResources(building.resources, m),
     forEach(p, (B, _) => {
       var D;
-      if ((B === "Power" && Tick.next.powerPlants.add(t), Dc(B))) {
-        e.push({ xy: t, resource: B, amount: _ }),
-          jm.emit({ xy: t, amount: _ });
+      if ((B === "Power" && Tick.next.powerPlants.add(xy), isTransportable(B))) {
+        result.push({ xy: xy, resource: B, amount: _ }),
+          jm.emit({ xy: xy, amount: _ });
         return;
       }
       if (B === "Science") {
@@ -63892,19 +63893,19 @@ function NP(t, e, r, i) {
             : D.building.resources;
         I &&
           (safeAdd(I, B, _),
-          Tick.next.scienceProduced.set(t, _),
-          jm.emit({ xy: t, amount: _ }));
+          Tick.next.scienceProduced.set(xy, _),
+          jm.emit({ xy: xy, amount: _ }));
         return;
       }
       hr(Tick.next.workersAvailable, B, _);
     }),
-    o1.emit({ xy: t, offline: i });
+    o1.emit({ xy: xy, offline: offline });
 }
 function bJ(t, e, r, i) {
   var f;
-  let n = Ck(e, i);
+  let n = getResourceImportIdleCapacity(e, i);
   if (n <= 0) return;
-  const a = da(e, "worker", 1, !1, i),
+  const a = totalMultiplierFor(e, "worker", 1, !1, i),
     o =
       a +
       Tick.current.globalMultipliers.transportCapacity.reduce(
@@ -63912,7 +63913,7 @@ function bJ(t, e, r, i) {
         0
       );
   Math.ceil(n / o) > uu("Worker") && (n = uu("Worker") * o);
-  const { total: l, used: u } = Es(e, i);
+  const { total: l, used: u } = getStorageFor(e, i);
   if (((n = We(n, 0, l - u)), n <= 0)) return;
   const c = new Set();
   ot(t.warehouseOptions, fs.AutopilotRespectCap) &&
@@ -64075,7 +64076,7 @@ function AJ(t) {
   let r = !1;
   t.lastPriceUpdated !== e && ((r = !0), (t.lastPriceUpdated = e), EL.emit(t));
   const i = Dg(unlockedResources(t), (l) => !NoPrice[l] && !NoStorage[l]),
-    n = Kn("GrandBazaar", t),
+    n = findSpecialBuilding("GrandBazaar", t),
     a = Mt(t);
   (o = getBuildingsByType("Market", t)) == null ||
     o.forEach((l, u) => {
@@ -64157,7 +64158,7 @@ function LL(t, e, r, i) {
         ? void 0
         : l.resources;
     if (!c) continue;
-    const { total: p, used: f } = Es(u, i),
+    const { total: p, used: f } = getStorageFor(u, i),
       m = p - f;
     if (m >= a) {
       const v = a;
@@ -64183,7 +64184,7 @@ function LL(t, e, r, i) {
 function jL(t, e) {
   let r = 0;
   for (const i of t) {
-    const { total: n, used: a } = Es(i, e);
+    const { total: n, used: a } = getStorageFor(i, e);
     r += We(n - a, 0, Number.POSITIVE_INFINITY);
   }
   return r;
@@ -70710,7 +70711,7 @@ function YJ(t) {
   const u = [],
     c = new Map();
   keysOf(Config.Building)
-    .filter((v) => on(v))
+    .filter((v) => isWorldWonder(v))
     .sort((v, y) => {
       const x = jl(v),
         T = jl(y);
@@ -73812,7 +73813,7 @@ class TQ {
       additionalUpgrades: () => [h(d.Commerce4UpgradeHTMLV2)],
       onUnlocked: (e) => {
         var i;
-        const r = Kn("ChoghaZanbil", e);
+        const r = findSpecialBuilding("ChoghaZanbil", e);
         if (r)
           for (const n of Mt(e).getNeighbors(xe(r.tile))) {
             const a = (i = e.tiles.get(Se(n))) == null ? void 0 : i.building;
@@ -73977,7 +73978,7 @@ class TQ {
         let i;
         for (i in Config.Tech)
           if (Config.Tech[i].column === r) {
-            const n = Kn("Headquarter", e);
+            const n = findSpecialBuilding("Headquarter", e);
             n && safeAdd(n.building.resources, "Science", ks(i));
             return;
           }
@@ -74180,7 +74181,7 @@ class TQ {
       },
       onUnlocked: (e) => {
         const [r, i] = yb("WorldWarAge"),
-          n = Kn("Headquarter", e);
+          n = findSpecialBuilding("Headquarter", e);
         n && safeAdd(n.building.resources, "Science", r);
       },
       additionalUpgrades: () => [h(d.SocialismLevel4DescHTMLV2)],
@@ -74195,7 +74196,7 @@ class TQ {
       },
       onUnlocked: (e) => {
         const [r, i] = yb("ColdWarAge"),
-          n = Kn("Headquarter", e);
+          n = findSpecialBuilding("Headquarter", e);
         n && safeAdd(n.building.resources, "Science", r);
       },
       additionalUpgrades: () => [h(d.SocialismLevel5DescHTMLV2)],
@@ -74290,22 +74291,26 @@ const AQ = {},
     BuildingHash: kQ,
     ResourceHash: MQ,
   };
-function da(t, e, r, i, n) {
-  let a = r;
+
+// SOURCE shared/logic/BuildingLogic.ts
+
+// obfuscated: da at b569
+function totalMultiplierFor(xy, type, base, stableOnly, gs) {
+  let result = base;
   return (
-    Tk(
-      t,
+    forEachMultiplier(
+      xy,
       (o) => {
         var l;
-        a += (l = o[e]) != null ? l : 0;
+        result += (l = o[type]) != null ? l : 0;
       },
-      i,
-      n
+      stableOnly,
+      gs
     ),
-    a
+    result
   );
 }
-function Tk(t, e, r, i) {
+function forEachMultiplier(t, e, r, i) {
   var a, o, l;
   (a = Tick.current.tileMultipliers.get(t)) == null ||
     a.forEach((u) => {
@@ -74323,10 +74328,11 @@ function Tk(t, e, r, i) {
       });
     });
 }
-function Jh(t, e) {
-  const r = [];
-  return Tk(t, (i) => r.push(i), !1, e), r;
+function forEachMultiplier(xy, gs) {
+  const result = [];
+  return forEachMultiplier(xy, (i) => result.push(i), !1, gs), result;
 }
+
 var br = ((t) => (
   (t[(t.None = 0)] = "None"),
   (t[(t.Capacity = 1)] = "Capacity"),
@@ -74335,47 +74341,55 @@ var br = ((t) => (
   (t[(t.TotalUsedBits = 3)] = "TotalUsedBits"),
   t
 ))(br || {});
-function BQ(t, e) {
+
+// obfuscated: BQ at b569
+function hasEnoughResources(a, b) {
   var i, n;
   let r;
-  for (r in e)
-    if (((i = t[r]) != null ? i : 0) < ((n = e[r]) != null ? n : 0)) return !1;
+  for (r in b)
+    if (((i = a[r]) != null ? i : 0) < ((n = b[r]) != null ? n : 0)) return !1;
   return !0;
 }
-function q_(t, e) {
-  let r;
-  for (r in e)
-    !t[r] || t[r] < e[r]
-      ? (console.warn(`Not enough ${r} when trying to deduct`, e, "from", t),
-        (t[r] = 0))
-      : (t[r] -= e[r]);
-  return t;
+
+//obfuscated: q_ at b569
+function deductResources(a, b) {
+  let res;
+  for (res in b)
+    !a[res] || a[res] < b[res]
+      ? (console.warn(`Not enough ${res} when trying to deduct`, b, "from", a),
+        (a[res] = 0))
+      : (a[res] -= b[res]);
+  return a;
 }
-function HA(t) {
+
+function filterTransportable(resources) {
   const e = {};
   let r;
-  for (r in t) Dc(r) && (e[r] = t[r]);
+  for (r in resources) isTransportable(r) && (e[r] = resources[r]);
   return e;
 }
-function UP(t, e) {
+
+function getWorkersFor(xy, gs) {
   var n;
   const r = { rawOutput: 0, multiplier: 1, output: 0 },
-    i = (n = e.tiles.get(t)) == null ? void 0 : n.building;
+    b = (n = gs.tiles.get(xy)) == null ? void 0 : n.building;
   return (
-    i &&
-      !Config.Building[i.type].output.Worker &&
-      (forEach(getBuildingIO(t, "input", 4, e), (a, o) => {
+    // Buildings that produce workers do not cost workers// Buildings that produce workers do not cost workers
+    b &&
+      !Config.Building[b.type].output.Worker &&
+      (forEach(getBuildingIO(xy, "input", 4, gs), (a, o) => {
         NoPrice[a] || (r.rawOutput += o);
       }),
-      forEach(getBuildingIO(t, "output", 4, e), (a, o) => {
+      forEach(getBuildingIO(xy, "output", 4, gs), (a, o) => {
         NoPrice[a] || (r.rawOutput += o);
       })),
-    (r.multiplier = da(t, "worker", 1, !1, e)),
+    (r.multiplier = totalMultiplierFor(xy, "worker", 1, !1, gs)),
     (r.output = Math.ceil(r.rawOutput / r.multiplier)),
     r
   );
 }
-function zP(t, e) {
+
+function checkBuildingMax(t, e) {
   var i;
   return (
     $h(
@@ -74388,55 +74402,58 @@ function zP(t, e) {
     ) < ((i = Config.Building[t].max) != null ? i : Number.POSITIVE_INFINITY)
   );
 }
-function Dc(t) {
+function isTransportable(t) {
   return !NoStorage[t] && !NoPrice[t];
 }
-function QL(t) {
-  return 3600 * t.level;
+function getPetraBaseStorage(petra) {
+  return 3600 * petra.level;
 }
 function VP(t) {
   var r;
-  const e = (r = Kn("Petra", t)) == null ? void 0 : r.building.status;
+  const e = (r = findSpecialBuilding("Petra", t)) == null ? void 0 : r.building.status;
   return e === "completed" || e === "upgrading" ? VJ : 2;
 }
-function Qf(t) {
+
+function getMaxWarpStorage(t) {
   var n;
   let r = 14400;
-  const i = Kn("Petra", t);
+  const i = findSpecialBuilding("Petra", t);
   if (i) {
-    (r += QL(i.building)),
+    (r += getPetraBaseStorage(i.building)),
       (r += 3600 * Config.GreatPerson.Zenobia.value(xa("Zenobia")));
     const a = (n = getGameOptions().ageWisdom[Config.GreatPerson.Zenobia.age]) != null ? n : 0;
     r += 3600 * Config.GreatPerson.Zenobia.value(a);
-    const o = Kn("MountFuji", t);
+    const o = findSpecialBuilding("MountFuji", t);
     o && Mt(t).distanceTile(o.tile, i.tile) <= 1 && (r += 3600 * 8);
   }
   return r;
 }
-const ny = 3600;
-function Es(t, e) {
+
+const STORAGE_TO_PRODUCTION = 3600;
+
+function getStorageFor(xy, gs) {
   var l, u;
   const r = (c, p, f) => (NoStorage[p] ? c : c + f),
-    i = (l = e.tiles.get(t)) == null ? void 0 : l.building;
+    i = (l = gs.tiles.get(xy)) == null ? void 0 : l.building;
   let n = reduceOf(i == null ? void 0 : i.resources, r, 0),
-    a = da(t, "storage", 1, !0, e),
+    a = totalMultiplierFor(xy, "storage", 1, !0, gs),
     o = 0;
   switch (i == null ? void 0 : i.type) {
     case "Market": {
-      o = i.level * ny * 10;
+      o = i.level * STORAGE_TO_PRODUCTION * 10;
       break;
     }
     case "Caravansary": {
-      o = Qh(i, 1) * ny;
+      o = getResourceImportCapacity(i, 1) * STORAGE_TO_PRODUCTION;
       break;
     }
     case "Warehouse": {
-      o = Qh(i, 1) * ny * 10;
+      o = getResourceImportCapacity(i, 1) * STORAGE_TO_PRODUCTION * 10;
       break;
     }
     case "Petra": {
-      const c = Kn("Headquarter", e);
-      c && ((o = Qf(e)), (n = (u = c.building.resources.Warp) != null ? u : 0)),
+      const c = findSpecialBuilding("Headquarter", gs);
+      c && ((o = getMaxWarpStorage(gs)), (n = (u = c.building.resources.Warp) != null ? u : 0)),
         (a = 1);
       break;
     }
@@ -74444,7 +74461,7 @@ function Es(t, e) {
       let c = 0;
       Ng("Faith").forEach((p) => {
         var f;
-        (f = getBuildingsByType(p, e)) == null ||
+        (f = getBuildingsByType(p, gs)) == null ||
           f.forEach((m, g) => {
             m.building.status === "completed" && (c += m.building.level);
           });
@@ -74455,8 +74472,8 @@ function Es(t, e) {
     }
     default: {
       o =
-        60 * reduceOf(getBuildingIO(t, "input", 4, e), r, 0) +
-        ny * reduceOf(getBuildingIO(t, "output", 4, e), r, 0);
+        60 * reduceOf(getBuildingIO(xy, "input", 4, gs), r, 0) +
+        STORAGE_TO_PRODUCTION * reduceOf(getBuildingIO(xy, "output", 4, gs), r, 0);
       break;
     }
   }
@@ -74466,13 +74483,13 @@ function Y_(t) {
   let e = 0;
   return (
     forEach(t, (r, i) => {
-      Dc(r) && (e += i);
+      isTransportable(r) && (e += i);
     }),
     e
   );
 }
 function cf(t, e, r) {
-  if (Dc(t)) {
+  if (isTransportable(t)) {
     console.error(
       "`useWorkers` can only be called with non-transportable resource!"
     );
@@ -74515,7 +74532,7 @@ function _Q(t, e) {
 function DQ(t) {
   const e = {};
   let r;
-  for (r in t) Dc(r) || (e[r] = t[r]);
+  for (r in t) isTransportable(r) || (e[r] = t[r]);
   return e;
 }
 function ej(t) {
@@ -74586,7 +74603,7 @@ function Ns(t) {
     r = t.level;
   let i = U({}, Config.Building[e].construction);
   if ((mr(i) && (i = U({}, Config.Building[e].input)), mr(i))) return {};
-  if (on(e)) {
+  if (isWorldWonder(e)) {
     const n = IQ(e);
     if (t.tradition && t.level > 0) {
       const a = Config.Tradition[t.tradition].content[t.level];
@@ -74648,7 +74665,7 @@ function IQ(t) {
   );
 }
 function tj(t) {
-  console.assert(on(t), "This only works for World Wonders!");
+  console.assert(isWorldWonder(t), "This only works for World Wonders!");
   const e = yk(t),
     r = reduceOf(Ns({ type: t, level: 0 }), (o, l, u) => o + u, 0);
   let i = 0,
@@ -74717,7 +74734,7 @@ function rj(t, e) {
 function UA(t) {
   return TZ.has(t.type)
     ? String(t.level)
-    : Config.Building[t.type].special === tl.HQ || xk(t.type)
+    : Config.Building[t.type].special === tl.HQ || isWorldOrNaturalWonder(t.type)
     ? ""
     : String(t.level);
 }
@@ -74731,35 +74748,45 @@ function jQ(t) {
 function yr(t) {
   return t ? !isNullOrUndefined(Config.Building[t].special) : !1;
 }
-function Mp(t) {
+
+// obfuscated: Mp at bb569
+function isNaturalWonder(t) {
   return t ? Config.Building[t].special === tl.NaturalWonder : !1;
 }
-function on(t) {
+
+// obfuscated: on at b569
+function isWorldWonder(t) {
   return t ? Config.Building[t].special === tl.WorldWonder : !1;
 }
-function xk(t) {
-  return Mp(t) || on(t);
+
+// obfuscated: xk at b569
+function isWorldOrNaturalWonder(t) {
+  return isNaturalWonder(t) || isWorldWonder(t);
 }
-function Qh(t, e) {
+
+// obfuscated: Qh at b569
+function getResourceImportCapacity(t, e) {
   return e * t.level * 10;
 }
-function Ck(t, e) {
+
+// obfuscated: Ck at b569
+function getResourceImportIdleCapacity(xy, gs) {
   var n;
-  const r = (n = e.tiles.get(t)) == null ? void 0 : n.building;
-  if (!r || !("resourceImports" in r)) return 0;
-  const i = r;
+  const building = (n = gs.tiles.get(xy)) == null ? void 0 : n.building;
+  if (!building || !("resourceImports" in building)) return 0;
+  const i = building;
   return (
-    Qh(i, da(t, "output", 1, !1, e)) -
+    getResourceImportCapacity(i, totalMultiplierFor(xy, "output", 1, !1, gs)) -
     reduceOf(i.resourceImports, (a, o, l) => a + l.perCycle, 0)
   );
 }
 function Pk(t, e, r) {
   const i =
     db(Tick.current.globalMultipliers.builderCapacity, "value") +
-    da(e, "worker", 0, !1, r);
+    totalMultiplierFor(e, "worker", 0, !1, r);
   let n = We(t.level, 1, Number.POSITIVE_INFINITY);
   return (
-    on(t.type) && (n *= tj(t.type)), { multiplier: i, base: n, total: i * n }
+    isWorldWonder(t.type) && (n *= tj(t.type)), { multiplier: i, base: n, total: i * n }
   );
 }
 function ij(t, e, r) {
@@ -74787,7 +74814,7 @@ function Ab(t, e, r) {
   const i = (o = r.tiles.get(e)) == null ? void 0 : o.building;
   if (!i || !("availableResources" in i)) return 0;
   const a = i.availableResources[t];
-  return a ? i.level * YP(t, a) * da(e, "output", 1, !1, r) : 0;
+  return a ? i.level * YP(t, a) * totalMultiplierFor(e, "output", 1, !1, r) : 0;
 }
 function eg(t, e, r, i, n) {
   var l, u, c, p;
@@ -74895,7 +74922,7 @@ function Z_(t, e, r, i) {
   return n ? ((l = n[e]) != null ? l : 0) >= r : !1;
 }
 function J_(t, e, r) {
-  const i = Es(t, r);
+  const i = getStorageFor(t, r);
   return We(i.total - i.used, 0, Number.POSITIVE_INFINITY) >= e;
 }
 function Ei(t, e) {
@@ -74959,7 +74986,9 @@ function lj(t, e) {
 function uj(t) {
   return Config.Building[t].power ? 0.5 : 1;
 }
-function Kn(t, e) {
+
+// obfus: Kn at b569
+function findSpecialBuilding(t, e) {
   var i;
   if (!yr(t)) return null;
   const r = Tick.current.specialBuildings.get(t);
@@ -74968,10 +74997,12 @@ function Kn(t, e) {
     if (((i = n.building) == null ? void 0 : i.type) === t) return n;
   return null;
 }
-function cj(t, e) {
-  const r = Kn("Headquarter", e);
+
+// obfus cj at b569
+function addPetraOfflineTime(t, e) {
+  const r = findSpecialBuilding("Headquarter", e);
   if (!r) return;
-  const i = Qf(e);
+  const i = getMaxWarpStorage(e);
   r.building.resources.Warp || (r.building.resources.Warp = 0);
   const n = r.building.resources.Warp;
   (r.building.resources.Warp += t),
@@ -74979,6 +75010,7 @@ function cj(t, e) {
   const a = r.building.resources.Warp;
   console.log("[addPetraOfflineTime]: Before:", n, "After:", a);
 }
+
 function dj(t, e) {
   var i, n;
   const r = (i = e.tiles.get(t)) == null ? void 0 : i.building;
@@ -74995,6 +75027,7 @@ function dj(t, e) {
   }
   return 1;
 }
+
 function hj(t, e) {
   var i, n;
   const r = (i = e.tiles.get(t)) == null ? void 0 : i.building;
@@ -75004,29 +75037,33 @@ function hj(t, e) {
       return 2;
   return 1;
 }
-function $P(t) {
+
+// obfus $P at 569
+function getBuildingDescription(t) {
   var i;
   const e = Config.Building[t],
     r = (i = e.desc) == null ? void 0 : i.call(e);
   return (
     r ||
     [
-      ws(e.input, (n, a) => `${Config.Resource[n].name()} x${a}`).join(" + "),
+      mapOf(e.input, (n, a) => `${Config.Resource[n].name()} x${a}`).join(" + "),
       " => ",
-      ws(e.output, (n, a) => `${Config.Resource[n].name()} x${a}`).join(" + "),
+      mapOf(e.output, (n, a) => `${Config.Resource[n].name()} x${a}`).join(" + "),
     ].join("")
   );
 }
-function VQ(t) {
-  return ws(t.globalMultiplier, (e, r) => `+${r} ${ok[e]()}`)
+
+// obfus VQ at 569
+function getMultipliersDescription(m) {
+  return mapOf(m.globalMultiplier, (e, r) => `+${r} ${ok[e]()}`)
     .concat(
-      ws(t.buildingMultiplier, (e, r) =>
-        ws(r, (i, n) => `${Config.Building[e].name()} +${n} ${gL[i]()}`)
+      mapOf(m.buildingMultiplier, (e, r) =>
+        mapOf(r, (i, n) => `${Config.Building[e].name()} +${n} ${gL[i]()}`)
       ).flat()
     )
     .join(", ");
 }
-function oy(t, e, r) {
+function generateScienceFromFaith(t, e, r) {
   var n, a;
   const i =
     (n = Tick.current.specialBuildings.get("Headquarter")) == null
@@ -75051,7 +75088,8 @@ function oy(t, e, r) {
       Tick.next.scienceProduced.set(t, o);
   }
 }
-function qQ(t) {
+
+function getExplorerRange(t) {
   return t.unlockedTech.Aviation
     ? 4
     : t.unlockedTech.SteamEngine
@@ -75060,18 +75098,22 @@ function qQ(t) {
     ? 2
     : 1;
 }
-function YQ(t) {
-  const e = [];
+
+function getUniqueWonders(currentCity) {
+  const result = [];
   return (
     forEach(Config.City, (r, i) => {
-      r !== t &&
+      r !== currentCity &&
         forEach(i.uniqueBuildings, (n, a) => {
-          on(n) && e.push(n);
+          isWorldWonder(n) && result.push(n);
         });
     }),
-    e
+    result
   );
 }
+
+
+
 function sy(t) {
   return Math.pow(2, t - 2) * 1e13;
 }
@@ -75090,7 +75132,7 @@ function KP(t, e, r) {
   const i = r.tiles.get(t),
     n = Mt(r),
     a = i == null ? void 0 : i.building;
-  if (!a || a.status === "building" || Mp(a.type)) return [];
+  if (!a || a.status === "building" || isNaturalWonder(a.type)) return [];
   const o = new Set();
   Rc(t, r), o.add(t);
   const l =
@@ -75939,7 +75981,7 @@ function hee(t) {
               delete r.building.offlineProductionPercent),
             Number.isFinite(r.building.resources.Warp)))
         ) {
-          const a = Kn("Headquarter", t.current);
+          const a = findSpecialBuilding("Headquarter", t.current);
           a &&
             safeAdd(
               a.building.resources,
@@ -76150,12 +76192,12 @@ function mee(t) {
           const P = (A = Config.BuildingTier[x.type]) != null ? A : 0;
           P > l && (l = P);
         }
-        const C = Kn("HagiaSophia", t);
+        const C = findSpecialBuilding("HagiaSophia", t);
         (x.capacity <= 0 && C && C.building.status === "completed") ||
           Tick.current.happinessExemptions.has(T) ||
           ++a;
       }
-      on(x.type) && ++o, Mp(x.type) && t.tiles.get(T).explored && ++o;
+      isWorldWonder(x.type) && ++o, isNaturalWonder(x.type) && t.tiles.get(T).explored && ++o;
     }
   });
   const u = Tick.current.specialBuildings.get("ZigguratOfUr");
@@ -81192,7 +81234,7 @@ function Ite(t) {
     e >= 60 &&
       (Rk(),
       ct(h(d.PetraOfflineTimeReconciliation, { count: e })),
-      cj(e, getGameState()));
+      addPetraOfflineTime(e, getGameState()));
 }
 function Nte(t) {
   if (!t || !t.id) throw new Error(`Invalid RPC Response received: ${t}`);
@@ -86302,7 +86344,7 @@ function Tn({ gameState: t, xy: e }) {
   return i.desc
     ? s.jsxs("fieldset", {
         children: [
-          xk(r) ? s.jsx("legend", { children: h(d.Wonder) }) : null,
+          isWorldOrNaturalWonder(r) ? s.jsx("legend", { children: h(d.Wonder) }) : null,
           i.desc(),
         ],
       })
@@ -86427,7 +86469,7 @@ function sn({ gameState: t, xy: e }) {
 }
 function Fie({ gameState: t, xy: e }) {
   var a, o;
-  const r = YQ(t.city),
+  const r = getUniqueWonders(t.city),
     [i, n] = se.useState(r[0]);
   return s.jsxs("div", {
     className: "window-body",
@@ -86816,7 +86858,7 @@ function Kt({
 function C4({ gameState: t, xy: e, type: r }) {
   var l, u;
   const i = getBuildingIO(e, r, br.Multiplier | br.Capacity, t),
-    n = da(e, r, 1, !1, t),
+    n = totalMultiplierFor(e, r, 1, !1, t),
     a =
       (u = (l = t.tiles.get(e)) == null ? void 0 : l.building) == null
         ? void 0
@@ -86922,7 +86964,7 @@ function C4({ gameState: t, xy: e, type: r }) {
                           s.jsx("div", { children: "1" }),
                         ],
                       }),
-                      Jh(e, t).map((x, T) =>
+                      forEachMultiplier(e, t).map((x, T) =>
                         x[r]
                           ? s.jsxs(
                               "li",
@@ -87736,7 +87778,7 @@ function Xc({ progress: t }) {
 }
 function qg({ gameState: t, xy: e }) {
   var o;
-  const r = Es(e, t),
+  const r = getStorageFor(e, t),
     i = (o = t.tiles.get(e)) == null ? void 0 : o.building;
   if (i == null || !Number.isFinite(r.total) || r.total <= 0) return null;
   const n = r.used / r.total,
@@ -87815,7 +87857,7 @@ function qg({ gameState: t, xy: e }) {
                         }),
                         r.multiplier === 1
                           ? null
-                          : Jh(e, t).map((l, u) =>
+                          : forEachMultiplier(e, t).map((l, u) =>
                               l.storage
                                 ? s.jsxs(
                                     "li",
@@ -87958,7 +88000,7 @@ function O0({ gameState: t, xy: e }) {
           var w;
           const k = (w = t.tiles.get(M)) == null ? void 0 : w.building;
           k &&
-            ws(Ak(k, k.level, C), (B, _) => {
+            mapOf(Ak(k, k.level, C), (B, _) => {
               B in P ? (P[B] = P[B] + _) : (P[B] = _);
             });
         }),
@@ -88238,7 +88280,7 @@ function O0({ gameState: t, xy: e }) {
 }
 function W0({ gameState: t, xy: e }) {
   var c, p, f;
-  const r = UP(e, t),
+  const r = getWorkersFor(e, t),
     i = (c = t.tiles.get(e)) == null ? void 0 : c.building;
   if (i == null) return null;
   const n = getBuildingIO(e, "input", br.None, t),
@@ -88355,7 +88397,7 @@ function W0({ gameState: t, xy: e }) {
                                   s.jsx("div", { children: "1" }),
                                 ],
                               }),
-                              Jh(e, t).map((m, g) =>
+                              forEachMultiplier(e, t).map((m, g) =>
                                 m.worker
                                   ? s.jsxs(
                                       "li",
@@ -88522,7 +88564,7 @@ function W0({ gameState: t, xy: e }) {
                                   s.jsx("div", { children: "1" }),
                                 ],
                               }),
-                              Jh(e, t).map((m, g) =>
+                              forEachMultiplier(e, t).map((m, g) =>
                                 m.worker
                                   ? s.jsxs(
                                       "li",
@@ -91807,7 +91849,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
         )),
         trade.sellAmount > trade.buyAmount)
       ) {
-        const H = Es(D, gs),
+        const H = getStorageFor(D, gs),
           $ = We(H.total - H.used, 0, Number.POSITIVE_INFINITY);
         I = We(I, 0, ($ * trade.buyAmount) / (trade.sellAmount - trade.buyAmount));
       }
@@ -91920,7 +91962,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                       cSorted.set(D, I);
 
                       var F, W, H;
-                      const L = Es(D, gs);
+                      const L = getStorageFor(D, gs);
                       return s.jsxs(
                         "tr",
                         {
@@ -95554,7 +95596,7 @@ function aae({ definition: t, gameState: e }) {
                   s.jsx("div", {
                     className: "text-desc",
                     children: h(d.ConstructionCost, {
-                      cost: ws(
+                      cost: mapOf(
                         Ns({ type: a, level: 0 }),
                         (l, u) => `${Config.Resource[l].name()} x${pr(u)}`
                       ).join(", "),
@@ -95706,7 +95748,7 @@ function oae({ id: t }) {
           const x = Sr(e);
           if (y && x && y !== x) {
             const A =
-                (T = Kn("YearOfTheSnake", e)) == null
+                (T = findSpecialBuilding("YearOfTheSnake", e)) == null
                   ? void 0
                   : T.building.status,
               C = A === "completed" || A === "upgrading";
@@ -96942,7 +96984,7 @@ function mae() {
               }),
               s.jsx("div", {
                 className: "mb5",
-                children: ws(
+                children: mapOf(
                   Config.City[a].deposits,
                   (y, x) => `${Config.Resource[y].name()}: ${Dt(x)}`
                 ).join(", "),
@@ -96958,7 +97000,7 @@ function mae() {
                     Kt,
                     {
                       className: "mr10",
-                      content: $P(y),
+                      content: getBuildingDescription(y),
                       children: [
                         Config.Building[y].name(),
                         " ",
@@ -96982,7 +97024,7 @@ function mae() {
                   const T = Config.Building[y];
                   return s.jsx(
                     Kt,
-                    { className: "mr10", content: $P(y), children: T.name() },
+                    { className: "mr10", content: getBuildingDescription(y), children: T.name() },
                     y
                   );
                 }),
@@ -97002,7 +97044,7 @@ function mae() {
                             Kt,
                             {
                               className: "mr10",
-                              content: VQ(x),
+                              content: getMultipliersDescription(x),
                               children: Config.Tech[y].name(),
                             },
                             y
@@ -97256,7 +97298,7 @@ function G4() {
     e = gi();
   if (!t) return null;
   const r = VP(e),
-    i = Qf(e);
+    i = getMaxWarpStorage(e);
   return s.jsxs("fieldset", {
     children: [
       s.jsxs("legend", {
@@ -97374,7 +97416,7 @@ function gae() {
                   }),
                   s.jsx("tbody", {
                     children: keysOf(Config.Building)
-                      .filter((r) => on(r))
+                      .filter((r) => isWorldWonder(r))
                       .sort((r, i) =>
                         Config.Building[r].name().localeCompare(Config.Building[i].name())
                       )
@@ -98099,7 +98141,7 @@ function bae({ gameState: t }) {
               s.jsx("div", { className: "f1", children: h(d.WondersUnlocked) }),
               s.jsx("div", {
                 className: "text-strong",
-                children: reduceOf(unlockedBuildings(t), (e, r) => e + (on(r) ? 1 : 0), 0),
+                children: reduceOf(unlockedBuildings(t), (e, r) => e + (isWorldWonder(r) ? 1 : 0), 0),
               }),
             ],
           }),
@@ -98109,7 +98151,7 @@ function bae({ gameState: t }) {
               s.jsx("div", { className: "f1", children: h(d.WondersBuilt) }),
               s.jsx("div", {
                 className: "text-strong",
-                children: $h(getXyBuildings(t), (e, r, i) => e + (on(i.type) ? 1 : 0), 0),
+                children: $h(getXyBuildings(t), (e, r, i) => e + (isWorldWonder(i.type) ? 1 : 0), 0),
               }),
             ],
           }),
@@ -98358,7 +98400,7 @@ function Jk({
             (!i() && o === 0) || (i() && r.level === o)
               ? (u = s.jsx(Te, {
                   disabled: !i(),
-                  content: ws(Ns(r), (f, m) =>
+                  content: mapOf(Ns(r), (f, m) =>
                     s.jsx(
                       Zk,
                       {
@@ -98424,7 +98466,7 @@ function Jk({
                                   }),
                                   s.jsx("div", {
                                     className: "text-small text-desc",
-                                    children: $P(f),
+                                    children: getBuildingDescription(f),
                                   }),
                                 ],
                               },
@@ -98920,7 +98962,7 @@ function Sae({ gameState: t, xy: e }) {
       ? void 0
       : o.building;
   if (!i) return null;
-  const n = QL(r);
+  const n = getPetraBaseStorage(r);
   return s.jsxs("div", {
     className: "window-body",
     children: [
@@ -99019,7 +99061,7 @@ function wae({ gameState: t, xy: e }) {
           Fg(),
             ct(
               h(d.PlayerTradeClaimAllMessageV2, {
-                resources: ws(
+                resources: mapOf(
                   m,
                   (v, y) => `${Config.Resource[v].name()}: ${pr(y)}`
                 ).join(", "),
@@ -100156,11 +100198,11 @@ function H4({ gameState: gameState, xy: xy }) {
 
   building.resourceImports || (building.resourceImports = {});
 
-  const storage = Es(xy, gameState), // Es is getStorageFor
-    baseCapacity = Qh(building, 1),
-    capacityMultiplier = da(xy, "output", 1, !1, gameState),
+  const storage = getStorageFor(xy, gameState), // Es is getStorageFor
+    baseCapacity = getResourceImportCapacity(building, 1),
+    capacityMultiplier = totalMultiplierFor(xy, "output", 1, !1, gameState),
     resources = keysOf(unlockedResources(gameState)).filter((f) => !NoStorage[f] && !NoPrice[f]),
-    idleCapacity = Ck(xy, gameState);
+    idleCapacity = getResourceImportIdleCapacity(xy, gameState);
   return s.jsxs("fieldset", {
     children: [
       s.jsx("legend", { children: h(d.ResourceImport) }),
@@ -100503,7 +100545,7 @@ function H4({ gameState: gameState, xy: xy }) {
                           s.jsx("div", { children: "1" }),
                         ],
                       }),
-                      Jh(xy, gameState).map((f, m) =>
+                      forEachMultiplier(xy, gameState).map((f, m) =>
                         f.output
                           ? s.jsxs(
                               "li",
@@ -109121,7 +109163,7 @@ function mue({ gameState: t, xy: e }) {
   var n;
   const r = (n = t.tiles.get(e)) == null ? void 0 : n.building;
   if (!r) return null;
-  const i = Ck(e, t);
+  const i = getResourceImportIdleCapacity(e, t);
   return s.jsxs("div", {
     className: "window-body",
     children: [
@@ -109522,7 +109564,7 @@ function yue({ gameState: t, xy: e }) {
         }),
       }),
       s.jsx("div", { className: "separator" }),
-      on(r.type)
+      isWorldWonder(r.type)
         ? s.jsxs(s.Fragment, {
             children: [
               s.jsx(Xt, {
@@ -109599,7 +109641,7 @@ function yue({ gameState: t, xy: e }) {
                         g
                       )
                     ),
-                    Jh(e, t).map((m, g) =>
+                    forEachMultiplier(e, t).map((m, g) =>
                       m.worker
                         ? s.jsxs(
                             "li",
@@ -109687,9 +109729,9 @@ function bue({ tile: t }) {
         s.jsxs("div", {
           className: "window-body",
           children: [
-            on(e.type) ? s.jsx(Tn, { gameState: r, xy: t.tile }) : null,
+            isWorldWonder(e.type) ? s.jsx(Tn, { gameState: r, xy: t.tile }) : null,
             s.jsx(yue, { xy: t.tile, gameState: r }),
-            !on(e.type) && e.level > 0
+            !isWorldWonder(e.type) && e.level > 0
               ? s.jsx(Xt, {
                   className: "mb10 text-small",
                   icon: "warning",
@@ -109870,7 +109912,7 @@ function Cue({ tile: t }) {
     [o, l] = se.useState(""),
     u = getTypeBuildings(e),
     c = (m) => {
-      if (!zP(m, e)) {
+      if (!checkBuildingMax(m, e)) {
         ze();
         return;
       }
@@ -109880,7 +109922,7 @@ function Cue({ tile: t }) {
   fn(
     "EmptyTilePageBuildLastBuilding",
     () => {
-      xm && zP(xm, e) && c(xm);
+      xm && checkBuildingMax(xm, e) && c(xm);
     },
     []
   );
@@ -110251,7 +110293,7 @@ function Sue({ xy: t, gameState: e }) {
       Rc(t, e),
       be().sceneManager.enqueue(WorldScene, (c) => c.revealTile(t)),
       Mt(e)
-        .getRange(xe(t), qQ(e))
+        .getRange(xe(t), getExplorerRange(e))
         .forEach((c) => {
           const p = Se(c);
           Rc(p, e), be().sceneManager.enqueue(WorldScene, (f) => f.revealTile(p));
@@ -110975,7 +111017,7 @@ class WorldScene extends H0 {
   }
   onEnable() {
     this.restoreViewport();
-    const r = Kn("Headquarter", getGameState());
+    const r = findSpecialBuilding("Headquarter", getGameState());
     r && this.selectGrid(xe(r.tile)), super.onEnable();
   }
   restoreViewport() {
@@ -111025,7 +111067,7 @@ class WorldScene extends H0 {
         ze();
         return;
       }
-      if (!zP(n.type, i)) {
+      if (!checkBuildingMax(n.type, i)) {
         ze();
         return;
       }
@@ -111435,7 +111477,7 @@ function Bue(t) {
         if (
           c.building &&
           c.building.status !== "building" &&
-          !Mp(c.building.type)
+          !isNaturalWonder(c.building.type)
         )
           for (const f of KP(p, 1, e))
             be().sceneManager.enqueue(WorldScene, (m) => m.revealTile(f));
@@ -111463,7 +111505,7 @@ function Bue(t) {
   Eue(r, e);
 }
 function Eue(t, e) {
-  if (Tick.current.specialBuildings.has("CerneAbbasGiant") && on(t.type)) {
+  if (Tick.current.specialBuildings.has("CerneAbbasGiant") && isWorldWonder(t.type)) {
     const r = In(new Set([Sr(e)]), e.city, Yn());
     r && e.greatPeopleChoicesV2.push(r),
       e.greatPeopleChoicesV2.length > 0 &&
@@ -111586,7 +111628,7 @@ function Due({ xy: t, offline: e }) {
         }
       else r.festival = !1;
       e ||
-        ((r.speedUp = We(r.speedUp, 1, Qf(r))),
+        ((r.speedUp = We(r.speedUp, 1, getMaxWarpStorage(r))),
         r.speedUp > 1 && ((m = n.resources.Warp) != null ? m : 0) > 0
           ? --n.resources.Warp
           : (r.speedUp = 1),
@@ -111939,7 +111981,7 @@ function Due({ xy: t, offline: e }) {
     }
     case "Neuschwanstein": {
       getXyBuildings(r).forEach((j, z) => {
-        on(j.type) &&
+        isWorldWonder(j.type) &&
           j.status !== "completed" &&
           Et(Tick.next.tileMultipliers, z, { worker: 10, source: l });
       });
@@ -112013,7 +112055,7 @@ function Due({ xy: t, offline: e }) {
       let j = 0;
       for (const K of o.getNeighbors(xe(t))) {
         const ne = Se(K);
-        on(($ = Ei(ne, r)) == null ? void 0 : $.type) && ++j;
+        isWorldWonder(($ = Ei(ne, r)) == null ? void 0 : $.type) && ++j;
       }
       Tick.next.globalMultipliers.happiness.push({ value: j, source: l });
       const z = xa("RamessesII", r);
@@ -112269,7 +112311,7 @@ function Due({ xy: t, offline: e }) {
     case "SpaceNeedle": {
       let j = 0;
       Tick.current.specialBuildings.forEach((z, K) => {
-        on(K) && ++j;
+        isWorldWonder(K) && ++j;
       }),
         Tick.next.globalMultipliers.happiness.push({ value: j, source: l });
       break;
@@ -112437,7 +112479,7 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "StPetersBasilica": {
-      st("Church", { storage: 5 }, l), oy(t, "Church", r);
+      st("Church", { storage: 5 }, l), generateScienceFromFaith(t, "Church", r);
       break;
     }
     case "ProphetsMosque": {
@@ -112447,7 +112489,7 @@ function Due({ xy: t, offline: e }) {
         `${l}: ${Config.GreatPerson.HarunAlRashid.name()}`,
         Li.None
       ),
-        oy(t, "Mosque", r);
+        generateScienceFromFaith(t, "Mosque", r);
       break;
     }
     case "GreatDagonPagoda": {
@@ -112455,7 +112497,7 @@ function Due({ xy: t, offline: e }) {
         Pr.forEach((j, z) => {
           Tick.next.happinessExemptions.add(z);
         }),
-        oy(t, "Pagoda", r);
+        generateScienceFromFaith(t, "Pagoda", r);
       break;
     }
     case "Pantheon": {
@@ -112463,7 +112505,7 @@ function Due({ xy: t, offline: e }) {
         const z = Se(j);
         Et(Tick.next.tileMultipliers, z, { worker: 1, storage: 1, source: l });
       }
-      oy(t, "Shrine", r);
+      generateScienceFromFaith(t, "Shrine", r);
       break;
     }
     case "ZigguratOfUr": {
@@ -112510,7 +112552,7 @@ function Due({ xy: t, offline: e }) {
       for (const z of o.getRange(xe(t), 1)) {
         const K = Se(z);
         let ne = 1;
-        Tk(
+        forEachMultiplier(
           K,
           (Ae) => {
             Ae.output && Ae.source !== l && (ne += Ae.output);
@@ -112646,7 +112688,7 @@ function Due({ xy: t, offline: e }) {
         const z = Tick.current.specialBuildings.get("Petra"),
           K = Tick.current.specialBuildings.get("Headquarter");
         if (K && z) {
-          const ne = Qf(r),
+          const ne = getMaxWarpStorage(r),
             Ae = r.festival ? 40 : 20;
           ne - ((Sn = K.building.resources.Warp) != null ? Sn : 0) >= Ae &&
             safeAdd(K.building.resources, "Warp", Ae);
@@ -112685,7 +112727,7 @@ function Due({ xy: t, offline: e }) {
         const K = Se(z);
         if (K === t) continue;
         const ne = (ie = r.tiles.get(K)) == null ? void 0 : ie.building;
-        (ne == null ? void 0 : ne.status) === "completed" && xk(ne.type) && ++j;
+        (ne == null ? void 0 : ne.status) === "completed" && isWorldOrNaturalWonder(ne.type) && ++j;
       }
       Tick.next.globalMultipliers.happiness.push({ value: j * 2, source: l });
       break;
@@ -112802,7 +112844,7 @@ function Rue(t) {
   var i, n;
   const e = getGameState(),
     r = (i = e.tiles.get(t)) == null ? void 0 : i.building;
-  if (Mp(r == null ? void 0 : r.type))
+  if (isNaturalWonder(r == null ? void 0 : r.type))
     switch (r == null ? void 0 : r.type) {
       case "GrottaAzzurra": {
         getXyBuildings(e).forEach((a) => {
@@ -112884,7 +112926,7 @@ function tickEveryFrame(gs, number) {
   const i = Math.ceil(timeSinceLastTick * tickTileQueueSize * be().ticker.speedUp),
     n = tickTileQueueSize - tickTileQueue.length,
     a = We(i - n, 0, tickTileQueue.length);
-  tickTileQueue.splice(0, a).forEach((o) => NP(o, resourceProduced, gs, !1));
+  tickTileQueue.splice(0, a).forEach((o) => transportAndConsumeResources(o, resourceProduced, gs, !1));
 }
 
 const heartbeatFreq = 60,
@@ -112899,19 +112941,19 @@ const resourceProduced = [];
 let currentSessionTick = 0;
 
 // obfuscated: gg in b569
-function tickEverySecond(t, e) {
-  if (!e && !shouldTick()) return;
+function tickEverySecond(gs, offline) {
+  if (!offline && !shouldTick()) return;
   (timeSinceLastTick = 0),
-    e || (tickTileQueue.forEach((i) => NP(i, resourceProduced, t, !1)), oI(t, !1)),
+    offline || (tickTileQueue.forEach((i) => transportAndConsumeResources(i, resourceProduced, gs, !1)), oI(gs, !1)),
     (Tick.next.tick = ++currentSessionTick),
     (Tick.current = freezeTickData(Tick.next)),
     (Tick.next = EmptyTickData()),
     clearIntraTickCache(),
-    forEach(t.unlockedTech, (i) => {
+    forEach(gs.unlockedTech, (i) => {
       const n = Config.Tech[i];
-      Gm(n, h(d.SourceResearch, { tech: n.name() }), t);
+      Gm(n, h(d.SourceResearch, { tech: n.name() }), gs);
     }),
-    forEach(t.greatPeople, (i, n) => {
+    forEach(gs.greatPeople, (i, n) => {
       const a = Config.GreatPerson[i];
       a.tick(a, kp(n), h(d.SourceGreatPerson, { person: a.name() }), Li.None);
     }),
@@ -112935,18 +112977,21 @@ function tickEverySecond(t, e) {
         );
       });
     }),
-    AJ(t),
-    fJ(t);
 
-  // obfuscated: r in b569
-  const tiles = getSortedTiles(t);
+    AJ(gs),
+    fJ(gs);
 
-  e
+    // obfuscated: r in b569
+    // inside tickEverySecond
+
+    const tiles = getSortedTiles(gs);
+
+    offline
     ? (tiles.forEach(function ([n, a]) {
-        NP(n, resourceProduced, t, e);
+        transportAndConsumeResources(n, resourceProduced, gs, offline);
       }),
-      oI(t, e))
-    : ((tickTileQueue = tiles.map(([i, n]) => i)), (tickTileQueueSize = tickTileQueue.length), jue(t));
+      oI(gs, offline))
+    : ((tickTileQueue = tiles.map(([i, n]) => i)), (tickTileQueueSize = tickTileQueue.length), jue(gs));
 }
 function jue(t) {
   if (t.tick % 10 !== 0 || Bk()) return;
@@ -113971,7 +114016,7 @@ function ice(t, e, r, i) {
     let a = !1;
     const o = yield Vue();
     if (o) {
-      if (!Kn("Headquarter", o.current)) {
+      if (!findSpecialBuilding("Headquarter", o.current)) {
         ze(), n(tce, {});
         return;
       }
@@ -114037,7 +114082,7 @@ function ice(t, e, r, i) {
             (C -= k);
         }
         const P = y - T;
-        cj(P, l);
+        addPetraOfflineTime(P, l);
         const M = structuredClone(l);
         (f = !0), It(s.jsx(ece, { before: A, after: M, time: T }));
       }
