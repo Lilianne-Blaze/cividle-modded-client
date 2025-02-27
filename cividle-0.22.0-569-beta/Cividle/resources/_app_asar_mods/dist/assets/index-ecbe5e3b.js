@@ -42581,33 +42581,43 @@ function D_(t, e) {
   for (const r in t) if (e(r, t[r])) return !0;
   return !1;
 }
-function reduceOf(t, e, r) {
-  let i = r;
-  for (const n in t) {
-    const a = t[n];
-    i = e(i, n, a);
+
+function reduceOf(obj, func, initial) {
+  let result = initial;
+  for (const key in obj) {
+    const a = obj[key];
+    result = func(result, key, a);
   }
-  return i;
+  return result;
 }
-function $h(t, e, r) {
-  let i = r;
-  for (const [n, a] of t) i = e(i, n, a);
-  return i;
+
+// obfus $h at 569
+function mReduceOf(obj, func, initial) {
+  let result = initial;
+  for (const [key, value] of obj) result = func(result, key, value);
+  return result;
 }
-function safeAdd(t, e, r) {
-  t[e] || (t[e] = 0), (t[e] += r);
+function safeAdd(obj, key, valueToAdd) {
+  obj[key] || (obj[key] = 0), (obj[key] += valueToAdd);
 }
-function hr(t, e, r) {
-  const i = t.get(e);
-  i ? t.set(e, i + r) : t.set(e, r);
+
+// obfus hr at 569
+function mapSafeAdd(obj, key, valueToAdd) {
+  const i = obj.get(key);
+  i ? obj.set(key, i + valueToAdd) : obj.set(key, valueToAdd);
 }
-function wZ(t, e, r) {
-  t[e] || (t[e] = []), t[e].push(r);
+
+// obfus wZ at 569
+function safePush(obj, key, valueToPush) {
+  obj[key] || (obj[key] = []), obj[key].push(valueToPush);
 }
-function Et(t, e, r) {
-  const i = t.get(e);
-  i ? i.push(r) : t.set(e, [r]);
+
+// obfus Et at 569
+function mapSafePush(obj, key, valueToPush) {
+  const v = obj.get(key);
+  v ? v.push(valueToPush) : obj.set(key, [valueToPush]);
 }
+
 function mapOf(t, e, r = () => []) {
   const i = [];
   return t
@@ -42643,13 +42653,16 @@ function uL(t) {
   const i = `${t.x.toString()},${t.y.toString()}`;
   return R_.set(e, i), i;
 }
-function Se(t) {
+
+function pointToTile(t) {
   return (t.x << 16) + t.y;
 }
-function xe(t) {
+
+function tileToPoint(t) {
   return { x: (t >> 16) & 65535, y: t & 65535 };
 }
-function Tr(t) {
+
+function sizeOf(t) {
   return typeof t != "object"
     ? 0
     : t instanceof Map || t instanceof Set
@@ -42658,44 +42671,63 @@ function Tr(t) {
     ? t.length
     : Object.keys(t).length;
 }
-function MZ(t, e) {
-  let r = 0;
+
+// obfus MZ at 569
+function mapCount(map, func) {
+  let result = 0;
   return (
-    t.forEach((i, n, a) => {
-      e(i, n, a) && ++r;
+    map.forEach((value, key, map2) => {
+      func(value, key, map2) && ++result;
     }),
-    r
+    result
   );
 }
-const I_ = new Map();
-let BZ = 0;
-function cL(t) {
-  let e = I_.get(t);
-  return e || ((e = BZ++), I_.set(t, e)), e;
+
+const xyHash = new Map();
+
+let xyCounter = 0;
+
+// obfus cL at 569
+function tileToHash(xy) {
+  let e = xyHash.get(xy);
+  return e || ((e = xyCounter++), xyHash.set(xy, e)), e;
 }
-const N_ = new Map();
-function $u(t) {
-  const e = N_.get(t);
-  if (e) return { x: e.x, y: e.y };
-  const r = t.split(","),
-    i = { x: Number.parseInt(r[0], 10), y: Number.parseInt(r[1], 10) };
-  return N_.set(t, Object.freeze(i)), i;
+
+const xyToPointCache = new Map();
+
+// obfus $u at 569
+function xyToPoint(str) {
+  const cached = xyToPointCache.get(str);
+  if (cached) return { x: cached.x, y: cached.y };
+  const parts = str.split(","),
+    point = { x: Number.parseInt(parts[0], 10), y: Number.parseInt(parts[1], 10) };
+  return xyToPointCache.set(str, Object.freeze(point)), point;
 }
-function We(t, e, r) {
-  return Math.min(Math.max(t, e), r);
+
+// obfus We at 569
+function clamp(number, minInclusive, maxInclusive) {
+  return Math.min(Math.max(number, minInclusive), maxInclusive);
 }
-function dL(t, e, r) {
-  return (r = We(r, 0, 1)), t + (e - t) * r;
+
+// obfus dL at 569
+function lerp(a, b, amount) {
+  return (amount = clamp(amount, 0, 1)), a + (b - a) * amount;
 }
+
+// obfus EZ at 569
 function EZ(t, e) {
   t.rotation = Math.atan2(e.y - t.y, e.x - t.x);
 }
-function _Z(t, e, r, i) {
-  const n = t / 2,
-    a = e / 2;
-  return -(r - 1) * (n + a) + i * (t + e);
+
+// obfus _Z at 569
+function layoutCenter(itemSize, margin, totalCount, current) {
+  const n = itemSize / 2,
+    a = margin / 2;
+  return -(totalCount - 1) * (n + a) + current * (itemSize + margin);
 }
-function db(t, e) {
+
+// obfus db at 569
+function sum(t, e) {
   return t.reduce((r, i) => {
     const n = i[e];
     return typeof n == "number" ? r + n : r;
@@ -42706,13 +42738,17 @@ function DZ(t, e) {
   for (r in e) if (!t[r]) return !1;
   return !0;
 }
-function xi(t, e = 0) {
-  const r = Number.parseInt(t, 10);
-  return Number.isFinite(r) ? r : e;
+
+// obfus xi at 569
+function safeParseInt(str, fallback = 0) {
+  const r = Number.parseInt(str, 10);
+  return Number.isFinite(r) ? r : fallback;
 }
-function n1(t, e = 0) {
-  const r = Number.parseFloat(t);
-  return Number.isFinite(r) ? r : e;
+
+// obfus n1 at 569
+function safeParseFloat(str, fallback = 0) {
+  const r = Number.parseFloat(str);
+  return Number.isFinite(r) ? r : fallback;
 }
 function hL(t) {
   return !/^[\x00-\x7F]*$/.test(t);
@@ -42725,7 +42761,9 @@ function shuffle(t, e) {
   }
   return t;
 }
-function mr(t) {
+
+// obfus mr at 569
+function isEmpty(t) {
   if (t instanceof Map || t instanceof Set) return t.size === 0;
   if (!t) return !0;
   for (const e in t) if (Object.prototype.hasOwnProperty.call(t, e)) return !1;
@@ -42809,7 +42847,7 @@ function hb(t) {
 }
 function formatHMS(t, e = !1) {
   if (!Number.isFinite(t)) return "--:--";
-  t = We(t, 0, Number.POSITIVE_INFINITY);
+  t = clamp(t, 0, Number.POSITIVE_INFINITY);
   const r = hb(t);
   if (r[0] === 0 && !e) return `${pad(r[1])}:${pad(r[2])}`;
   if (r[0] > 24 * 4) {
@@ -42827,7 +42865,7 @@ function formatHMS(t, e = !1) {
   return `${pad(r[0])}:${pad(r[1])}:${pad(r[2])}`;
 }
 function formatHM(t) {
-  t = We(t, 0, Number.POSITIVE_INFINITY);
+  t = clamp(t, 0, Number.POSITIVE_INFINITY);
   const e = hb(t);
   return e[0] === 0
     ? `${e[1]}m`
@@ -62773,7 +62811,7 @@ let nJ =
       return this.layout.hexToPixel(this.gridToHex(e));
     }
     xyToPosition(e) {
-      return this.gridToHex(xe(e), zr._hex1), this.layout.hexToPixel(zr._hex1);
+      return this.gridToHex(tileToPoint(e), zr._hex1), this.layout.hexToPixel(zr._hex1);
     }
     getNeighbors(e) {
       const r = [];
@@ -62872,7 +62910,7 @@ function getFuelByTarget() {
 function getBuildingIO(xy, type, options, gs) {
   var u, c;
   const n =
-      (cL(xy) << (br.TotalUsedBits + 1)) | (options << 1) | (type === "input" ? 1 : 0),
+      (tileToHash(xy) << (br.TotalUsedBits + 1)) | (options << 1) | (type === "input" ? 1 : 0),
     a = _cache.buildingIO.get(n);
   if (a) return a;
   const o = {},
@@ -62896,7 +62934,7 @@ function getBuildingIO(xy, type, options, gs) {
       const f = getResourceImportCapacity(l, totalMultiplierFor(xy, "output", 1, !1, gs)),
         m = l,
         g = reduceOf(m.resourceImports, (y, x, T) => y + T.perCycle, 0),
-        v = We(g > 0 ? f / g : 0, 0, 1);
+        v = clamp(g > 0 ? f / g : 0, 0, 1);
       return (
         forEach(m.resourceImports, (y, x) => {
           x.perCycle > 0 && (o[y] = x.perCycle * v);
@@ -62988,15 +63026,15 @@ function getResourceIO(t) {
       const n = getBuildingIO(i, "input", br.Multiplier | br.Capacity, t),
         a = getBuildingIO(i, "output", br.Multiplier | br.Capacity, t);
       Tick.current.notProducingReasons.has(i) ||
-        (forEach(n, (o, l) => hr(e.actualInput, o, l)),
-        forEach(a, (o, l) => hr(e.actualOutput, o, l))),
-        forEach(n, (o, l) => hr(e.theoreticalInput, o, l)),
-        forEach(a, (o, l) => hr(e.theoreticalOutput, o, l));
+        (forEach(n, (o, l) => mapSafeAdd(e.actualInput, o, l)),
+        forEach(a, (o, l) => mapSafeAdd(e.actualOutput, o, l))),
+        forEach(n, (o, l) => mapSafeAdd(e.theoreticalInput, o, l)),
+        forEach(a, (o, l) => mapSafeAdd(e.theoreticalOutput, o, l));
     }),
     Tick.current.wonderProductions.forEach((r, i) =>
-      hr(e.theoreticalOutput, i, r)
+      mapSafeAdd(e.theoreticalOutput, i, r)
     ),
-    Tick.current.wonderProductions.forEach((r, i) => hr(e.actualOutput, i, r)),
+    Tick.current.wonderProductions.forEach((r, i) => mapSafeAdd(e.actualOutput, i, r)),
     e
   );
 }
@@ -63045,7 +63083,7 @@ function unlockedResources(t) {
   );
 }
 let Ad = null;
-function Mt(t) {
+function getGrid(t) {
   const e = Config.City[t.city].size;
   return (
     (Ad === null || Ad.maxX !== e || Ad.maxY !== e || Ad.size !== TILE_SIZE) &&
@@ -63150,7 +63188,7 @@ var nh = ((t) => (
   t
 ))(nh || {});
 function wp() {
-  return We(
+  return clamp(
     Math.floor(Math.cbrt(Tick.current.totalValue / 1e6) / 4),
     0,
     Number.POSITIVE_INFINITY
@@ -63247,7 +63285,7 @@ function uk(t, e, r, i, n) {
     const p = [];
     for (let m = 0; m < r; m++)
       c.length === 0 && (c = shuffle([...l])), p.push(c.pop());
-    const f = We(e, 0, u);
+    const f = clamp(e, 0, u);
     (u -= f), a.push({ choices: p, amount: f });
   }
   return a;
@@ -63475,11 +63513,11 @@ function Do(t) {
     }
   }
   return (
-    (e.stockpileCapacity = We(e.stockpileCapacity, dk, hk)),
-    (e.stockpileMax = We(e.stockpileMax, pk, mk)),
-    (e.productionPriority = We(e.productionPriority, rn, vu)),
-    (e.constructionPriority = We(e.constructionPriority, rn, vu)),
-    Kh(),
+    (e.stockpileCapacity = clamp(e.stockpileCapacity, dk, hk)),
+    (e.stockpileMax = clamp(e.stockpileMax, pk, mk)),
+    (e.productionPriority = clamp(e.productionPriority, rn, vu)),
+    (e.constructionPriority = clamp(e.constructionPriority, rn, vu)),
+    clearTransportSourceCache(),
     e
   );
 }
@@ -63512,7 +63550,7 @@ function Gm(t, e, r) {
 }
 function fJ(t) {
   const e = Tick.current.specialBuildings.get("MausoleumAtHalicarnassus"),
-    r = Mt(t),
+    r = getGrid(t),
     i = e ? r.xyToPosition(e.tile) : null;
   LZ(t.transportationV2, (n) => {
     var o;
@@ -63529,8 +63567,8 @@ function fJ(t) {
     }
     const a = PL(n.resource, n.amount);
     return (
-      hr(Tick.next.resourceValues, n.resource, a),
-      hr(Tick.next.amountInTransit, gk(n.toXy, n.resource), n.amount),
+      mapSafeAdd(Tick.next.resourceValues, n.resource, a),
+      mapSafeAdd(Tick.next.amountInTransit, hashTileAndRes(n.toXy, n.resource), n.amount),
       (Tick.next.totalValue += a),
       !0
     );
@@ -63548,28 +63586,29 @@ function gJ(t, e, r) {
         (Sa.lerp(i, n, t.ticksSpent / a, j_),
         lu(j_).subtractSelf(r).lengthSqr() <= 200 * 200 &&
           (t.fuelCurrentTick = 0)),
-      uu(t.fuel) >= t.fuelCurrentTick
+      getAvailableWorkers(t.fuel) >= t.fuelCurrentTick
         ? (cf(t.fuel, t.fuelCurrentTick, null),
-          hr(getFuelByTarget(), t.toXy, t.fuelCurrentTick),
+          mapSafeAdd(getFuelByTarget(), t.toXy, t.fuelCurrentTick),
           t.ticksSpent++,
           (t.hasEnoughFuel = !0))
         : (t.hasEnoughFuel = !1),
       t.ticksSpent >= a);
 }
-function vJ(t) {
-  const e = Mt(t);
+
+function tickPower(gs) {
+  const grid = getGrid(gs);
   console.assert(Tick.next.powerGrid.size === 0),
     Tick.next.powerPlants.forEach((i) => {
-      for (const n of e.getNeighbors(xe(i))) Tick.next.powerGrid.add(Se(n));
+      for (const n of grid.getNeighbors(tileToPoint(i))) Tick.next.powerGrid.add(pointToTile(n));
     });
-  let r = 0;
+  let size = 0;
   do
-    (r = Tick.next.powerGrid.size),
+    (size = Tick.next.powerGrid.size),
       Tick.next.powerBuildings.forEach((i) => {
         if (Tick.next.powerGrid.has(i))
-          for (const n of e.getNeighbors(xe(i))) Tick.next.powerGrid.add(Se(n));
+          for (const n of grid.getNeighbors(tileToPoint(i))) Tick.next.powerGrid.add(pointToTile(n));
       });
-  while (r !== Tick.next.powerGrid.size);
+  while (size !== Tick.next.powerGrid.size);
 }
 
 // obfuscated: yJ in b569
@@ -63591,14 +63630,15 @@ function transportAndConsumeResources(xy, result, gs, offline) {
   if (!tile) return;
   const building = tile.building;
   if (!building || (isNaturalWonder(building.type) && !tile.explored)) return;
-  const o = offline || getGameOptions().enableTransportSourceCache;
-  s1 || Kh(),
+
+  const transportSourceCache = offline || getGameOptions().enableTransportSourceCache;
+  transportResource || clearTransportSourceCache(),
     building.desiredLevel > building.level
       ? (building.status = building.level > 0 ? "upgrading" : "building")
       : (building.desiredLevel = building.level);
   const l = NQ(building);
-  hr(Tick.next.buildingValueByTile, xy, l),
-    hr(Tick.next.buildingValues, building.type, l),
+  mapSafeAdd(Tick.next.buildingValueByTile, xy, l),
+    mapSafeAdd(Tick.next.buildingValues, building.type, l),
     (Tick.next.totalValue += l);
   const { total: u, used: c } = getStorageFor(xy, gs),
     p = getBuildingIO(xy, "output", br.Multiplier | br.Capacity, gs),
@@ -63613,12 +63653,12 @@ function transportAndConsumeResources(xy, result, gs, offline) {
       }
       const D = PL(B, _);
       (Tick.next.totalValue += D),
-        hr(Tick.next.resourceValueByTile, xy, D),
-        hr(Tick.next.resourceValues, B, D),
-        building.status === "completed" && hr(Tick.next.resourceAmount, B, _),
+        mapSafeAdd(Tick.next.resourceValueByTile, xy, D),
+        mapSafeAdd(Tick.next.resourceValues, B, D),
+        building.status === "completed" && mapSafeAdd(Tick.next.resourceAmount, B, _),
         f ||
           (resourceSet.add(B),
-          Et(Tick.next.resourcesByTile, B, {
+          mapSafePush(Tick.next.resourcesByTile, B, {
             tile: xy,
             amount: _,
             usedStoragePercentage: u === 0 ? 1 : c / u,
@@ -63626,7 +63666,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
     }),
     forEach(p, (B) => {
       resourceSet.has(B) ||
-        Et(Tick.next.resourcesByTile, B, {
+        mapSafePush(Tick.next.resourcesByTile, B, {
           tile: xy,
           amount: 0,
           usedStoragePercentage: c / u,
@@ -63643,7 +63683,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
       Tick.next.specialBuildings.set(building.type, tile),
     building.status === "building" || building.status === "upgrading")
   ) {
-    const B = Ns(building),
+    const B = getBuildingCost(building),
       _ = Ak(building, building.level, building.desiredLevel),
       { total: D } = Pk(building, xy, gs),
       I = new Map();
@@ -63666,7 +63706,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
     ) {
       const F = D / I.size;
       I.forEach(function (H, $) {
-        s1($, We(H, 0, F), F, xy, gs, X_(building, gs), o);
+        transportResource($, clamp(H, 0, F), F, xy, gs, X_(building, gs), transportSourceCache);
       });
     }
     building.status === "upgrading" && isWorldWonder(building.type) && o1.emit({ xy: xy, offline: offline }),
@@ -63688,15 +63728,15 @@ function transportAndConsumeResources(xy, result, gs, offline) {
   if (
     (gs.unlockedTech.Banking &&
       building.level >= 10 &&
-      Et(Tick.next.tileMultipliers, xy, {
+      mapSafePush(Tick.next.tileMultipliers, xy, {
         storage: 1,
         source: h(d.SourceResearch, { tech: h(d.Banking) }),
       }),
     building.type === "Caravansary" &&
       (Tick.next.playerTradeBuildings.set(xy, building), Ci(mi.WarehouseExtension, gs)))
   )
-    for (const B of Mt(gs).getNeighbors(xe(xy))) {
-      const _ = Se(B),
+    for (const B of getGrid(gs).getNeighbors(tileToPoint(xy))) {
+      const _ = pointToTile(B),
         D = (M = gs.tiles.get(_)) == null ? void 0 : M.building;
       (D == null ? void 0 : D.type) === "Warehouse" &&
         D.status === "completed" &&
@@ -63709,11 +63749,11 @@ function transportAndConsumeResources(xy, result, gs, offline) {
         D = getResourceImportCapacity(B, totalMultiplierFor(xy, "output", 1, !1, gs)),
         I = new Map();
       let L = 0;
-      for (const F of Mt(gs).getRange(xe(xy), B0)) {
-        const W = Se(F);
+      for (const F of getGrid(gs).getRange(tileToPoint(xy), B0)) {
+        const W = pointToTile(F);
         Ei(W, gs) &&
           forEach(filterTransportable(getBuildingIO(W, "output", br.Capacity | br.Multiplier, gs)), ($, X) => {
-            hr(I, $, X), (L += X);
+            mapSafeAdd(I, $, X), (L += X);
           });
       }
       if (L > 0) {
@@ -63749,9 +63789,9 @@ function transportAndConsumeResources(xy, result, gs, offline) {
   if (
     (forEach(m, function (_, D) {
       var H, $, X;
-      let I = D * qP(building);
+      let I = D * getStockpileCapacity(building);
       if (I <= 0 || c + (isTransportable(_) ? I : 0) > u) return;
-      let L = ej(building) * D;
+      let L = getStockpileMax(building) * D;
       if ("resourceImports" in building) {
         const q = building;
         (I = D),
@@ -63771,7 +63811,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
         const re = building.resourceImports[_];
         re && !isNullOrUndefined(re.inputMode) && (W = re.inputMode);
       }
-      s1(_, I, v, xy, gs, W, o), (y = !0);
+      transportResource(_, I, v, xy, gs, W, transportSourceCache), (y = !0);
     }),
     "resourceImports" in building &&
       !y &&
@@ -63787,7 +63827,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
         delete B.sellResources[I];
         return;
       }
-      const F = We(
+      const F = clamp(
           building.capacity * Ab(I, xy, gs),
           0,
           (H = building.resources[I]) != null ? H : 0
@@ -63807,7 +63847,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
   if ("resourceImports" in building) {
     if (Ci(mi.WarehouseUpgrade, gs) && "warehouseOptions" in building) {
       const B = building;
-      ot(B.warehouseOptions, fs.Autopilot) && bJ(B, xy, o, gs);
+      ot(B.warehouseOptions, fs.Autopilot) && tickWarehouseAutopilot(B, xy, transportSourceCache, gs);
     }
     return;
   }
@@ -63830,7 +63870,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
     Tick.next.notProducingReasons.set(xy, Jt.NoPower);
     return;
   }
-  if ((x && Tick.next.powerBuildings.add(xy), !(uu("Worker") >= g.output))) {
+  if ((x && Tick.next.powerBuildings.add(xy), !(getAvailableWorkers("Worker") >= g.output))) {
     Tick.next.notProducingReasons.set(xy, Jt.NotEnoughWorkers);
     return;
   }
@@ -63838,9 +63878,9 @@ function transportAndConsumeResources(xy, result, gs, offline) {
     Tick.next.notProducingReasons.set(xy, Jt.NotEnoughResources);
     return;
   }
-  if (!(mr(p) || c + Y_(p) + Y_(m) * qP(building) <= u)) {
-    const B = DQ(p);
-    if (Tr(B) > 0) {
+  if (!(isEmpty(p) || c + Y_(p) + Y_(m) * getStockpileCapacity(building) <= u)) {
+    const B = filterNonTransportable(p);
+    if (sizeOf(B) > 0) {
       const _ = getWorkersFor(xy, gs);
       cf("Worker", _.output, xy),
         deductResources(building.resources, m),
@@ -63857,19 +63897,19 @@ function transportAndConsumeResources(xy, result, gs, offline) {
               Tick.next.scienceProduced.set(xy, I));
           } else
             D === "Power" && Tick.next.powerPlants.add(xy),
-              hr(Tick.next.workersAvailable, D, I);
+              mapSafeAdd(Tick.next.workersAvailable, D, I);
         }),
-        mr(filterTransportable(p)) || Tick.next.notProducingReasons.set(xy, Jt.StorageFull);
+        isEmpty(filterTransportable(p)) || Tick.next.notProducingReasons.set(xy, Jt.StorageFull);
     } else Tick.next.notProducingReasons.set(xy, Jt.StorageFull);
     return;
   }
   if (Ci(mi.Electricity, gs) && Sk(building.type) && building.electrification > 0) {
-    let B = We(building.electrification, 0, building.level);
+    let B = clamp(building.electrification, 0, building.level);
     gs.unlockedUpgrades.Liberalism5 && (B *= 2);
     const _ = aj(building);
-    uu("Power") >= _ &&
+    getAvailableWorkers("Power") >= _ &&
       (cf("Power", _, xy),
-      Et(Tick.next.tileMultipliers, xy, {
+      mapSafePush(Tick.next.tileMultipliers, xy, {
         source: h(d.Electrification),
         input: B * uj(building.type),
         output: B,
@@ -63897,40 +63937,43 @@ function transportAndConsumeResources(xy, result, gs, offline) {
           jm.emit({ xy: xy, amount: _ }));
         return;
       }
-      hr(Tick.next.workersAvailable, B, _);
+      mapSafeAdd(Tick.next.workersAvailable, B, _);
     }),
     o1.emit({ xy: xy, offline: offline });
 }
-function bJ(t, e, r, i) {
+// end of transportAndConsumeResources
+
+// obfus bJ at 569
+function tickWarehouseAutopilot(warehouse, xy, transportSourceCache, gs) {
   var f;
-  let n = getResourceImportIdleCapacity(e, i);
-  if (n <= 0) return;
-  const a = totalMultiplierFor(e, "worker", 1, !1, i),
-    o =
-      a +
+  let capacity = getResourceImportIdleCapacity(xy, gs);
+  if (capacity <= 0) return;
+  const workerCapacity = totalMultiplierFor(xy, "worker", 1, false, gs),
+    transportCapacity =
+      workerCapacity +
       Tick.current.globalMultipliers.transportCapacity.reduce(
-        (m, g) => m + g.value,
+        (prev, curr) => prev + curr.value,
         0
       );
-  Math.ceil(n / o) > uu("Worker") && (n = uu("Worker") * o);
-  const { total: l, used: u } = getStorageFor(e, i);
-  if (((n = We(n, 0, l - u)), n <= 0)) return;
+  Math.ceil(capacity / transportCapacity) > getAvailableWorkers("Worker") && (capacity = getAvailableWorkers("Worker") * transportCapacity);
+  const { total: l, used: u } = getStorageFor(xy, gs);
+  if (((capacity = clamp(capacity, 0, l - u)), capacity <= 0)) return;
   const c = new Set();
-  ot(t.warehouseOptions, fs.AutopilotRespectCap) &&
-    forEach(t.resourceImports, (m, g) => {
+  ot(warehouse.warehouseOptions, fs.AutopilotRespectCap) &&
+    forEach(warehouse.resourceImports, (m, g) => {
       var v;
-      ((v = t.resources[m]) != null ? v : 0) < g.cap ? c.add(m) : c.delete(m);
+      ((v = warehouse.resources[m]) != null ? v : 0) < g.cap ? c.add(m) : c.delete(m);
     });
   const p = getStorageFullBuildings().sort(
-    (m, g) => Mt(i).distanceTile(m, e) - Mt(i).distanceTile(g, e)
+    (m, g) => getGrid(gs).distanceTile(m, xy) - getGrid(gs).distanceTile(g, xy)
   );
   for (const m of p) {
-    const g = (f = i.tiles.get(m)) == null ? void 0 : f.building;
-    if (!g || m === e) continue;
-    const v = getBuildingIO(m, "output", br.None, i),
+    const g = (f = gs.tiles.get(m)) == null ? void 0 : f.building;
+    if (!g || m === xy) continue;
+    const v = getBuildingIO(m, "output", br.None, gs),
       y = keysOf(g.resources)
         .filter((x) =>
-          ot(t.warehouseOptions, fs.AutopilotRespectCap)
+          ot(warehouse.warehouseOptions, fs.AutopilotRespectCap)
             ? c.has(x) && v[x]
             : v[x]
         )
@@ -63942,31 +63985,40 @@ function bJ(t, e, r, i) {
           );
         });
     for (const x of y) {
-      const T = s1(x, n, a, e, i, $l.Distance, r, [m]);
-      if ((T < n && Tick.next.notProducingReasons.delete(e), (n = T), n <= 0))
+      const T = transportResource(x, capacity, workerCapacity, xy, gs, $l.Distance, transportSourceCache, [m]);
+      if ((T < capacity && Tick.next.notProducingReasons.delete(xy), (capacity = T), capacity <= 0))
         return;
     }
   }
 }
-function gk(t, e) {
-  return (cL(t) << 12) | Config.ResourceHash[e];
+// end of tickWarehouseAutopilot
+
+// obfus gk at 569
+function hashTileAndRes(xy, res) {
+  return (tileToHash(xy) << 12) | Config.ResourceHash[res];
 }
-const FP = new Map();
-function Kh() {
-  FP.clear();
+
+// obfus FP at 569
+const _transportSourceCache = new Map();
+
+// obfus Kh at 569
+function clearTransportSourceCache() {
+  _transportSourceCache.clear();
 }
-function s1(t, e, r, i, n, a, o, l = void 0) {
+
+// obfus s1 at 569
+function transportResource(t, e, r, i, n, a, o, l = void 0) {
   var v, y, x, T, A, C, P, M;
   let u = e;
-  const c = Mt(n),
-    p = xe(i);
-  if (uu("Worker") <= 0) return u;
+  const c = getGrid(n),
+    p = tileToPoint(i);
+  if (getAvailableWorkers("Worker") <= 0) return u;
   const f = (v = n.tiles.get(i)) == null ? void 0 : v.building;
   if (!f) return u;
   const m =
-    o && a === $l.Distance && !("resourceImports" in f) ? gk(i, t) : null;
+    o && a === $l.Distance && !("resourceImports" in f) ? hashTileAndRes(i, t) : null;
   let g;
-  if ((l && (g = l), !g && m && (g = FP.get(m)), !g)) {
+  if ((l && (g = l), !g && m && (g = _transportSourceCache.get(m)), !g)) {
     const k =
       (x =
         (y = Tick.current.resourcesByTile.get(t)) == null ? void 0 : y.slice()) !=
@@ -63992,7 +64044,7 @@ function s1(t, e, r, i, n, a, o, l = void 0) {
         }
       }),
       (g = k.map((w) => w.tile)),
-      o && m && g && FP.set(m, g);
+      o && m && g && _transportSourceCache.set(m, g);
   }
   if (!g) return u;
   for (let k = 0; k < g.length; k++) {
@@ -64028,8 +64080,8 @@ function s1(t, e, r, i, n, a, o, l = void 0) {
     if (L === "Warehouse" || F === "Warehouse") {
       if (n.unlockedUpgrades.Liberalism3) I = Number.POSITIVE_INFINITY;
       else if (Ci(mi.WarehouseUpgrade, n)) {
-        const X = xe(w);
-        Mt(n).distance(X.x, X.y, p.x, p.y) <= 1 &&
+        const X = tileToPoint(w);
+        getGrid(n).distance(X.x, X.y, p.x, p.y) <= 1 &&
           (I = Number.POSITIVE_INFINITY);
       }
     }
@@ -64038,22 +64090,22 @@ function s1(t, e, r, i, n, a, o, l = void 0) {
       D >= u)
     ) {
       const X = Math.ceil(u / I),
-        q = uu("Worker");
+        q = getAvailableWorkers("Worker");
       if (q >= X)
-        (B.resources[t] -= u), ay(t, u, "Worker", X, w, i, n), (u = 0);
+        (B.resources[t] -= u), addTransportation(t, u, "Worker", X, w, i, n), (u = 0);
       else if (q > 0) {
         const re = (u * q) / X;
-        (B.resources[t] -= re), ay(t, re, "Worker", q, w, i, n), (u -= re);
+        (B.resources[t] -= re), addTransportation(t, re, "Worker", q, w, i, n), (u -= re);
       }
       return u;
     }
     const W = D,
       H = Math.ceil(W / I),
-      $ = uu("Worker");
-    if ($ >= H) (B.resources[t] -= W), ay(t, W, "Worker", H, w, i, n), (u -= W);
+      $ = getAvailableWorkers("Worker");
+    if ($ >= H) (B.resources[t] -= W), addTransportation(t, W, "Worker", H, w, i, n), (u -= W);
     else if ($ > 0) {
       const X = (W * $) / H;
-      return (B.resources[t] -= X), ay(t, X, "Worker", $, w, i, n), (u -= X), u;
+      return (B.resources[t] -= X), addTransportation(t, X, "Worker", $, w, i, n), (u -= X), u;
     }
   }
   return u;
@@ -64077,14 +64129,14 @@ function AJ(t) {
   t.lastPriceUpdated !== e && ((r = !0), (t.lastPriceUpdated = e), EL.emit(t));
   const i = Dg(unlockedResources(t), (l) => !NoPrice[l] && !NoStorage[l]),
     n = findSpecialBuilding("GrandBazaar", t),
-    a = Mt(t);
+    a = getGrid(t);
   (o = getBuildingsByType("Market", t)) == null ||
     o.forEach((l, u) => {
       var f;
       const c = (f = t.tiles.get(u)) == null ? void 0 : f.building;
       if (!c || c.type !== "Market") return;
       const p = c;
-      if (r || Tr(p.availableResources) === 0) {
+      if (r || sizeOf(p.availableResources) === 0) {
         const g =
             (n == null ? void 0 : n.building.status) === "completed" &&
             a.distanceTile(n.tile, u) <= 1
@@ -64112,7 +64164,7 @@ function OA(t) {
 }
 function G_(t, e) {
   var r;
-  return (r = Tick.current.amountInTransit.get(gk(t, e))) != null ? r : 0;
+  return (r = Tick.current.amountInTransit.get(hashTileAndRes(t, e))) != null ? r : 0;
 }
 function xJ(t) {
   return reduceOf(t, (e, r, i) => e + (NoPrice[r] ? 0 : Config.ResourcePrice[r] * i), 0);
@@ -64144,7 +64196,7 @@ function FL(t, e, r, i) {
       });
   }
   return {
-    amount: We(e - a, 0, Number.POSITIVE_INFINITY),
+    amount: clamp(e - a, 0, Number.POSITIVE_INFINITY),
     rollback: () => n.forEach((u) => u()),
   };
 }
@@ -64177,7 +64229,7 @@ function LL(t, e, r, i) {
       });
   }
   return {
-    amount: We(e - a, 0, Number.POSITIVE_INFINITY),
+    amount: clamp(e - a, 0, Number.POSITIVE_INFINITY),
     rollback: () => n.forEach((u) => u()),
   };
 }
@@ -64185,7 +64237,7 @@ function jL(t, e) {
   let r = 0;
   for (const i of t) {
     const { total: n, used: a } = getStorageFor(i, e);
-    r += We(n - a, 0, Number.POSITIVE_INFINITY);
+    r += clamp(n - a, 0, Number.POSITIVE_INFINITY);
   }
   return r;
 }
@@ -70349,13 +70401,13 @@ function VL(t, e, r) {
         u = shuffle(
           Array.from(r.tiles.entries()).filter(([p, f]) => {
             var g;
-            if (Tr(f.deposit) >= 2) return !1;
+            if (sizeOf(f.deposit) >= 2) return !1;
             const m = (g = f.building) == null ? void 0 : g.type;
             return m ? !!isNullOrUndefined(Config.Building[m].special) : !0;
           })
         ).slice(0, l),
         c = Object.values(r.tiles).filter(
-          (p) => p.explored && !p.building && mr(p.deposit)
+          (p) => p.explored && !p.building && isEmpty(p.deposit)
         );
       u.every(([p, f]) => !f.explored) && c.length > 0 && (u[0] = shuffle(c)[0].xy),
         u.forEach(([p, f]) => {
@@ -70458,7 +70510,7 @@ function YJ(t) {
   forEach(Config.Building, (v, y) => {
     var C;
     (Config.BuildingHash[v] = r++),
-      mr(y.input) &&
+      isEmpty(y.input) &&
         (forEach(y.output, (P) => {
           if (
             (Config.ResourceTier[P] || (Config.ResourceTier[P] = 1), !Config.ResourcePrice[P])
@@ -70470,7 +70522,7 @@ function YJ(t) {
           }
         }),
         Config.BuildingTier[v] || (Config.BuildingTier[v] = 1)),
-      (!mr(y.input) || !mr(y.output)) &&
+      (!isEmpty(y.input) || !isEmpty(y.output)) &&
         e.push({ building: v, input: y.input, output: y.output });
     const x = jl(v);
     x
@@ -70524,7 +70576,7 @@ function YJ(t) {
                 );
             }),
             console.assert(
-              !mr(Config.Building[T].input) || !mr(Config.Building[T].construction),
+              !isEmpty(Config.Building[T].input) || !isEmpty(Config.Building[T].construction),
               `${T}: A building should have either 'input' or 'construction' defined`
             );
         });
@@ -70556,7 +70608,7 @@ function YJ(t) {
     });
   const i = {},
     n = {};
-  for (; Tr(Config.BuildingTier) < Tr(Config.Building); )
+  for (; sizeOf(Config.BuildingTier) < sizeOf(Config.Building); )
     e.forEach(({ building: v, input: y, output: x }) => {
       let T = 0,
         A = 0,
@@ -70612,7 +70664,7 @@ function YJ(t) {
         }),
           (!Config.BuildingTier[v] || M > Config.BuildingTier[v]) &&
             (Config.BuildingTier[v] = M);
-        const B = 1.5 + 0.25 * Tr(y);
+        const B = 1.5 + 0.25 * sizeOf(y);
         forEach(x, (_) => {
           const D = Math.round((B * A - w) / k);
           if (Number.isFinite(D)) {
@@ -70656,11 +70708,11 @@ function YJ(t) {
       throw new Error(`Natural Wonder: ${v} should have max = 0`);
     if (
       (forEach(y.input, (x) => {
-        hr(o, x, 1);
+        mapSafeAdd(o, x, 1);
       }),
       y.output.Science)
     ) {
-      const x = 1.5 + 0.25 * Tr(y.input),
+      const x = 1.5 + 0.25 * sizeOf(y.input),
         T = Math.round(
           x *
             reduceOf(
@@ -70723,8 +70775,8 @@ function YJ(t) {
         T = 0;
       const A = tj(v),
         C = wa(jl(v));
-      forEach(Ns({ type: v, level: 0 }), (P, M) => {
-        hr(c, P, 1);
+      forEach(getBuildingCost({ type: v, level: 0 }), (P, M) => {
+        mapSafeAdd(c, P, 1);
         const k = KJ(P),
           w = wa(k[0]);
         T += M;
@@ -72810,7 +72862,7 @@ function Me(t) {
 }
 function iy(t, e) {
   const r = getGameState(),
-    { workersBusy: i, workersAfterHappiness: n } = Pu(),
+    { workersBusy: i, workersAfterHappiness: n } = getScienceFromWorkers(),
     a = getTransportStat(r);
   i >= 0.5 * n &&
     a.totalFuel <= 0.5 * i &&
@@ -73815,8 +73867,8 @@ class TQ {
         var i;
         const r = findSpecialBuilding("ChoghaZanbil", e);
         if (r)
-          for (const n of Mt(e).getNeighbors(xe(r.tile))) {
-            const a = (i = e.tiles.get(Se(n))) == null ? void 0 : i.building;
+          for (const n of getGrid(e).getNeighbors(tileToPoint(r.tile))) {
+            const a = (i = e.tiles.get(pointToTile(n))) == null ? void 0 : i.building;
             a &&
               a.type === "Bank" &&
               a.status === "completed" &&
@@ -74310,25 +74362,25 @@ function totalMultiplierFor(xy, type, base, stableOnly, gs) {
     result
   );
 }
-function forEachMultiplier(t, e, r, i) {
+function forEachMultiplier(xy, func, stableOnly, gs) {
   var a, o, l;
-  (a = Tick.current.tileMultipliers.get(t)) == null ||
-    a.forEach((u) => {
-      (r && u.unstable) || e(u);
+  (a = Tick.current.tileMultipliers.get(xy)) == null ||
+    a.forEach((m) => {
+      (stableOnly && m.unstable) || func(m);
     });
-  const n = (o = i.tiles.get(t)) == null ? void 0 : o.building;
-  n &&
-    ((l = Tick.current.buildingMultipliers.get(n.type)) == null ||
+  const b = (o = gs.tiles.get(xy)) == null ? void 0 : o.building;
+  b &&
+    ((l = Tick.current.buildingMultipliers.get(b.type)) == null ||
       l.forEach((u) => {
-        (r && u.unstable) || e(u);
+        (stableOnly && u.unstable) || func(u);
       })),
     iJ.forEach((u) => {
-      oJ(u).forEach((c) => {
-        (r && c.unstable) || e(c);
+      oJ(u).forEach((m) => {
+        (stableOnly && m.unstable) || func(m);
       });
     });
 }
-function forEachMultiplier(xy, gs) {
+function getMultipliersFor(xy, gs) {
   const result = [];
   return forEachMultiplier(xy, (i) => result.push(i), !1, gs), result;
 }
@@ -74392,7 +74444,7 @@ function getWorkersFor(xy, gs) {
 function checkBuildingMax(t, e) {
   var i;
   return (
-    $h(
+    mReduceOf(
       e.tiles,
       (n, a, o) => {
         var l;
@@ -74424,7 +74476,7 @@ function getMaxWarpStorage(t) {
     const a = (n = getGameOptions().ageWisdom[Config.GreatPerson.Zenobia.age]) != null ? n : 0;
     r += 3600 * Config.GreatPerson.Zenobia.value(a);
     const o = findSpecialBuilding("MountFuji", t);
-    o && Mt(t).distanceTile(o.tile, i.tile) <= 1 && (r += 3600 * 8);
+    o && getGrid(t).distanceTile(o.tile, i.tile) <= 1 && (r += 3600 * 8);
   }
   return r;
 }
@@ -74495,21 +74547,23 @@ function cf(t, e, r) {
     );
     return;
   }
-  if ((hr(Tick.next.workersUsed, t, e), !isNullOrUndefined(r)))
+  if ((mapSafeAdd(Tick.next.workersUsed, t, e), !isNullOrUndefined(r)))
     switch (t) {
       case "Worker": {
-        hr(Tick.next.workersAssignment, r, e);
+        mapSafeAdd(Tick.next.workersAssignment, r, e);
         break;
       }
     }
 }
-function uu(t) {
+
+// obfus uu at 569
+function getAvailableWorkers(res) {
   var n, a, o, l;
-  const e = (n = Tick.current.workersAvailable.get(t)) != null ? n : 0,
-    r = (a = Tick.next.workersUsed.get(t)) != null ? a : 0;
+  const e = (n = Tick.current.workersAvailable.get(res)) != null ? n : 0,
+    r = (a = Tick.next.workersUsed.get(res)) != null ? a : 0;
   let i = 1;
   return (
-    t === "Worker" &&
+    res === "Worker" &&
       (i =
         (l = (o = Tick.current.happiness) == null ? void 0 : o.workerPercentage) !=
         null
@@ -74518,35 +74572,46 @@ function uu(t) {
     Math.floor(e * i) - r
   );
 }
-function EQ(t) {
-  return Config.Resource[t].name();
+
+// obfus EQ at 569
+function getResourceName(r) {
+  return Config.Resource[r].name();
 }
-function _Q(t, e) {
+
+// obfus _Q at 569
+function getBuildingName(xy, gs) {
   var i, n;
   const r =
-    (n = (i = e.tiles.get(t)) == null ? void 0 : i.building) == null
+    (n = (i = gs.tiles.get(xy)) == null ? void 0 : i.building) == null
       ? void 0
       : n.type;
   return r ? Config.Building[r].name() : "";
 }
-function DQ(t) {
+
+function filterNonTransportable(t) {
   const e = {};
   let r;
   for (r in t) isTransportable(r) || (e[r] = t[r]);
   return e;
 }
-function ej(t) {
+
+// obfus ej at 569
+function getStockpileMax(b) {
   return Ci(mi.BuildingStockpileMode, getGameState())
-    ? t.stockpileMax === 0
+    ? b.stockpileMax === 0
       ? Number.POSITIVE_INFINITY
-      : t.stockpileMax
+      : b.stockpileMax
     : ML;
 }
-function qP(t) {
-  return Ci(mi.BuildingStockpileMode, getGameState()) ? t.stockpileCapacity : kL;
+
+// obfus qP at 569
+function getStockpileCapacity(b) {
+  return Ci(mi.BuildingStockpileMode, getGameState()) ? b.stockpileCapacity : kL;
 }
-function ay(t, e, r, i, n, a, o) {
-  const l = Mt(o),
+
+// obfus ay at 569
+function addTransportation(t, e, r, i, n, a, o) {
+  const l = getGrid(o),
     u = l.xyToPosition(n),
     c = l.xyToPosition(a);
   cf(r, i, null),
@@ -74566,7 +74631,9 @@ function ay(t, e, r, i, n, a, o) {
       hasEnoughFuel: !0,
     });
 }
-function Pu(t) {
+
+// obfus Pu at 569
+function getScienceFromWorkers(t) {
   var p, f, m, g;
   const e = Math.floor(
       (p = Tick.current.workersAvailable.get("Worker")) != null ? p : 0
@@ -74578,9 +74645,9 @@ function Pu(t) {
         : 1,
     i = Math.floor(e * r),
     n = (g = Tick.current.workersUsed.get("Worker")) != null ? g : 0,
-    a = db(Tick.current.globalMultipliers.sciencePerIdleWorker, "value"),
-    o = a * We(i - n, 0, Number.POSITIVE_INFINITY),
-    l = db(Tick.current.globalMultipliers.sciencePerBusyWorker, "value"),
+    a = sum(Tick.current.globalMultipliers.sciencePerIdleWorker, "value"),
+    o = a * clamp(i - n, 0, Number.POSITIVE_INFINITY),
+    l = sum(Tick.current.globalMultipliers.sciencePerBusyWorker, "value"),
     u = l * n,
     c = u + o;
   return {
@@ -74595,34 +74662,38 @@ function Pu(t) {
     scienceFromWorkers: c,
   };
 }
-function RQ() {
-  return $h(Tick.current.scienceProduced, (t, e, r) => t + r, 0);
+
+// obfus RQ at 569
+function getScienceFromBuildings() {
+  return mReduceOf(Tick.current.scienceProduced, (t, e, r) => t + r, 0);
 }
-function Ns(t) {
-  const e = t.type,
-    r = t.level;
+
+// obfus Ns at 569
+function getBuildingCost(building) {
+  const e = building.type,
+    r = building.level;
   let i = U({}, Config.Building[e].construction);
-  if ((mr(i) && (i = U({}, Config.Building[e].input)), mr(i))) return {};
+  if ((isEmpty(i) && (i = U({}, Config.Building[e].input)), isEmpty(i))) return {};
   if (isWorldWonder(e)) {
     const n = IQ(e);
-    if (t.tradition && t.level > 0) {
-      const a = Config.Tradition[t.tradition].content[t.level];
+    if (building.tradition && building.level > 0) {
+      const a = Config.Tradition[building.tradition].content[building.level];
       (i = structuredClone(Config.Upgrade[a].requireResources)),
         forEach(i, (o, l) => {
-          i[o] = l * 100 * Math.pow(2, t.level);
+          i[o] = l * 100 * Math.pow(2, building.level);
         });
     }
-    if (t.religion && t.level > 0) {
-      const a = Config.Religion[t.religion].content[t.level];
+    if (building.religion && building.level > 0) {
+      const a = Config.Religion[building.religion].content[building.level];
       (i = structuredClone(Config.Upgrade[a].requireResources)),
         forEach(i, (o, l) => {
-          i[o] = l * 100 * Math.pow(2, t.level);
+          i[o] = l * 100 * Math.pow(2, building.level);
         });
     }
     keysOf(i).forEach((a) => {
       var l;
       const o = (l = Config.ResourcePrice[a]) != null ? l : 1;
-      i[a] = (Math.pow(1.5, t.level) * n * i[a]) / o;
+      i[a] = (Math.pow(1.5, building.level) * n * i[a]) / o;
     });
   } else
     keysOf(i).forEach((a) => {
@@ -74644,7 +74715,7 @@ function Ak(t, e, r) {
     },
     o = {};
   for (; a.level < r; ) {
-    const l = Ns(a);
+    const l = getBuildingCost(a);
     forEach(l, (u, c) => safeAdd(o, u, c)), ++a.level;
   }
   return $_.set(i, Object.freeze(o)), o;
@@ -74667,7 +74738,7 @@ function IQ(t) {
 function tj(t) {
   console.assert(isWorldWonder(t), "This only works for World Wonders!");
   const e = yk(t),
-    r = reduceOf(Ns({ type: t, level: 0 }), (o, l, u) => o + u, 0);
+    r = reduceOf(getBuildingCost({ type: t, level: 0 }), (o, l, u) => o + u, 0);
   let i = 0,
     n = 0;
   if (e) {
@@ -74688,8 +74759,8 @@ function NQ(t) {
 function getCurrentPriority(t, e) {
   if (!Ci(mi.BuildingProductionPriority, e)) return rn;
   switch (
-    ((t.constructionPriority = We(t.constructionPriority, rn, vu)),
-    (t.productionPriority = We(t.productionPriority, rn, vu)),
+    ((t.constructionPriority = clamp(t.constructionPriority, rn, vu)),
+    (t.productionPriority = clamp(t.productionPriority, rn, vu)),
     t.status)
   ) {
     case "building":
@@ -74720,13 +74791,13 @@ function rj(t, e) {
     return { percent: 0, secondsLeft: Number.POSITIVE_INFINITY, cost: {} };
   if (r.status === "completed") return { percent: 1, secondsLeft: 0, cost: {} };
   const { total: i } = Pk(r, t, e),
-    n = Ns(r);
+    n = getBuildingCost(r);
   let a = 0,
     o = 0;
   return (
     forEach(n, (u, c) => {
       var p;
-      (a += c), (o += We((p = r.resources[u]) != null ? p : 0, 0, c));
+      (a += c), (o += clamp((p = r.resources[u]) != null ? p : 0, 0, c));
     }),
     { cost: n, percent: o / a, secondsLeft: Math.ceil((a - o) / i) }
   );
@@ -74782,9 +74853,9 @@ function getResourceImportIdleCapacity(xy, gs) {
 }
 function Pk(t, e, r) {
   const i =
-    db(Tick.current.globalMultipliers.builderCapacity, "value") +
+    sum(Tick.current.globalMultipliers.builderCapacity, "value") +
     totalMultiplierFor(e, "worker", 0, !1, r);
-  let n = We(t.level, 1, Number.POSITIVE_INFINITY);
+  let n = clamp(t.level, 1, Number.POSITIVE_INFINITY);
   return (
     isWorldWonder(t.type) && (n *= tj(t.type)), { multiplier: i, base: n, total: i * n }
   );
@@ -74846,13 +74917,13 @@ function GQ(t, e, r, i) {
       return 0;
     const f = p.resourceImports[r];
     return f && !ot(p.resourceImportOptions, mn.ExportBelowCap)
-      ? We(a - ((c = f.cap) != null ? c : 0), 0, Number.POSITIVE_INFINITY)
+      ? clamp(a - ((c = f.cap) != null ? c : 0), 0, Number.POSITIVE_INFINITY)
       : a;
   }
   const l = getBuildingIO(t, "input", 3, i)[r];
   if (l) {
-    const p = (ej(n) + qP(n)) * l;
-    return We(a - p, 0, Number.POSITIVE_INFINITY);
+    const p = (getStockpileMax(n) + getStockpileCapacity(n)) * l;
+    return clamp(a - p, 0, Number.POSITIVE_INFINITY);
   }
   return a;
 }
@@ -74877,7 +74948,7 @@ function Sk(t) {
   )
     return !0;
   const e = Config.Building[t].output;
-  if (Tr(e) <= 0) return !1;
+  if (sizeOf(e) <= 0) return !1;
   let r;
   for (r in e)
     if (
@@ -74905,10 +74976,10 @@ function oj(t, e) {
     : "NoPower";
 }
 function sj(t, e, r) {
-  if (!t || Tr(t) === 0) return !0;
+  if (!t || sizeOf(t) === 0) return !0;
   const i = [e];
   if (Tick.current.specialBuildings.has("SaintBasilsCathedral"))
-    for (const a of Mt(r).getNeighbors(xe(e))) i.push(Se(a));
+    for (const a of getGrid(r).getNeighbors(tileToPoint(e))) i.push(pointToTile(a));
   let n;
   for (n in t) if (!HQ(n, i, r)) return !1;
   return !0;
@@ -74923,7 +74994,7 @@ function Z_(t, e, r, i) {
 }
 function J_(t, e, r) {
   const i = getStorageFor(t, r);
-  return We(i.total - i.used, 0, Number.POSITIVE_INFINITY) >= e;
+  return clamp(i.total - i.used, 0, Number.POSITIVE_INFINITY) >= e;
 }
 function Ei(t, e) {
   const r = e.tiles.get(t);
@@ -75006,7 +75077,7 @@ function addPetraOfflineTime(t, e) {
   r.building.resources.Warp || (r.building.resources.Warp = 0);
   const n = r.building.resources.Warp;
   (r.building.resources.Warp += t),
-    (r.building.resources.Warp = We(r.building.resources.Warp, 0, i));
+    (r.building.resources.Warp = clamp(r.building.resources.Warp, 0, i));
   const a = r.building.resources.Warp;
   console.log("[addPetraOfflineTime]: Before:", n, "After:", a);
 }
@@ -75015,8 +75086,8 @@ function dj(t, e) {
   var i, n;
   const r = (i = e.tiles.get(t)) == null ? void 0 : i.building;
   if ((r == null ? void 0 : r.type) !== "YellowCraneTower") return 0;
-  for (const a of Mt(e).getNeighbors(xe(t))) {
-    const o = e.tiles.get(Se(a));
+  for (const a of getGrid(e).getNeighbors(tileToPoint(t))) {
+    const o = e.tiles.get(pointToTile(a));
     if (
       o != null &&
       o.explored &&
@@ -75032,8 +75103,8 @@ function hj(t, e) {
   var i, n;
   const r = (i = e.tiles.get(t)) == null ? void 0 : i.building;
   if ((r == null ? void 0 : r.type) !== "GreatWall") return 0;
-  for (const a of Mt(e).getNeighbors(xe(t)))
-    if (((n = Ei(Se(a), e)) == null ? void 0 : n.type) === "ForbiddenCity")
+  for (const a of getGrid(e).getNeighbors(tileToPoint(t)))
+    if (((n = Ei(pointToTile(a), e)) == null ? void 0 : n.type) === "ForbiddenCity")
       return 2;
   return 1;
 }
@@ -75084,7 +75155,7 @@ function generateScienceFromFaith(t, e, r) {
       }),
       (o *= 10),
       safeAdd(i, "Science", o),
-      hr(Tick.next.wonderProductions, "Science", o),
+      mapSafeAdd(Tick.next.wonderProductions, "Science", o),
       Tick.next.scienceProduced.set(t, o);
   }
 }
@@ -75130,7 +75201,7 @@ function $Q(t) {
 function KP(t, e, r) {
   var u, c;
   const i = r.tiles.get(t),
-    n = Mt(r),
+    n = getGrid(r),
     a = i == null ? void 0 : i.building;
   if (!a || a.status === "building" || isNaturalWonder(a.type)) return [];
   const o = new Set();
@@ -75140,8 +75211,8 @@ function KP(t, e, r) {
       ? c
       : bZ + e;
   return (
-    n.getRange(xe(t), l).forEach((p) => {
-      const f = Se(p),
+    n.getRange(tileToPoint(t), l).forEach((p) => {
+      const f = pointToTile(p),
         m = r.tiles.get(f);
       m && !m.explored && (Rc(f, r), o.add(f));
     }),
@@ -75150,13 +75221,13 @@ function KP(t, e, r) {
 }
 function zA(t, e, r, i) {
   const n = r.gridToPosition(e),
-    a = Se(e);
+    a = pointToTile(e);
   let o = Number.POSITIVE_INFINITY,
     l = null;
   return (
     i.tiles.forEach((u, c) => {
       if (!t(u) || c === a) return;
-      const p = lu(r.gridToPosition(xe(c)))
+      const p = lu(r.gridToPosition(tileToPoint(c)))
         .subtractSelf(n)
         .lengthSqr();
       p < o && ((o = p), (l = u));
@@ -75165,11 +75236,11 @@ function zA(t, e, r, i) {
   );
 }
 function pj(t, e) {
-  const r = Mt(t),
+  const r = getGrid(t),
     i = r.center(),
-    n = Se(i);
+    n = pointToTile(i);
   r.forEach((m) => {
-    const g = Se(m);
+    const g = pointToTile(m);
     t.tiles.has(g) || t.tiles.set(g, { tile: g, deposit: {}, explored: !1 });
   });
   const a = Object.assign({}, e, { defaultBuildingLevel: 1 });
@@ -75210,7 +75281,7 @@ function pj(t, e) {
   for (let m = 0; m < f.length; m++) {
     const g = f[m],
       v = t.tiles.get(g);
-    if (v.building || !mr(v.deposit) || v.explored || r.isEdge(xe(g), 2))
+    if (v.building || !isEmpty(v.deposit) || v.explored || r.isEdge(tileToPoint(g), 2))
       continue;
     if (c.length <= 0) break;
     const y = c.pop();
@@ -75948,9 +76019,9 @@ function Aj(t) {
   };
 }
 function hee(t) {
-  const e = Mt(t.current);
+  const e = getGrid(t.current);
   e.forEach((r) => {
-    const i = Se(r);
+    const i = pointToTile(r);
     t.current.tiles.has(i) ||
       t.current.tiles.set(i, { tile: i, deposit: {}, explored: !1 });
   }),
@@ -75959,7 +76030,7 @@ function hee(t) {
       (t.current.unlockedTech.Skyscraper = !0)),
     t.current.tiles.forEach((r, i) => {
       var n;
-      if (!e.isValid(xe(i))) {
+      if (!e.isValid(tileToPoint(i))) {
         t.current.tiles.delete(i);
         return;
       }
@@ -76176,7 +76247,7 @@ const pee = Bp("App", {
   },
   xj = 2;
 function mee(t) {
-  const e = Tr(t.unlockedTech),
+  const e = sizeOf(t.unlockedTech),
     r = Sr(t),
     i = getTypeBuildings(t);
   let n = 0;
@@ -76202,7 +76273,7 @@ function mee(t) {
   });
   const u = Tick.current.specialBuildings.get("ZigguratOfUr");
   u && u.building.capacity > 0 && (o = 0);
-  const c = $h(i, (x, T, A) => (mr(kZ(A, (C, P) => lj(C, t))) ? x : x + 1), 0),
+  const c = mReduceOf(i, (x, T, A) => (isEmpty(kZ(A, (C, P) => lj(C, t))) ? x : x + 1), 0),
     p = {
       fromUnlockedTech: e,
       fromUnlockedAge: n,
@@ -76213,9 +76284,9 @@ function mee(t) {
     f = { fromBuildings: a },
     m =
       reduceOf(p, (x, T, A) => x + A, 0) +
-      db(Tick.current.globalMultipliers.happiness, "value") -
+      sum(Tick.current.globalMultipliers.happiness, "value") -
       reduceOf(f, (x, T, A) => x + A, 0),
-    g = We(m, -50, 50),
+    g = clamp(m, -50, 50),
     v = (100 + g * xj) / 100,
     y = (g + 50) / 100;
   return {
@@ -81127,7 +81198,7 @@ function $j() {
               (platformInfo = u.platformInfo),
               OnPlatformInfoChanged.emit(platformInfo);
             const p = getGameState().tick,
-              f = We(
+              f = clamp(
                 u.lastGameTick + u.offlineTime - p,
                 0,
                 Number.POSITIVE_INFINITY
@@ -86242,7 +86313,7 @@ function li({ gameState: t, xy: e }) {
                   u.push(f);
               }),
                 (c = be().sceneManager.getCurrent(WorldScene)) == null ||
-                  c.drawSelection(xe(e), u);
+                  c.drawSelection(tileToPoint(e), u);
             },
             children: "search",
           }),
@@ -86497,7 +86568,7 @@ function Fie({ gameState: t, xy: e }) {
                   const l = t.tiles.get(e);
                   if (!l) return;
                   const u = Kl(Do({ type: i }), getGameOptions());
-                  forEach(Ns(u), (c, p) => {
+                  forEach(getBuildingCost(u), (c, p) => {
                     u.resources[c] = p;
                   }),
                     (l.building = u),
@@ -86728,7 +86799,7 @@ function gn({ xy: t, getOptions: e, gameState: r, flags: i }) {
     o = ki(),
     l = e(n);
   return (
-    console.assert(Tr(l) === 1),
+    console.assert(sizeOf(l) === 1),
     s.jsxs("div", {
       className: "text-small row",
       children: [
@@ -86764,9 +86835,9 @@ function gn({ xy: t, getOptions: e, gameState: r, flags: i }) {
                   (p = be().sceneManager.getCurrent(WorldScene)) == null ||
                     p.drawSelection(
                       null,
-                      Mt(r)
-                        .getRange(xe(t), c)
-                        .map((f) => Se(f))
+                      getGrid(r)
+                        .getRange(tileToPoint(t), c)
+                        .map((f) => pointToTile(f))
                         .filter((f) => {
                           var m, g;
                           return (
@@ -86788,11 +86859,11 @@ function gn({ xy: t, getOptions: e, gameState: r, flags: i }) {
                 onClick: () => {
                   pc();
                   let p = 0;
-                  Mt(r)
-                    .getRange(xe(t), c)
+                  getGrid(r)
+                    .getRange(tileToPoint(t), c)
                     .map((f) => {
                       var m;
-                      return (m = r.tiles.get(Se(f))) == null
+                      return (m = r.tiles.get(pointToTile(f))) == null
                         ? void 0
                         : m.building;
                     })
@@ -86964,7 +87035,7 @@ function C4({ gameState: t, xy: e, type: r }) {
                           s.jsx("div", { children: "1" }),
                         ],
                       }),
-                      forEachMultiplier(e, t).map((x, T) =>
+                      getMultipliersFor(e, t).map((x, T) =>
                         x[r]
                           ? s.jsxs(
                               "li",
@@ -87030,7 +87101,7 @@ function Xt({ children: t, icon: e, className: r, onClick: i }) {
 }
 function zie({ gameState: t, xy: e }) {
   const r = getBuildingIO(e, "input", br.Capacity, t);
-  return mr(r)
+  return isEmpty(r)
     ? null
     : s.jsxs("fieldset", {
         children: [
@@ -87100,7 +87171,7 @@ function qie({ gameState: t, xy: e }) {
   const i = r.building;
   if (!i) return null;
   const n = Config.Building[i.type].deposit;
-  return !n || Tr(n) === 0
+  return !n || sizeOf(n) === 0
     ? null
     : s.jsxs("fieldset", {
         children: [
@@ -87292,7 +87363,7 @@ function Vg({ gameState: t, xy: e }) {
   const r = (i = t.tiles.get(e)) == null ? void 0 : i.building;
   return r == null ||
     !Ci(mi.BuildingInputMode, t) ||
-    (r.status === "completed" && mr(getBuildingIO(e, "input", br.None, t)) && !_0(r))
+    (r.status === "completed" && isEmpty(getBuildingIO(e, "input", br.None, t)) && !_0(r))
     ? null
     : s.jsxs("fieldset", {
         children: [
@@ -87373,8 +87444,8 @@ function Vg({ gameState: t, xy: e }) {
               s.jsx("input", {
                 value: r.maxInputDistance,
                 onChange: (n) => {
-                  (r.maxInputDistance = We(
-                    xi(n.target.value),
+                  (r.maxInputDistance = clamp(
+                    safeParseInt(n.target.value),
                     1,
                     Number.POSITIVE_INFINITY
                   )),
@@ -87403,7 +87474,7 @@ function Vg({ gameState: t, xy: e }) {
 function P4({ gameState: t, xy: e }) {
   var i, n;
   const r = getBuildingIO(e, "output", br.Capacity, t);
-  return mr(r)
+  return isEmpty(r)
     ? null
     : s.jsxs("fieldset", {
         children: [
@@ -87428,8 +87499,8 @@ function j0({ gameState: t, xy: e }) {
   const r = (i = t.tiles.get(e)) == null ? void 0 : i.building;
   return r == null ||
     !Ci(mi.BuildingProductionPriority, t) ||
-    (mr(getBuildingIO(e, "input", br.None, t)) &&
-      mr(getBuildingIO(e, "output", br.None, t)) &&
+    (isEmpty(getBuildingIO(e, "input", br.None, t)) &&
+      isEmpty(getBuildingIO(e, "output", br.None, t)) &&
       !_0(r))
     ? null
     : s.jsxs("fieldset", {
@@ -87446,7 +87517,7 @@ function j0({ gameState: t, xy: e }) {
               step: "1",
               value: r.productionPriority,
               onChange: (n) => {
-                (r.productionPriority = xi(n.target.value, rn)), Ze();
+                (r.productionPriority = safeParseInt(n.target.value, rn)), Ze();
               },
             }),
           }),
@@ -87505,7 +87576,7 @@ function G0({ gameState: t, xy: e }) {
   const n = () => {
     delete r.building,
       be().sceneManager.enqueue(WorldScene, (o) => o.resetTile(r.tile)),
-      Kh(),
+      clearTransportSourceCache(),
       Ze();
   };
   fn("BuildingPageSellBuilding", n, [e]);
@@ -87533,9 +87604,9 @@ function G0({ gameState: t, xy: e }) {
                 (l = be().sceneManager.getCurrent(WorldScene)) == null ||
                   l.drawSelection(
                     null,
-                    Mt(t)
-                      .getRange(xe(e), o)
-                      .map((u) => Se(u))
+                    getGrid(t)
+                      .getRange(tileToPoint(e), o)
+                      .map((u) => pointToTile(u))
                       .filter((u) => {
                         var c, p;
                         return (
@@ -87556,9 +87627,9 @@ function G0({ gameState: t, xy: e }) {
               },
               onClick: () => {
                 let l = 0;
-                Mt(t)
-                  .getRange(xe(e), o)
-                  .map((u) => t.tiles.get(Se(u)))
+                getGrid(t)
+                  .getRange(tileToPoint(e), o)
+                  .map((u) => t.tiles.get(pointToTile(u)))
                   .forEach((u) => {
                     var c;
                     ((c = u == null ? void 0 : u.building) == null
@@ -87571,9 +87642,9 @@ function G0({ gameState: t, xy: e }) {
                       onConfirm: () => {
                         pc();
                         let u = 0;
-                        Mt(t)
-                          .getRange(xe(e), o)
-                          .map((c) => t.tiles.get(Se(c)))
+                        getGrid(t)
+                          .getRange(tileToPoint(e), o)
+                          .map((c) => t.tiles.get(pointToTile(c)))
                           .forEach((c) => {
                             var p;
                             ((p = c == null ? void 0 : c.building) == null
@@ -87585,7 +87656,7 @@ function G0({ gameState: t, xy: e }) {
                                 f.resetTile(c.tile)
                               ));
                           }),
-                          Kh(),
+                          clearTransportSourceCache(),
                           Ze(),
                           ct(
                             h(d.ApplyToBuildingsToastHTML, {
@@ -87615,7 +87686,7 @@ function S4({ gameState: t, xy: e }) {
   const r = (i = t.tiles.get(e)) == null ? void 0 : i.building;
   return r == null ||
     !Ci(mi.BuildingStockpileMode, t) ||
-    (mr(getBuildingIO(e, "input", br.None, t)) && !_0(r))
+    (isEmpty(getBuildingIO(e, "input", br.None, t)) && !_0(r))
     ? null
     : s.jsxs("fieldset", {
         children: [
@@ -87723,7 +87794,7 @@ function $ie({ building: t, resource: e }) {
                 type: "text",
                 className: "f1 text-right",
                 value: i,
-                onChange: (o) => n(We(xi(o.target.value, 0), 0, r)),
+                onChange: (o) => n(clamp(safeParseInt(o.target.value, 0), 0, r)),
               }),
             ],
           }),
@@ -87744,7 +87815,7 @@ function $ie({ building: t, resource: e }) {
                   safeAdd(
                     t.resources,
                     e,
-                    -We(i, 0, (o = t.resources[e]) != null ? o : 0)
+                    -clamp(i, 0, (o = t.resources[e]) != null ? o : 0)
                   ),
                     Ze(),
                     Le(),
@@ -87772,7 +87843,7 @@ function Xc({ progress: t }) {
     className: "meter",
     children: s.jsx("div", {
       className: "fill",
-      style: { width: `${We(t * 100, 0, 100)}%` },
+      style: { width: `${clamp(t * 100, 0, 100)}%` },
     }),
   });
 }
@@ -87857,7 +87928,7 @@ function qg({ gameState: t, xy: e }) {
                         }),
                         r.multiplier === 1
                           ? null
-                          : forEachMultiplier(e, t).map((l, u) =>
+                          : getMultipliersFor(e, t).map((l, u) =>
                               l.storage
                                 ? s.jsxs(
                                     "li",
@@ -87977,10 +88048,10 @@ function O0({ gameState: t, xy: e }) {
     m = (A, C) => {
       var M;
       const P = new Set();
-      Mt(t)
-        .getRange(xe(e), A)
+      getGrid(t)
+        .getRange(tileToPoint(e), A)
         .forEach((k) => {
-          const w = Se(k),
+          const w = pointToTile(k),
             B = t.tiles.get(w);
           B != null &&
             B.building &&
@@ -88241,7 +88312,7 @@ function O0({ gameState: t, xy: e }) {
                     ze();
                     return;
                   }
-                  const C = Se(A),
+                  const C = pointToTile(A),
                     P = t.tiles.get(C);
                   P && !P.building && P.explored
                     ? (pc(),
@@ -88251,7 +88322,7 @@ function O0({ gameState: t, xy: e }) {
                       Zf.emit(r.tile),
                       Zf.emit(P.tile),
                       Ze(),
-                      Kh(),
+                      clearTransportSourceCache(),
                       clearIntraTickCache(),
                       (w = be().sceneManager.getCurrent(WorldScene)) == null ||
                         w.selectGrid(A))
@@ -88285,7 +88356,7 @@ function W0({ gameState: t, xy: e }) {
   if (i == null) return null;
   const n = getBuildingIO(e, "input", br.None, t),
     a = getBuildingIO(e, "output", br.None, t);
-  if (mr(n) && mr(a) && !_0(i)) return null;
+  if (isEmpty(n) && isEmpty(a) && !_0(i)) return null;
   const o = Tick.current.notProducingReasons.get(e) === Jt.NotEnoughWorkers,
     l = () => {
       (i.capacity = i.capacity > 0 ? 0 : 1), Ze();
@@ -88304,7 +88375,7 @@ function W0({ gameState: t, xy: e }) {
         s.jsxs("ul", {
           className: "tree-view",
           children: [
-            mr(n)
+            isEmpty(n)
               ? null
               : s.jsxs(s.Fragment, {
                   children: [
@@ -88337,10 +88408,10 @@ function W0({ gameState: t, xy: e }) {
                                           className: "f1",
                                           children: [
                                             h(d.ResourceFromBuilding, {
-                                              resource: `${pr(m.amount)} ${EQ(
+                                              resource: `${pr(m.amount)} ${getResourceName(
                                                 m.resource
                                               )}`,
-                                              building: _Q(m.fromXy, t),
+                                              building: getBuildingName(m.fromXy, t),
                                             }),
                                             " ",
                                             "(",
@@ -88397,7 +88468,7 @@ function W0({ gameState: t, xy: e }) {
                                   s.jsx("div", { children: "1" }),
                                 ],
                               }),
-                              forEachMultiplier(e, t).map((m, g) =>
+                              getMultipliersFor(e, t).map((m, g) =>
                                 m.worker
                                   ? s.jsxs(
                                       "li",
@@ -88459,7 +88530,7 @@ function W0({ gameState: t, xy: e }) {
                     }),
                   ],
                 }),
-            mr(a)
+            isEmpty(a)
               ? null
               : s.jsxs(s.Fragment, {
                   children: [
@@ -88564,7 +88635,7 @@ function W0({ gameState: t, xy: e }) {
                                   s.jsx("div", { children: "1" }),
                                 ],
                               }),
-                              forEachMultiplier(e, t).map((m, g) =>
+                              getMultipliersFor(e, t).map((m, g) =>
                                 m.worker
                                   ? s.jsxs(
                                       "li",
@@ -91053,7 +91124,7 @@ function E4() {
                         onChange: (l) =>
                           ae(this, null, function* () {
                             try {
-                              const u = xi(l.target.value, 0);
+                              const u = safeParseInt(l.target.value, 0);
                               (t.color = u),
                                 OnUserChanged.emit(U({}, t)),
                                 OnUserChanged.emit(yield qe.changeColor(u));
@@ -91106,7 +91177,7 @@ function Tne() {
     n = ot((o = r == null ? void 0 : r.attr) != null ? o : 0, Ir.DLC1),
     a = () =>
       wp() +
-        Tr(getGameState().greatPeople) +
+        sizeOf(getGameState().greatPeople) +
         getGameState().greatPeopleChoicesV2.length +
         getGameOptions().greatPeopleChoicesV2.length <=
       0;
@@ -91484,7 +91555,7 @@ function Ane({ xy: t }) {
                 step: "10",
                 value: r * 100 * 100,
                 onChange: (l) => {
-                  i(xi(l.target.value) / 100 / 100);
+                  i(safeParseInt(l.target.value) / 100 / 100);
                 },
               }),
               s.jsx("div", { className: "sep20" }),
@@ -91655,7 +91726,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
     if (!trade) return;
     const targetXy = dne(trade.fromId);
     if (!myXy || !targetXy) return;
-    const path = M4($u(myXy), $u(targetXy));
+    const path = M4(xyToPoint(myXy), xyToPoint(targetXy));
     setTiles(path.map((L) => uL(L)));
   }, [trade, myXy]);
   const m = BJ(tiles, LP(gs)),
@@ -91813,7 +91884,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
         } else ze(), ct(errors.join("<br />"));
       }),
     A = (D) =>
-      We((trade.sellAmount * D) / trade.buyAmount - D, 0, Number.POSITIVE_INFINITY),
+      clamp((trade.sellAmount * D) / trade.buyAmount - D, 0, Number.POSITIVE_INFINITY),
     fillsHaveEnoughStorage = (D) => {
       if (!k()) return !0;
       for (const [I, L] of D) {
@@ -91837,7 +91908,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
       var L, F, W;
       let I = trade.buyAmount;
       if (
-        ((I = We(
+        ((I = clamp(
           I,
           0,
           (W =
@@ -91850,8 +91921,8 @@ function D4({ tradeId: tradeId, xy: xy }) {
         trade.sellAmount > trade.buyAmount)
       ) {
         const H = getStorageFor(D, gs),
-          $ = We(H.total - H.used, 0, Number.POSITIVE_INFINITY);
-        I = We(I, 0, ($ * trade.buyAmount) / (trade.sellAmount - trade.buyAmount));
+          $ = clamp(H.total - H.used, 0, Number.POSITIVE_INFINITY);
+        I = clamp(I, 0, ($ * trade.buyAmount) / (trade.sellAmount - trade.buyAmount));
       }
       return I;
     },
@@ -92015,7 +92086,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                                 onChange: ($) => {
                                   setFills(
                                     (X) => (
-                                      X.set(D, n1($.target.value, 0)),
+                                      X.set(D, safeParseFloat($.target.value, 0)),
                                       new Map(X)
                                     )
                                   );
@@ -92469,7 +92540,7 @@ class Mne extends Pi {
     b(this, "update", () => {
       if (this.targetZoom) {
         const r = this.screenToWorld(this.cursorPos),
-          i = dL(
+          i = lerp(
             this.zoom,
             this.targetZoom,
             Math.min(0.01 * this.app.ticker.deltaMS, 1 / 3)
@@ -92501,7 +92572,7 @@ class Mne extends Pi {
       switch (this.wheelMode) {
         case 0: {
           (this.cursorPos = { x: r.x, y: r.y }),
-            (this.targetZoom = We(
+            (this.targetZoom = clamp(
               this.zoom - r.deltaY * 0.001 * i.scrollSensitivity * this.zoom,
               this.minZoom,
               this.maxZoom
@@ -92556,7 +92627,7 @@ class Mne extends Pi {
     if (!i) return;
     const n = _u(i.x - r.x, 2) + _u(i.y - r.y, 2);
     (i.moved || n > kne) && (i.moved = !0);
-    const a = Tr(this.pressedPointers);
+    const a = sizeOf(this.pressedPointers);
     if (a === 1)
       i.moved &&
         ((this.targetOrigin = null),
@@ -92616,7 +92687,7 @@ class Mne extends Pi {
     return this.scale.x;
   }
   set zoom(r) {
-    const i = We(r, this.minZoom, this.maxZoom),
+    const i = clamp(r, this.minZoom, this.maxZoom),
       n = this.center;
     this.scale.set(i, i), (this.center = n);
   }
@@ -92651,8 +92722,8 @@ class Mne extends Pi {
       a = this._worldWidth + this._margin - this.screenWidth / this.scale.x,
       o = -this._margin,
       l = this._worldHeight + this._margin - this.screenHeight / this.scale.y,
-      u = a < 0 ? (n + a) / 2 : We(r.x, n, a),
-      c = l < 0 ? (o + l) / 2 : We(r.y, o, l);
+      u = a < 0 ? (n + a) / 2 : clamp(r.x, n, a),
+      c = l < 0 ? (o + l) / 2 : clamp(r.y, o, l);
     return i ? ((i.x = u), (i.y = c), i) : { x: u, y: c };
   }
   onResize(r, i) {
@@ -92834,7 +92905,7 @@ class ap extends H0 {
       this.viewport.setZoomRange(a, 1),
       (this._landTiles = this.viewport.addChild(new Pi())),
       forEach(k0, (l) => {
-        const u = $u(l),
+        const u = xyToPoint(l),
           c = this._landTiles.addChild(
             new Nr(this.context.textures.Misc_100x100)
           );
@@ -92871,7 +92942,7 @@ class ap extends H0 {
     if (
       (this._idToTradeCount.clear(),
       getTrades().forEach((i) => {
-        hr(this._idToTradeCount, i.fromId, 1);
+        mapSafeAdd(this._idToTradeCount, i.fromId, 1);
       }),
       this.onTradeChanged(getTrades()),
       this._listeners.push(OnTradeChanged.on(this.onTradeChanged.bind(this))),
@@ -92882,7 +92953,7 @@ class ap extends H0 {
     }
     const r = Lc();
     if (r) {
-      const i = $u(r);
+      const i = xyToPoint(r);
       this.selectTile(i.x, i.y), Pd || (Pd = this.tileToPosition(i));
     } else
       this.selectTile(100, 50),
@@ -92893,7 +92964,7 @@ class ap extends H0 {
     const i = Array.from(this._idToTradeCount.keys());
     this._idToTradeCount.clear(),
       r.forEach((n) => {
-        hr(this._idToTradeCount, n.fromId, 1), this.markDirtyById(n.fromId);
+        mapSafeAdd(this._idToTradeCount, n.fromId, 1), this.markDirtyById(n.fromId);
       }),
       i.forEach((n) => {
         this._idToTradeCount.has(n) || this.markDirtyById(n);
@@ -92912,7 +92983,7 @@ class ap extends H0 {
     this.selectTile(n, a);
   }
   lookAt(r) {
-    const i = $u(r),
+    const i = xyToPoint(r),
       n = lt * i.x,
       a = lt * i.y;
     (this.viewport.center = { x: n + lt / 2, y: a + lt / 2 }),
@@ -92968,7 +93039,7 @@ class ap extends H0 {
       l = Xl(),
       u = `${r},${i}`;
     if (o && l.has(u) && u !== o) {
-      const c = M4($u(o), { x: r, y: i });
+      const c = M4(xyToPoint(o), { x: r, y: i });
       this.drawPath(c);
     } else this.clearPath();
     be().routeTo(wne, { xy: u });
@@ -92978,7 +93049,7 @@ class ap extends H0 {
     (o = this._tiles.get(r)) == null || o.destroy({ children: !0 });
     const n = this._idToTradeCount.get(i.userId),
       a = this._landTiles.addChild(
-        new Ene($u(r), i, n != null ? n : 0, this.context)
+        new Ene(xyToPoint(r), i, n != null ? n : 0, this.context)
       );
     this._tiles.set(r, a), this._idToTile.set(i.userId, r);
   }
@@ -93248,7 +93319,7 @@ function Nne() {
                   step: "1",
                   value: t.defaultBuildingLevel,
                   onChange: (e) => {
-                    (t.defaultBuildingLevel = We(xi(e.target.value, 1), 1, 50)),
+                    (t.defaultBuildingLevel = clamp(safeParseInt(e.target.value, 1), 1, 50)),
                       ut(t);
                   },
                 }),
@@ -93274,7 +93345,7 @@ function Nne() {
                   step: "1",
                   value: t.defaultProductionPriority,
                   onChange: (e) => {
-                    (t.defaultProductionPriority = xi(e.target.value, rn)),
+                    (t.defaultProductionPriority = safeParseInt(e.target.value, rn)),
                       ut(t);
                   },
                 }),
@@ -93300,7 +93371,7 @@ function Nne() {
                   step: "1",
                   value: t.defaultConstructionPriority,
                   onChange: (e) => {
-                    (t.defaultConstructionPriority = xi(e.target.value, rn)),
+                    (t.defaultConstructionPriority = safeParseInt(e.target.value, rn)),
                       ut(t);
                   },
                 }),
@@ -93357,7 +93428,7 @@ function Nne() {
                   step: "5",
                   value: t.defaultStockpileMax,
                   onChange: (e) => {
-                    (t.defaultStockpileMax = xi(e.target.value, 1)), ut(t);
+                    (t.defaultStockpileMax = safeParseInt(e.target.value, 1)), ut(t);
                   },
                 }),
                 s.jsx("div", { className: "sep10" }),
@@ -93640,7 +93711,7 @@ function Nne() {
                 s.jsx("button", {
                   className: "jcc w100 mt10",
                   onClick: () => {
-                    Le(), Kh();
+                    Le(), clearTransportSourceCache();
                   },
                   children: h(d.ClearTransportPlanCache),
                 }),
@@ -93655,7 +93726,7 @@ function Nne() {
                 }),
               ],
             }),
-            Tr(t.buildingDefaults) > 0
+            sizeOf(t.buildingDefaults) > 0
               ? s.jsxs("fieldset", {
                   children: [
                     s.jsx("legend", { children: h(d.BuildingDefaults) }),
@@ -93681,9 +93752,9 @@ function Nne() {
                                     s.jsx("td", {
                                       children: s.jsx(Kt, {
                                         content: h(d.BuildingDefaultsCount, {
-                                          count: Tr(r),
+                                          count: sizeOf(r),
                                         }),
-                                        children: Tr(r),
+                                        children: sizeOf(r),
                                       }),
                                     }),
                                     s.jsx("td", {
@@ -94407,7 +94478,7 @@ const Wne = gp(One);
 function N4(t) {
   const e = Wne({
     luminosity: "light",
-    count: reduceOf(Config.Building, (r, i) => r + (yr(i) ? 0 : 1), 0) + Tr(Config.Resource),
+    count: reduceOf(Config.Building, (r, i) => r + (yr(i) ? 0 : 1), 0) + sizeOf(Config.Resource),
   });
   forEach(Config.Building, (r, i) => {
     yr(r) ? delete t.buildingColors[r] : (t.buildingColors[r] = e.pop());
@@ -94481,7 +94552,7 @@ function Une() {
                             className: "ml10",
                             value: t.fontSizeScale,
                             onChange: (e) => {
-                              (t.fontSizeScale = n1(e.target.value, 1)),
+                              (t.fontSizeScale = safeParseFloat(e.target.value, 1)),
                                 MS(be().sceneManager.getContext().app, t),
                                 ut(t);
                             },
@@ -94511,7 +94582,7 @@ function Une() {
                             className: "ml10",
                             value: t.fontSizeScaleMobile,
                             onChange: (e) => {
-                              (t.fontSizeScaleMobile = n1(e.target.value, 1)),
+                              (t.fontSizeScaleMobile = safeParseFloat(e.target.value, 1)),
                                 MS(be().sceneManager.getContext().app, t),
                                 ut(t);
                             },
@@ -94552,7 +94623,7 @@ function Une() {
                     className: "ml10",
                     value: t.sidePanelWidth,
                     onChange: (e) => {
-                      (t.sidePanelWidth = xi(e.target.value, 400)), ut(t);
+                      (t.sidePanelWidth = safeParseInt(e.target.value, 400)), ut(t);
                     },
                     children: [
                       s.jsx("option", { value: 400, children: "400px" }),
@@ -94573,7 +94644,7 @@ function Une() {
                     className: "ml10",
                     value: t.sidePanelWidthMobile,
                     onChange: (e) => {
-                      (t.sidePanelWidthMobile = xi(e.target.value, 400)), ut(t);
+                      (t.sidePanelWidthMobile = safeParseInt(e.target.value, 400)), ut(t);
                     },
                     children: [
                       s.jsx("option", { value: 400, children: "400px" }),
@@ -94628,8 +94699,8 @@ function Une() {
                     style: { width: 60, textAlign: "right" },
                     value: t.scrollSensitivity,
                     onChange: (e) => {
-                      (t.scrollSensitivity = We(
-                        n1(e.target.value, 1),
+                      (t.scrollSensitivity = clamp(
+                        safeParseFloat(e.target.value, 1),
                         0.01,
                         100
                       )),
@@ -95238,7 +95309,7 @@ function An() {
                         children: h(d.ResearchMenu),
                       }),
                     }),
-                    Tr(Tick.current.playerTradeBuildings) <= 0
+                    sizeOf(Tick.current.playerTradeBuildings) <= 0
                       ? null
                       : s.jsx("div", {
                           className: "menu-popover-item",
@@ -95597,7 +95668,7 @@ function aae({ definition: t, gameState: e }) {
                     className: "text-desc",
                     children: h(d.ConstructionCost, {
                       cost: mapOf(
-                        Ns({ type: a, level: 0 }),
+                        getBuildingCost({ type: a, level: 0 }),
                         (l, u) => `${Config.Resource[l].name()} x${pr(u)}`
                       ).join(", "),
                     }),
@@ -96230,7 +96301,7 @@ class op extends H0 {
         ? this._layout[o.column].push(a)
         : (this._layout[o.column] = [a]);
     });
-    const n = Tr(this._layout) * ix;
+    const n = sizeOf(this._layout) * ix;
     this.viewport.setWorldSize(n, nx),
       (this.viewport.zoom = Math.max(
         i.screen.width / n,
@@ -96456,7 +96527,7 @@ class op extends H0 {
 function pae({ open: t }) {
   var o, l, u;
   const e = nO().happiness,
-    { workersBeforeHappiness: r, workersAfterHappiness: i } = Pu(gi()),
+    { workersBeforeHappiness: r, workersAfterHappiness: i } = getScienceFromWorkers(gi()),
     n = gi(),
     a =
       (u =
@@ -96794,9 +96865,9 @@ function mae() {
           ) || jA() === a
         : !0;
     },
-    p = We(
+    p = clamp(
       Math.floor(
-        We(u - n.claimedGreatPeople, 0, Number.POSITIVE_INFINITY) / 50
+        clamp(u - n.claimedGreatPeople, 0, Number.POSITIVE_INFINITY) / 50
       ),
       1,
       Number.POSITIVE_INFINITY
@@ -96873,7 +96944,7 @@ function mae() {
                             total: u,
                             claimed: n.claimedGreatPeople,
                           }),
-                          children: We(
+                          children: clamp(
                             u - n.claimedGreatPeople,
                             0,
                             Number.POSITIVE_INFINITY
@@ -96915,7 +96986,7 @@ function mae() {
                 s.jsx("select", {
                   value: f,
                   onChange: (y) => {
-                    m(We(xi(y.target.value, 1), 1, p));
+                    m(clamp(safeParseInt(y.target.value, 1), 1, p));
                   },
                   children: mL(1, p + 1).map((y) =>
                     s.jsx("option", { value: y, children: y }, y)
@@ -97029,7 +97100,7 @@ function mae() {
                   );
                 }),
               }),
-              mr(Config.City[a].uniqueMultipliers)
+              isEmpty(Config.City[a].uniqueMultipliers)
                 ? null
                 : s.jsxs(s.Fragment, {
                     children: [
@@ -97181,7 +97252,7 @@ function mae() {
                         return;
                       }
                     }
-                    const y = We(
+                    const y = clamp(
                       u - n.claimedGreatPeople,
                       0,
                       Number.POSITIVE_INFINITY
@@ -97315,7 +97386,7 @@ function G4() {
         step: "1",
         value: e.speedUp,
         onChange: (l) => {
-          (e.speedUp = We(Number.parseInt(l.target.value, 10), 1, r)), Ze();
+          (e.speedUp = clamp(Number.parseInt(l.target.value, 10), 1, r)), Ze();
         },
       }),
       s.jsx("div", { className: "text-center text-strong" }),
@@ -97466,7 +97537,7 @@ function O4({ gameState: t, xy: e }) {
     scienceFromWorkers: u,
     sciencePerBusyWorker: c,
     sciencePerIdleWorker: p,
-  } = Pu();
+  } = getScienceFromWorkers();
   return s.jsxs(s.Fragment, {
     children: [
       s.jsx("li", {
@@ -97593,7 +97664,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
       scienceFromWorkers: c,
       sciencePerBusyWorker: p,
       sciencePerIdleWorker: f,
-    } = Pu(),
+    } = getScienceFromWorkers(),
     m = vk(),
     g = Sr(t),
     v = ki(),
@@ -98015,7 +98086,7 @@ function yae({ gameState: t, options: e }) {
                     }),
                     s.jsx("div", {
                       className: "text-strong",
-                      children: Tr(Dg(e.greatPeople, (r, i) => i.level > 0)),
+                      children: sizeOf(Dg(e.greatPeople, (r, i) => i.level > 0)),
                     }),
                   ],
                 }),
@@ -98151,7 +98222,7 @@ function bae({ gameState: t }) {
               s.jsx("div", { className: "f1", children: h(d.WondersBuilt) }),
               s.jsx("div", {
                 className: "text-strong",
-                children: $h(getXyBuildings(t), (e, r, i) => e + (isWorldWonder(i.type) ? 1 : 0), 0),
+                children: mReduceOf(getXyBuildings(t), (e, r, i) => e + (isWorldWonder(i.type) ? 1 : 0), 0),
               }),
             ],
           }),
@@ -98400,7 +98471,7 @@ function Jk({
             (!i() && o === 0) || (i() && r.level === o)
               ? (u = s.jsx(Te, {
                   disabled: !i(),
-                  content: mapOf(Ns(r), (f, m) =>
+                  content: mapOf(getBuildingCost(r), (f, m) =>
                     s.jsx(
                       Zk,
                       {
@@ -99044,7 +99115,7 @@ function wae({ gameState: t, xy: e }) {
         let p = 0;
         for (const g of o) {
           if (p + g.amount > u) {
-            c[g.id] = We(u - p, 0, Number.POSITIVE_INFINITY);
+            c[g.id] = clamp(u - p, 0, Number.POSITIVE_INFINITY);
             break;
           }
           (c[g.id] = g.amount), (p += g.amount);
@@ -99056,7 +99127,7 @@ function wae({ gameState: t, xy: e }) {
             const y = LL(g, v, l, t);
             console.assert(y.amount === v);
           }),
-          Tr(m) > 0)
+          sizeOf(m) > 0)
         ) {
           Fg(),
             ct(
@@ -99294,7 +99365,7 @@ function AddTradeComponent({ gameState: gameState, xy: xy }) {
               type: "text",
               value: trade.sellAmount,
               onChange: (T) =>
-                setTrade(Ie(U({}, trade), { sellAmount: xi(T.target.value) })),
+                setTrade(Ie(U({}, trade), { sellAmount: safeParseInt(T.target.value) })),
             }),
           ],
         }),
@@ -99364,7 +99435,7 @@ function AddTradeComponent({ gameState: gameState, xy: xy }) {
               type: "text",
               value: trade.buyAmount,
               onChange: (T) =>
-                setTrade(Ie(U({}, trade), { buyAmount: xi(T.target.value) })),
+                setTrade(Ie(U({}, trade), { buyAmount: safeParseInt(T.target.value) })),
             }),
           ],
         }),
@@ -99388,7 +99459,7 @@ function AddTradeComponent({ gameState: gameState, xy: xy }) {
                   onClick: () =>
                     setTrade(
                       Ie(U({}, trade), {
-                        buyAmount: We(
+                        buyAmount: clamp(
                           Math.round(buyAmountRange.amount * (1 + T)),
                           buyAmountRange.min,
                           buyAmountRange.max
@@ -99685,7 +99756,7 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                     size: 1,
                     value: f,
                     onChange: (A) => {
-                      (savedMaxTradeAmountFilter = xi(A.target.value, 0)), m(savedMaxTradeAmountFilter);
+                      (savedMaxTradeAmountFilter = safeParseInt(A.target.value, 0)), m(savedMaxTradeAmountFilter);
                     },
                     onClick: (A) => {
                       var C;
@@ -99968,7 +100039,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
     ),
     o = gi(),
     l = reduceOf(t.resourceImports, (f, m, g) => (m === e ? f : f + g.perCycle), 0),
-    u = We(i - l, 0, i),
+    u = clamp(i - l, 0, i),
     c = n.perCycle >= 0 && n.perCycle <= u;
   return s.jsxs("div", {
     className: "window",
@@ -100016,7 +100087,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
                 type: "text",
                 value: n.perCycle,
                 onChange: (f) => {
-                  a(Ie(U({}, n), { perCycle: xi(f.target.value) }));
+                  a(Ie(U({}, n), { perCycle: safeParseInt(f.target.value) }));
                 },
               }),
             ],
@@ -100070,7 +100141,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
                 type: "text",
                 value: n.cap,
                 onChange: (f) => {
-                  a(Ie(U({}, n), { cap: xi(f.target.value) }));
+                  a(Ie(U({}, n), { cap: safeParseInt(f.target.value) }));
                 },
               }),
             ],
@@ -100545,7 +100616,7 @@ function H4({ gameState: gameState, xy: xy }) {
                           s.jsx("div", { children: "1" }),
                         ],
                       }),
-                      forEachMultiplier(xy, gameState).map((f, m) =>
+                      getMultipliersFor(xy, gameState).map((f, m) =>
                         f.output
                           ? s.jsxs(
                               "li",
@@ -108014,10 +108085,10 @@ function iue({ gameState: t, xy: e }) {
   var p, f, m, g, v;
   const r = (p = t.tiles.get(e)) == null ? void 0 : p.building;
   if (!r) return null;
-  const i = $h(Tick.current.resourceValues, (y, x, T) => y + T, 0),
-    n = $h(Tick.current.buildingValues, (y, x, T) => y + T, 0),
-    a = RQ(),
-    { scienceFromWorkers: o } = Pu(),
+  const i = mReduceOf(Tick.current.resourceValues, (y, x, T) => y + T, 0),
+    n = mReduceOf(Tick.current.buildingValues, (y, x, T) => y + T, 0),
+    a = getScienceFromBuildings(),
+    { scienceFromWorkers: o } = getScienceFromWorkers(),
     l = vk(),
     u = o + a,
     c = getTransportStat(t);
@@ -109106,7 +109177,7 @@ function ns({ gameState: t, xy: e }) {
                 ],
               }),
               s.jsx("div", { className: "separator" }),
-              Bt(Ns({ type: r.type, level: r.level }), (n, a) =>
+              Bt(getBuildingCost({ type: r.type, level: r.level }), (n, a) =>
                 s.jsxs(
                   "div",
                   {
@@ -109456,7 +109527,7 @@ function yue({ gameState: t, xy: e }) {
   if (!r) return null;
   const { base: i, multiplier: n, total: a } = Pk(r, e, t),
     { cost: o, percent: l, secondsLeft: u } = rj(e, t),
-    c = Tr(o) - r.suspendedInput.size,
+    c = sizeOf(o) - r.suspendedInput.size,
     p = c > 0 ? a / c : 0;
   return s.jsxs("fieldset", {
     children: [
@@ -109641,7 +109712,7 @@ function yue({ gameState: t, xy: e }) {
                         g
                       )
                     ),
-                    forEachMultiplier(e, t).map((m, g) =>
+                    getMultipliersFor(e, t).map((m, g) =>
                       m.worker
                         ? s.jsxs(
                             "li",
@@ -109814,7 +109885,7 @@ function bue({ tile: t }) {
                       step: "1",
                       value: e.constructionPriority,
                       onChange: (l) => {
-                        (e.constructionPriority = xi(l.target.value, rn)), Ze();
+                        (e.constructionPriority = safeParseInt(l.target.value, rn)), Ze();
                       },
                     }),
                     s.jsx("div", { className: "sep15" }),
@@ -109937,7 +110008,7 @@ function Cue({ tile: t }) {
         className: "window-body",
         style: { display: "flex", flexDirection: "column" },
         children: [
-          Tr(t.deposit) > 0
+          sizeOf(t.deposit) > 0
             ? s.jsxs("div", {
                 className: "row inset-shallow-2 mb5",
                 style: { padding: "0 5px" },
@@ -109958,7 +110029,7 @@ function Cue({ tile: t }) {
                             x.explored && x.deposit[m] && v.push(T);
                           }),
                             (y = be().sceneManager.getCurrent(WorldScene)) == null ||
-                              y.drawSelection(xe(t.tile), v);
+                              y.drawSelection(tileToPoint(t.tile), v);
                         },
                         children: Config.Resource[m].name(),
                       },
@@ -110024,7 +110095,7 @@ function Cue({ tile: t }) {
             data: keysOf(unlockedBuildings(e)).filter((m) => {
               var y, x, T, A;
               if (
-                ((y = Tr(u.get(m))) != null ? y : 0) >=
+                ((y = sizeOf(u.get(m))) != null ? y : 0) >=
                   ((x = Config.Building[m].max) != null
                     ? x
                     : Number.POSITIVE_INFINITY) ||
@@ -110072,7 +110143,7 @@ function Cue({ tile: t }) {
             renderRow: (m) => {
               var y, x, T;
               const g = Config.Building[m],
-                v = Ns({ type: m, level: 0 });
+                v = getBuildingCost({ type: m, level: 0 });
               return s.jsxs(
                 "tr",
                 {
@@ -110108,7 +110179,7 @@ function Cue({ tile: t }) {
                                     : k.type) === m && A.push(M);
                                 }),
                                   (C = be().sceneManager.getCurrent(WorldScene)) ==
-                                    null || C.drawSelection(xe(t.tile), A);
+                                    null || C.drawSelection(tileToPoint(t.tile), A);
                               },
                               children: numberToRoman(
                                 (T = Config.BuildingTier[m]) != null ? T : 1
@@ -110130,7 +110201,7 @@ function Cue({ tile: t }) {
                                   ? null
                                   : s.jsx("span", {
                                       className: "text-desc text-small ml5",
-                                      children: Tr(f.get(m)),
+                                      children: sizeOf(f.get(m)),
                                     }),
                               ],
                             }),
@@ -110152,7 +110223,7 @@ function Cue({ tile: t }) {
                           children: s.jsxs("div", {
                             className: "row text-small text-desc",
                             children: [
-                              mr(v)
+                              isEmpty(v)
                                 ? null
                                 : s.jsx("div", {
                                     className: "m-icon small mr2 fs",
@@ -110181,7 +110252,7 @@ function Cue({ tile: t }) {
                             s.jsxs("div", {
                               className: "row text-small text-desc",
                               children: [
-                                mr(g.input)
+                                isEmpty(g.input)
                                   ? null
                                   : s.jsx("div", {
                                       className: "m-icon small mr2 fs",
@@ -110208,7 +110279,7 @@ function Cue({ tile: t }) {
                             s.jsxs("div", {
                               className: "row text-small text-desc",
                               children: [
-                                mr(g.output)
+                                isEmpty(g.output)
                                   ? null
                                   : s.jsx("div", {
                                       className: "m-icon small mr2 fs",
@@ -110292,10 +110363,10 @@ function Sue({ xy: t, gameState: e }) {
         safeAdd(l.resources, "Explorer", -1),
       Rc(t, e),
       be().sceneManager.enqueue(WorldScene, (c) => c.revealTile(t)),
-      Mt(e)
-        .getRange(xe(t), getExplorerRange(e))
+      getGrid(e)
+        .getRange(tileToPoint(t), getExplorerRange(e))
         .forEach((c) => {
-          const p = Se(c);
+          const p = pointToTile(c);
           Rc(p, e), be().sceneManager.enqueue(WorldScene, (f) => f.revealTile(p));
         });
   };
@@ -110427,11 +110498,11 @@ class eI extends Pi {
     b(this, "_xy");
     b(this, "_floaterValue", 0);
     b(this, "_aabb");
-    (this._world = r), (this._grid = i), (this._xy = Se(this._grid));
+    (this._world = r), (this._grid = i), (this._xy = pointToTile(this._grid));
     const n = getGameState();
     (this._tile = n.tiles.get(this._xy)),
       console.assert(this._tile, `Expect tile ${this._xy} to exist!`);
-    const a = Mt(n);
+    const a = getGrid(n);
     (this.position = a.gridToPosition(this._grid)),
       (this._aabb = new dt(
         this.position.x - 2 * a.size,
@@ -110590,8 +110661,8 @@ class eI extends Pi {
       Tick.current.notProducingReasons.has(this._xy)
         ? ((this._spinner.alpha -= r), (this._building.alpha -= r))
         : ((this._spinner.alpha += r), (this._building.alpha += r)),
-      (this._spinner.alpha = We(this._spinner.alpha, 0, 0.5)),
-      (this._building.alpha = We(
+      (this._spinner.alpha = clamp(this._spinner.alpha, 0, 0.5)),
+      (this._building.alpha = clamp(
         this._building.alpha,
         getGameOptions().themeColors.InactiveBuildingAlpha,
         1
@@ -110731,7 +110802,7 @@ class eI extends Pi {
       i = 0.25;
     this._tile.building && ((r = lu({ x: 0, y: 28 })), (i = 0.15));
     const n = i * 100;
-    let a = Tr(this._tile.deposit);
+    let a = sizeOf(this._tile.deposit);
     const o = Tick.current.powerGrid.has(this._tile.tile);
     o && ++a;
     let l = 0;
@@ -110741,7 +110812,7 @@ class eI extends Pi {
         return;
       }
       (u.visible = !0),
-        u.position.copyFrom(r.add({ x: _Z(n, 4, a, l++), y: 0 })),
+        u.position.copyFrom(r.add({ x: layoutCenter(n, 4, a, l++), y: 0 })),
         u.scale.set(i);
     });
   }
@@ -110968,7 +111039,7 @@ class WorldScene extends H0 {
     b(this, "_rect", new dt(0, 0, 9.75, 9.75));
     b(this, "_pos", { x: 0, y: 0 });
     const { app: i, textures: n } = r,
-      a = Mt(getGameState()).maxPosition();
+      a = getGrid(getGameState()).maxPosition();
     (this._width = a.x),
       (this._height = a.y),
       this.viewport.setWorldSize(this._width, this._height, MARGIN),
@@ -110997,9 +111068,9 @@ class WorldScene extends H0 {
           alignment: 0.5,
         })),
       (this._graphics.alpha = 0.1),
-      kue(Mt(getGameState()), this._graphics),
-      Mt(getGameState()).forEach((o) => {
-        const l = Se(o);
+      kue(getGrid(getGameState()), this._graphics),
+      getGrid(getGameState()).forEach((o) => {
+        const l = pointToTile(o);
         this._tiles.set(l, this.viewport.addChild(new eI(this, o)));
       }),
       (this.tooltipPool = new rO(this.viewport.addChild(new Pi()))),
@@ -111018,7 +111089,7 @@ class WorldScene extends H0 {
   onEnable() {
     this.restoreViewport();
     const r = findSpecialBuilding("Headquarter", getGameState());
-    r && this.selectGrid(xe(r.tile)), super.onEnable();
+    r && this.selectGrid(tileToPoint(r.tile)), super.onEnable();
   }
   restoreViewport() {
     viewportZoom && (this.viewport.zoom = viewportZoom),
@@ -111035,7 +111106,7 @@ class WorldScene extends H0 {
   }
   onClicked(r) {
     const i = getGameState(),
-      n = Mt(i).positionToGrid(this.viewport.screenToWorld(r));
+      n = getGrid(i).positionToGrid(this.viewport.screenToWorld(r));
     if (this._hijackSelectGridResolve) {
       this._hijackSelectGridResolve(n), (this._hijackSelectGridResolve = null);
       return;
@@ -111056,7 +111127,7 @@ class WorldScene extends H0 {
     if (this._selectedXy === null) return;
     const n = (l = i.tiles.get(this._selectedXy)) == null ? void 0 : l.building;
     if (!n) return;
-    const a = Se(r),
+    const a = pointToTile(r),
       o = i.tiles.get(a);
     if (o) {
       if (!(o != null && o.explored)) {
@@ -111102,7 +111173,7 @@ class WorldScene extends H0 {
   lookAtTile(r, i) {
     var a;
     (a = this.cameraMovement) == null || a.stop();
-    const n = this.viewport.clampCenter(Mt(getGameState()).xyToPosition(r));
+    const n = this.viewport.clampCenter(getGrid(getGameState()).xyToPosition(r));
     (this.cameraMovement = new wue(
       () => viewportCenter,
       (o) => {
@@ -111117,12 +111188,12 @@ class WorldScene extends H0 {
       lu(n).subtractSelf(viewportCenter).length() / 2e3,
       aa.InOutSine
     ).start()),
-      i === 0 ? this.drawSelection(null, [r]) : this.selectGrid(xe(r));
+      i === 0 ? this.drawSelection(null, [r]) : this.selectGrid(tileToPoint(r));
   }
   drawSelection(selected, highlights) {
     if (!this._selectedGraphics || isNullOrUndefined(this._selectedXy)) return;
     this._selectedGraphics.clear(),
-      selected != null || (selected = xe(this._selectedXy)),
+      selected != null || (selected = tileToPoint(this._selectedXy)),
       this._selectedGraphics.lineStyle({
         color: 16777215,
         width: 2,
@@ -111130,21 +111201,21 @@ class WorldScene extends H0 {
         join: Yr.ROUND,
         alignment: 0.5,
       });
-    const n = Mt(getGameState());
+    const n = getGrid(getGameState());
     vx(n, selected, this._selectedGraphics),
       highlights.length > 0
         ? highlights.forEach((a) => {
             this._selectedGraphics.lineStyle({ width: 0 }),
               this._selectedGraphics.beginFill(16777215, 0.2, !0),
-              vx(n, xe(a), this._selectedGraphics),
+              vx(n, tileToPoint(a), this._selectedGraphics),
               this._selectedGraphics.endFill();
           })
         : this.drawBuildingDecors(getGameState());
   }
   selectGrid(r) {
     const i = getGameState();
-    if (!Mt(i).isValid(r)) return;
-    const n = Se(r);
+    if (!getGrid(i).isValid(r)) return;
+    const n = pointToTile(r);
     (this._selectedXy = n),
       be().routeTo(eT, { xy: n }),
       this.drawSelection(r, []),
@@ -111156,11 +111227,11 @@ class WorldScene extends H0 {
     const n = r.tiles.get(i);
     if (!(n != null && n.explored)) return;
     const a = n == null ? void 0 : n.building,
-      o = xe(i);
+      o = tileToPoint(i);
     if (a)
       switch (a.type) {
         case "MausoleumAtHalicarnassus": {
-          const l = Mt(r).gridToPosition(o);
+          const l = getGrid(r).gridToPosition(o);
           this._selectedGraphics.lineStyle({ width: 0 }),
             this._selectedGraphics.beginFill(16777215, 0.2, !0),
             this._selectedGraphics.drawCircle(l.x, l.y, TILE_SIZE * 4),
@@ -111238,8 +111309,8 @@ class WorldScene extends H0 {
     r.transportationV2.forEach((a) => {
       var c;
       if (a.fromXy !== i && a.toXy !== i) return;
-      const o = xe(a.fromXy),
-        l = xe(a.toXy),
+      const o = tileToPoint(a.fromXy),
+        l = tileToPoint(a.toXy),
         u = [a.resource, (o.y - l.y) / (o.x - l.x)].join(",");
       n[u] ||
         ((n[u] = !0),
@@ -111258,7 +111329,7 @@ class WorldScene extends H0 {
     });
   }
   highlightRange(r, i) {
-    const n = Mt(getGameState());
+    const n = getGrid(getGameState());
     n.getRange(r, i).forEach((a) => {
       this._selectedGraphics.lineStyle({ width: 0 }),
         this._selectedGraphics.beginFill(16777215, 0.2, !0),
@@ -111273,7 +111344,7 @@ class WorldScene extends H0 {
   resetTile(r) {
     var i;
     (i = this._tiles.get(r)) == null || i.destroy({ children: !0 }),
-      this._tiles.set(r, this.viewport.addChild(new eI(this, xe(r))));
+      this._tiles.set(r, this.viewport.addChild(new eI(this, tileToPoint(r))));
   }
   revealTile(r) {
     var i;
@@ -111324,10 +111395,10 @@ class WorldScene extends H0 {
           const c = this._transport.get(o.id);
           (c.position = this._pos),
             o.ticksSpent >= o.ticksRequired - 1 &&
-              (c.alpha = dL(
+              (c.alpha = lerp(
                 options.themeColors.TransportIndicatorAlpha,
                 0,
-                We(i - 0.5, 0, 0.5) * 2
+                clamp(i - 0.5, 0, 0.5) * 2
               ));
         }
         this._ticked.add(o.id);
@@ -111339,8 +111410,8 @@ class WorldScene extends H0 {
   cameraPan(r, i) {
     const { app: n } = this.context;
     this._selectedXy &&
-      (this.viewport.center = Mt(getGameState()).xyToPosition(this._selectedXy));
-    const a = We(
+      (this.viewport.center = getGrid(getGameState()).xyToPosition(this._selectedXy));
+    const a = clamp(
       r,
       Math.max(n.screen.width / this._width, n.screen.height / this._height),
       2
@@ -111358,7 +111429,7 @@ function Bue(t) {
     be().sceneManager.enqueue(WorldScene, (u) => u.revealTile(l));
   const r = (n = e.tiles.get(t)) == null ? void 0 : n.building;
   if (!r) return;
-  const i = Mt(e);
+  const i = getGrid(e);
   switch (r.type) {
     case "HatshepsutTemple": {
       e.tiles.forEach((l, u) => {
@@ -111407,10 +111478,10 @@ function Bue(t) {
     }
     case "StatueOfZeus": {
       let l = [];
-      for (const u of i.getNeighbors(xe(t))) {
+      for (const u of i.getNeighbors(tileToPoint(t))) {
         l.length <= 0 && (l = shuffle(CJ(e)));
-        const c = Se(u);
-        if (mr(e.tiles.get(c).deposit)) {
+        const c = pointToTile(u);
+        if (isEmpty(e.tiles.get(c).deposit)) {
           const p = l.pop();
           vb(c, p, !0, e);
         }
@@ -111431,7 +111502,7 @@ function Bue(t) {
       let l = 1;
       const u = Yn();
       getGameOptions().porcelainTowerMaxPickPerRoll &&
-        (l = We(
+        (l = clamp(
           Math.floor(e.claimedGreatPeople / 50),
           1,
           Number.POSITIVE_INFINITY
@@ -111450,7 +111521,7 @@ function Bue(t) {
     case "GreatMosqueOfSamarra": {
       const l = [];
       e.tiles.forEach((c, p) => {
-        !c.explored && Tr(c.deposit) > 0 && l.push(p);
+        !c.explored && sizeOf(c.deposit) > 0 && l.push(p);
       }),
         shuffle(l);
       let u = 0;
@@ -111602,12 +111673,12 @@ function Due({ xy: t, offline: e }) {
     n = (u = r.tiles.get(t)) == null ? void 0 : u.building;
   if (!n) return;
   const a = getTypeBuildings(r),
-    o = Mt(r),
+    o = getGrid(r),
     l = Config.Building[n.type].name();
   switch (n.type) {
     case "Headquarter": {
       if (
-        (Et(Tick.next.tileMultipliers, t, {
+        (mapSafePush(Tick.next.tileMultipliers, t, {
           output: Pp(Xf(getGameOptions()) * 0.1, 1),
           source: h(d.PermanentGreatPeople),
         }),
@@ -111628,7 +111699,7 @@ function Due({ xy: t, offline: e }) {
         }
       else r.festival = !1;
       e ||
-        ((r.speedUp = We(r.speedUp, 1, getMaxWarpStorage(r))),
+        ((r.speedUp = clamp(r.speedUp, 1, getMaxWarpStorage(r))),
         r.speedUp > 1 && ((m = n.resources.Warp) != null ? m : 0) > 0
           ? --n.resources.Warp
           : (r.speedUp = 1),
@@ -111641,10 +111712,10 @@ function Due({ xy: t, offline: e }) {
           var K;
           if (j.building) {
             let ne = 0;
-            for (const Ae of o.getNeighbors(xe(z)))
-              (K = r.tiles.get(Se(Ae))) != null && K.deposit.Water && ++ne;
+            for (const Ae of o.getNeighbors(tileToPoint(z)))
+              (K = r.tiles.get(pointToTile(Ae))) != null && K.deposit.Water && ++ne;
             ne > 0 &&
-              Et(Tick.next.tileMultipliers, j.tile, { output: ne, source: l });
+              mapSafePush(Tick.next.tileMultipliers, j.tile, { output: ne, source: l });
           }
         });
       break;
@@ -111660,7 +111731,7 @@ function Due({ xy: t, offline: e }) {
       getXyBuildings(r).forEach((j, z) => {
         const K = Math.floor(j.level / 10);
         K > 0 &&
-          Et(Tick.next.tileMultipliers, z, {
+          mapSafePush(Tick.next.tileMultipliers, z, {
             input: r.festival ? 0 : K,
             output: K,
             source: h(d.NaturalWonderName, { name: l }),
@@ -111681,8 +111752,8 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "ChichenItza": {
-      for (const j of o.getNeighbors(xe(t)))
-        Et(Tick.next.tileMultipliers, Se(j), {
+      for (const j of o.getNeighbors(tileToPoint(t)))
+        mapSafePush(Tick.next.tileMultipliers, pointToTile(j), {
           output: 1,
           storage: 1,
           worker: 1,
@@ -111691,23 +111762,23 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "LighthouseOfAlexandria": {
-      for (const j of o.getNeighbors(xe(t)))
-        Et(Tick.next.tileMultipliers, Se(j), { storage: 5, source: l });
+      for (const j of o.getNeighbors(tileToPoint(t)))
+        mapSafePush(Tick.next.tileMultipliers, pointToTile(j), { storage: 5, source: l });
       break;
     }
     case "GrandBazaar": {
-      for (const j of o.getNeighbors(xe(t))) {
-        const z = Se(j),
+      for (const j of o.getNeighbors(tileToPoint(t))) {
+        const z = pointToTile(j),
           K = Ei(z, r);
         (K == null ? void 0 : K.type) === "Caravansary" &&
-          Et(Tick.next.tileMultipliers, z, { output: 5, storage: 5, source: l });
+          mapSafePush(Tick.next.tileMultipliers, z, { output: 5, storage: 5, source: l });
       }
       break;
     }
     case "ColossusOfRhodes": {
       let j = 0;
-      for (const z of o.getNeighbors(xe(t))) {
-        const K = Ei(Se(z), r);
+      for (const z of o.getNeighbors(tileToPoint(t))) {
+        const K = Ei(pointToTile(z), r);
         K && !Config.Building[K.type].output.Worker && j++;
       }
       Tick.next.globalMultipliers.happiness.push({ value: j, source: l });
@@ -111735,22 +111806,22 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "AngkorWat": {
-      hr(Tick.next.workersAvailable, "Worker", 1e3);
-      for (const j of o.getNeighbors(xe(t)))
-        Et(Tick.next.tileMultipliers, Se(j), { worker: 1, source: l });
+      mapSafeAdd(Tick.next.workersAvailable, "Worker", 1e3);
+      for (const j of o.getNeighbors(tileToPoint(t)))
+        mapSafePush(Tick.next.tileMultipliers, pointToTile(j), { worker: 1, source: l });
       break;
     }
     case "TempleOfHeaven": {
       getXyBuildings(r).forEach((j, z) => {
         j.level >= 10 &&
-          Et(Tick.next.tileMultipliers, z, { worker: 1, source: l });
+          mapSafePush(Tick.next.tileMultipliers, z, { worker: 1, source: l });
       });
       break;
     }
     case "HangingGarden": {
       let j = 1;
-      for (const z of Mt(r).getNeighbors(xe(t))) {
-        const K = r.tiles.get(Se(z));
+      for (const z of getGrid(r).getNeighbors(tileToPoint(t))) {
+        const K = r.tiles.get(pointToTile(z));
         K != null &&
           K.explored &&
           ((T = K == null ? void 0 : K.building) == null ? void 0 : T.type) ===
@@ -111758,11 +111829,11 @@ function Due({ xy: t, offline: e }) {
           (j = Config.TechAge[Sr(r)].idx - Config.TechAge[H_("HangingGarden")].idx);
       }
       Tick.next.globalMultipliers.builderCapacity.push({ value: j, source: l });
-      for (const z of o.getNeighbors(xe(t))) {
-        const K = (A = r.tiles.get(Se(z))) == null ? void 0 : A.building;
+      for (const z of o.getNeighbors(tileToPoint(t))) {
+        const K = (A = r.tiles.get(pointToTile(z))) == null ? void 0 : A.building;
         K &&
           K.type === "Aqueduct" &&
-          Et(Tick.next.tileMultipliers, Se(z), {
+          mapSafePush(Tick.next.tileMultipliers, pointToTile(z), {
             worker: j,
             storage: j,
             output: j,
@@ -111797,8 +111868,8 @@ function Due({ xy: t, offline: e }) {
             var K;
             if (j.building) {
               let ne = 0;
-              for (const Ae of o.getNeighbors(xe(j.tile))) {
-                const vt = r.tiles.get(Se(Ae));
+              for (const Ae of o.getNeighbors(tileToPoint(j.tile))) {
+                const vt = r.tiles.get(pointToTile(Ae));
                 ((K = vt == null ? void 0 : vt.building) == null
                   ? void 0
                   : K.type) === "IronMiningCamp" &&
@@ -111807,7 +111878,7 @@ function Due({ xy: t, offline: e }) {
                   ++ne;
               }
               ne > 0 &&
-                Et(Tick.next.tileMultipliers, j.tile, { output: ne, source: l });
+                mapSafePush(Tick.next.tileMultipliers, j.tile, { output: ne, source: l });
             }
           });
       break;
@@ -111830,7 +111901,7 @@ function Due({ xy: t, offline: e }) {
           : k.building.resources;
       z &&
         (safeAdd(z, "Science", j),
-        hr(Tick.next.wonderProductions, "Science", j),
+        mapSafeAdd(Tick.next.wonderProductions, "Science", j),
         Tick.next.scienceProduced.set(t, j));
       break;
     }
@@ -111858,17 +111929,17 @@ function Due({ xy: t, offline: e }) {
       getXyBuildings(r).forEach((j, z) => {
         j.level >= 20 &&
           j.status !== "completed" &&
-          Et(Tick.next.tileMultipliers, z, { worker: 5, source: l });
+          mapSafePush(Tick.next.tileMultipliers, z, { worker: 5, source: l });
       });
       break;
     }
     case "SaintBasilsCathedral": {
-      for (const j of o.getNeighbors(xe(t))) {
-        const z = Se(j),
+      for (const j of o.getNeighbors(tileToPoint(t))) {
+        const z = pointToTile(j),
           K = Ei(z, r);
         K &&
           Config.BuildingTier[K.type] === 1 &&
-          Et(Tick.next.tileMultipliers, z, {
+          mapSafePush(Tick.next.tileMultipliers, z, {
             output: 1,
             worker: 1,
             storage: 1,
@@ -111881,7 +111952,7 @@ function Due({ xy: t, offline: e }) {
       getXyBuildings(r).forEach((j, z) => {
         j.level >= 20 &&
           j.status !== "completed" &&
-          Et(Tick.next.tileMultipliers, z, {
+          mapSafePush(Tick.next.tileMultipliers, z, {
             worker: 2 * (j.level - 20),
             source: l,
           });
@@ -111895,14 +111966,14 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "Poseidon": {
-      for (const j of o.getNeighbors(xe(t))) {
-        const z = Se(j),
+      for (const j of o.getNeighbors(tileToPoint(t))) {
+        const z = pointToTile(j),
           K = Ei(z, r);
         if (K && !yr(K.type)) {
           K.level < 25 && (K.level = 25);
           const ne = (_ = Config.BuildingTier[K.type]) != null ? _ : 0;
           ne > 0 &&
-            Et(Tick.next.tileMultipliers, z, {
+            mapSafePush(Tick.next.tileMultipliers, z, {
               output: ne,
               storage: ne,
               source: l,
@@ -111914,12 +111985,12 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "StatueOfZeus": {
-      for (const j of o.getNeighbors(xe(t))) {
-        const z = Se(j),
+      for (const j of o.getNeighbors(tileToPoint(t))) {
+        const z = pointToTile(j),
           K = (D = r.tiles.get(z)) == null ? void 0 : D.building;
         K &&
           Config.BuildingTier[K.type] === 1 &&
-          Et(Tick.next.tileMultipliers, z, { output: 5, storage: 5, source: l });
+          mapSafePush(Tick.next.tileMultipliers, z, { output: 5, storage: 5, source: l });
       }
       break;
     }
@@ -111931,13 +112002,13 @@ function Due({ xy: t, offline: e }) {
     case "EiffelTower": {
       const j = [];
       let z = 0;
-      for (const K of o.getNeighbors(xe(t))) {
-        const ne = Se(K);
+      for (const K of o.getNeighbors(tileToPoint(t))) {
+        const ne = pointToTile(K);
         ((I = Ei(ne, r)) == null ? void 0 : I.type) === "SteelMill" &&
           (j.push(ne), ++z);
       }
       for (const K of j)
-        Et(Tick.next.tileMultipliers, K, {
+        mapSafePush(Tick.next.tileMultipliers, K, {
           worker: z,
           storage: z,
           output: z,
@@ -111958,8 +112029,8 @@ function Due({ xy: t, offline: e }) {
         (z.input.Gunpowder || z.output.Gunpowder) &&
           st(j, { output: 1, worker: 1, storage: 1 }, l);
       });
-      for (const j of o.getNeighbors(xe(t))) {
-        const z = Se(j),
+      for (const j of o.getNeighbors(tileToPoint(t))) {
+        const z = pointToTile(j),
           K = Ei(z, r);
         K &&
           (Config.Building[K.type].input.Gunpowder ||
@@ -111969,10 +112040,10 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "MogaoCaves": {
-      const { workersAfterHappiness: j, workersBusy: z } = Pu(),
+      const { workersAfterHappiness: j, workersBusy: z } = getScienceFromWorkers(),
         K = j === 0 ? 0 : Math.floor((10 * z) / j);
-      for (const ne of o.getNeighbors(xe(t))) {
-        const Ae = Se(ne),
+      for (const ne of o.getNeighbors(tileToPoint(t))) {
+        const Ae = pointToTile(ne),
           vt = (L = Ei(Ae, r)) == null ? void 0 : L.type;
         vt && Config.Building[vt].output.Faith && Tick.next.happinessExemptions.add(Ae);
       }
@@ -111983,20 +112054,20 @@ function Due({ xy: t, offline: e }) {
       getXyBuildings(r).forEach((j, z) => {
         isWorldWonder(j.type) &&
           j.status !== "completed" &&
-          Et(Tick.next.tileMultipliers, z, { worker: 10, source: l });
+          mapSafePush(Tick.next.tileMultipliers, z, { worker: 10, source: l });
       });
       break;
     }
     case "StatueOfLiberty": {
-      for (const j of o.getNeighbors(xe(t))) {
-        const z = Se(j),
+      for (const j of o.getNeighbors(tileToPoint(t))) {
+        const z = pointToTile(j),
           K = (F = r.tiles.get(z)) == null ? void 0 : F.building;
         if (K) {
           const ne = K.type;
           let Ae = 0;
           for (const vt of o.getNeighbors(j))
-            ((W = Ei(Se(vt), r)) == null ? void 0 : W.type) === ne && ++Ae;
-          Et(Tick.next.tileMultipliers, z, {
+            ((W = Ei(pointToTile(vt), r)) == null ? void 0 : W.type) === ne && ++Ae;
+          mapSafePush(Tick.next.tileMultipliers, z, {
             worker: Ae,
             storage: Ae,
             output: Ae,
@@ -112012,10 +112083,10 @@ function Due({ xy: t, offline: e }) {
           var K;
           if (j.building) {
             let ne = 0;
-            for (const Ae of o.getNeighbors(xe(z)))
-              (K = r.tiles.get(Se(Ae))) != null && K.deposit.Oil && ++ne;
+            for (const Ae of o.getNeighbors(tileToPoint(z)))
+              (K = r.tiles.get(pointToTile(Ae))) != null && K.deposit.Oil && ++ne;
             ne > 0 &&
-              Et(Tick.next.tileMultipliers, j.tile, {
+              mapSafePush(Tick.next.tileMultipliers, j.tile, {
                 output: ne,
                 storage: ne,
                 worker: ne,
@@ -112035,11 +112106,11 @@ function Due({ xy: t, offline: e }) {
     }
     case "NileRiver": {
       st("WheatFarm", { output: 1, storage: 1 }, l);
-      for (const z of o.getNeighbors(xe(t))) {
-        const K = Se(z),
+      for (const z of o.getNeighbors(tileToPoint(t))) {
+        const K = pointToTile(z),
           ne = Ei(K, r);
         (ne == null ? void 0 : ne.type) === "WheatFarm" &&
-          Et(Tick.next.tileMultipliers, K, { storage: 5, output: 5, source: l });
+          mapSafePush(Tick.next.tileMultipliers, K, { storage: 5, output: 5, source: l });
       }
       const j = xa("Hatshepsut", r);
       j > 0 &&
@@ -112053,8 +112124,8 @@ function Due({ xy: t, offline: e }) {
     }
     case "AbuSimbel": {
       let j = 0;
-      for (const K of o.getNeighbors(xe(t))) {
-        const ne = Se(K);
+      for (const K of o.getNeighbors(tileToPoint(t))) {
+        const ne = pointToTile(K);
         isWorldWonder(($ = Ei(ne, r)) == null ? void 0 : $.type) && ++j;
       }
       Tick.next.globalMultipliers.happiness.push({ value: j, source: l });
@@ -112067,15 +112138,15 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "GreatSphinx": {
-      for (const j of o.getRange(xe(t), 2)) {
-        const z = Se(j),
+      for (const j of o.getRange(tileToPoint(t), 2)) {
+        const z = pointToTile(j),
           K = (X = r.tiles.get(z)) == null ? void 0 : X.building;
         if (K && ((q = Config.BuildingTier[K.type]) != null ? q : 0) > 1) {
           const ne = K.type;
           let Ae = 0;
           for (const vt of o.getNeighbors(j))
-            ((re = Ei(Se(vt), r)) == null ? void 0 : re.type) === ne && ++Ae;
-          Et(Tick.next.tileMultipliers, z, {
+            ((re = Ei(pointToTile(vt), r)) == null ? void 0 : re.type) === ne && ++Ae;
+          mapSafePush(Tick.next.tileMultipliers, z, {
             input: r.festival ? 0 : Ae,
             output: Ae,
             source: l,
@@ -112086,8 +112157,8 @@ function Due({ xy: t, offline: e }) {
     }
     case "Hollywood": {
       let j = 0;
-      for (const z of o.getRange(xe(t), 2)) {
-        const K = Se(z),
+      for (const z of o.getRange(tileToPoint(t), 2)) {
+        const K = pointToTile(z),
           ne = (V = r.tiles.get(K)) == null ? void 0 : V.building;
         ne &&
           lj(K, r) &&
@@ -112102,20 +112173,20 @@ function Due({ xy: t, offline: e }) {
       forEach(Config.Building, (j, z) => {
         z.output.Power && st(j, { output: 1 }, l);
       });
-      for (const j of o.getNeighbors(xe(t))) Tick.next.powerPlants.add(Se(j));
+      for (const j of o.getNeighbors(tileToPoint(t))) Tick.next.powerPlants.add(pointToTile(j));
       break;
     }
     case "CristoRedentor": {
-      for (const j of o.getRange(xe(t), 2))
-        Tick.next.happinessExemptions.add(Se(j));
+      for (const j of o.getRange(tileToPoint(t), 2))
+        Tick.next.happinessExemptions.add(pointToTile(j));
       break;
     }
     case "SagradaFamilia": {
-      const j = Mt(r);
+      const j = getGrid(r);
       let z = Number.MAX_SAFE_INTEGER,
         K = 0;
-      for (const Ae of j.getNeighbors(xe(t))) {
-        const vt = Se(Ae),
+      for (const Ae of j.getNeighbors(tileToPoint(t))) {
+        const vt = pointToTile(Ae),
           wn = (Z = Ei(vt, r)) == null ? void 0 : Z.type;
         if (!wn || yr(wn)) continue;
         const Gr = (ee = Config.BuildingTier[wn]) != null ? ee : 0;
@@ -112123,8 +112194,8 @@ function Due({ xy: t, offline: e }) {
       }
       const ne = K - z;
       if (ne > 0)
-        for (const Ae of j.getRange(xe(t), 2))
-          Et(Tick.next.tileMultipliers, Se(Ae), {
+        for (const Ae of j.getRange(tileToPoint(t), 2))
+          mapSafePush(Tick.next.tileMultipliers, pointToTile(Ae), {
             output: ne,
             storage: ne,
             worker: ne,
@@ -112133,8 +112204,8 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "YellowCraneTower": {
-      for (const j of o.getRange(xe(t), dj(t, r)))
-        Et(Tick.next.tileMultipliers, Se(j), {
+      for (const j of o.getRange(tileToPoint(t), dj(t, r)))
+        mapSafePush(Tick.next.tileMultipliers, pointToTile(j), {
           output: 1,
           storage: 1,
           worker: 1,
@@ -112187,8 +112258,8 @@ function Due({ xy: t, offline: e }) {
         var vt;
         if (!K.building) return;
         let Ae = 0;
-        for (const wn of o.getNeighbors(xe(ne))) {
-          const Gr = r.tiles.get(Se(wn));
+        for (const wn of o.getNeighbors(tileToPoint(ne))) {
+          const Gr = r.tiles.get(pointToTile(wn));
           ((vt = Gr == null ? void 0 : Gr.building) == null
             ? void 0
             : vt.type) === "UraniumMine" &&
@@ -112197,7 +112268,7 @@ function Due({ xy: t, offline: e }) {
             Gr.building.capacity > 0 &&
             ++Ae;
         }
-        Ae > 0 && Et(Tick.next.tileMultipliers, ne, { output: Ae, source: l });
+        Ae > 0 && mapSafePush(Tick.next.tileMultipliers, ne, { output: Ae, source: l });
       };
       (ve = a.get("UraniumEnrichmentPlant")) == null || ve.forEach(j),
         (ce = a.get("AtomicFacility")) == null || ce.forEach(j);
@@ -112210,18 +112281,18 @@ function Due({ xy: t, offline: e }) {
       z > 0 &&
         st(
           "AtomicFacility",
-          { storage: We(z, 1, 5), output: We(z, 1, 5) },
+          { storage: clamp(z, 1, 5), output: clamp(z, 1, 5) },
           Config.GreatPerson.MahatmaGandhi.name()
         );
       break;
     }
     case "GreatWall": {
-      for (const j of o.getRange(xe(t), hj(t, r))) {
-        const z = Ei(Se(j), r);
+      for (const j of o.getRange(tileToPoint(t), hj(t, r))) {
+        const z = Ei(pointToTile(j), r);
         if (!z || yr(z.type)) continue;
         let K = Math.abs(Config.TechAge[Sr(r)].idx - Config.TechAge[H_(z.type)].idx);
         r.festival && (K *= 2),
-          Et(Tick.next.tileMultipliers, Se(j), {
+          mapSafePush(Tick.next.tileMultipliers, pointToTile(j), {
             output: K,
             storage: K,
             worker: K,
@@ -112264,14 +112335,14 @@ function Due({ xy: t, offline: e }) {
     }
     case "Atomium": {
       let j = 0;
-      for (const K of o.getRange(xe(t), 2)) {
-        const ne = Se(K);
+      for (const K of o.getRange(tileToPoint(t), 2)) {
+        const ne = pointToTile(K);
         if (ne !== t) {
           j += (et = Tick.current.scienceProduced.get(ne)) != null ? et : 0;
           const Ae = Ei(ne, r);
           Ae &&
             Config.Building[Ae.type].output.Science &&
-            Et(Tick.next.tileMultipliers, ne, { output: 5, source: l });
+            mapSafePush(Tick.next.tileMultipliers, ne, { output: 5, source: l });
         }
       }
       const z =
@@ -112280,7 +112351,7 @@ function Due({ xy: t, offline: e }) {
           : je.building.resources;
       z &&
         (safeAdd(z, "Science", j),
-        hr(Tick.next.wonderProductions, "Science", j),
+        mapSafeAdd(Tick.next.wonderProductions, "Science", j),
         Tick.next.scienceProduced.set(t, j));
       break;
     }
@@ -112322,12 +112393,12 @@ function Due({ xy: t, offline: e }) {
         var Ae;
         if (!z.building) return;
         let ne = 0;
-        for (const vt of o.getNeighbors(xe(K))) {
-          const wn = Se(vt);
+        for (const vt of o.getNeighbors(tileToPoint(K))) {
+          const wn = pointToTile(vt);
           ((Ae = Ei(wn, r)) == null ? void 0 : Ae.type) === "RocketFactory" &&
             ++ne;
         }
-        ne > 0 && Et(Tick.next.tileMultipliers, K, { output: ne, source: l });
+        ne > 0 && mapSafePush(Tick.next.tileMultipliers, K, { output: ne, source: l });
       };
       (sr = a.get("SatelliteFactory")) == null || sr.forEach(j),
         (Yt = a.get("SpacecraftFactory")) == null || Yt.forEach(j),
@@ -112401,8 +112472,8 @@ function Due({ xy: t, offline: e }) {
           ? Lr
           : 0) < GP &&
         safeAdd(n.resources, "Teleport", 1);
-      for (const j of o.getRange(xe(t), 2))
-        Et(Tick.next.tileMultipliers, Se(j), {
+      for (const j of o.getRange(tileToPoint(t), 2))
+        mapSafePush(Tick.next.tileMultipliers, pointToTile(j), {
           output: 1,
           worker: 1,
           storage: 1,
@@ -112411,8 +112482,8 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "WallStreet": {
-      for (const z of o.getRange(xe(t), 2)) {
-        const K = Se(z),
+      for (const z of o.getRange(tileToPoint(t), 2)) {
+        const K = pointToTile(z),
           ne = (tt = r.tiles.get(K)) == null ? void 0 : tt.building;
         if (ne && ne.status === "completed") {
           let Ae = !1;
@@ -112432,7 +112503,7 @@ function Due({ xy: t, offline: e }) {
           ) {
             let vt = Math.round(mb(r.id + r.lastPriceUpdated + K)() * 4 + 1);
             r.festival && (vt *= 2),
-              Et(Tick.next.tileMultipliers, K, {
+              mapSafePush(Tick.next.tileMultipliers, K, {
                 unstable: !0,
                 output: vt,
                 source: l,
@@ -112501,9 +112572,9 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "Pantheon": {
-      for (const j of o.getRange(xe(t), 2)) {
-        const z = Se(j);
-        Et(Tick.next.tileMultipliers, z, { worker: 1, storage: 1, source: l });
+      for (const j of o.getRange(tileToPoint(t), 2)) {
+        const z = pointToTile(j);
+        mapSafePush(Tick.next.tileMultipliers, z, { worker: 1, storage: 1, source: l });
       }
       generateScienceFromFaith(t, "Shrine", r);
       break;
@@ -112515,7 +112586,7 @@ function Due({ xy: t, offline: e }) {
             : 0,
         z = Sr(r);
       if (j > 0) {
-        const K = We(
+        const K = clamp(
           Math.floor(j / 10),
           1,
           Math.floor((Config.TechAge[z].idx + 1) / 2)
@@ -112530,8 +112601,8 @@ function Due({ xy: t, offline: e }) {
     }
     case "TowerOfBabel": {
       const j = new Set();
-      for (const z of o.getRange(xe(t), 1)) {
-        const K = Se(z),
+      for (const z of o.getRange(tileToPoint(t), 1)) {
+        const K = pointToTile(z),
           ne = Ei(K, r);
         ne && !Tick.current.notProducingReasons.has(K) && j.add(ne.type);
       }
@@ -112549,8 +112620,8 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "ZagrosMountains": {
-      for (const z of o.getRange(xe(t), 1)) {
-        const K = Se(z);
+      for (const z of o.getRange(tileToPoint(t), 1)) {
+        const K = pointToTile(z);
         let ne = 1;
         forEachMultiplier(
           K,
@@ -112561,7 +112632,7 @@ function Due({ xy: t, offline: e }) {
           r
         ),
           ne < 5 &&
-            Et(Tick.next.tileMultipliers, K, {
+            mapSafePush(Tick.next.tileMultipliers, K, {
               output: 2,
               unstable: !0,
               source: l,
@@ -112593,7 +112664,7 @@ function Due({ xy: t, offline: e }) {
         ne = Math.floor((z * 10) / K),
         Ae = Sr(r);
       if (Number.isFinite(ne) && ne > 0) {
-        const vt = We(ne, 1, Math.floor((Config.TechAge[Ae].idx + 1) / 2));
+        const vt = clamp(ne, 1, Math.floor((Config.TechAge[Ae].idx + 1) / 2));
         (r.festival ? keysOf(Config.BuildingTechAge) : U_(Sr(r))).forEach((Gr) => {
           !yr(Gr) &&
             !Config.Building[Gr].output.Worker &&
@@ -112654,8 +112725,8 @@ function Due({ xy: t, offline: e }) {
             ? Ii
             : 0) * bb;
         (Tick.next.totalValue += z),
-          hr(Tick.next.resourceValueByTile, t, z),
-          hr(Tick.next.resourceValues, "Science", z);
+          mapSafeAdd(Tick.next.resourceValueByTile, t, z),
+          mapSafeAdd(Tick.next.resourceValues, "Science", z);
       }
       n.level > 1 &&
         forEach(Config.Building, (z, K) => {
@@ -112672,7 +112743,7 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "OsakaCastle": {
-      for (const j of o.getRange(xe(t), 1)) Tick.next.powerPlants.add(Se(j));
+      for (const j of o.getRange(tileToPoint(t), 1)) Tick.next.powerPlants.add(pointToTile(j));
       break;
     }
     case "Kanagawa": {
@@ -112697,23 +112768,23 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "GoldenPavilion": {
-      o.getRange(xe(t), 3).forEach((j) => {
+      o.getRange(tileToPoint(t), 3).forEach((j) => {
         var vt;
-        const z = Se(j),
+        const z = pointToTile(j),
           K = (vt = r.tiles.get(z)) == null ? void 0 : vt.building;
         if (!K) return;
         const ne = Config.Building[K.type].input;
         let Ae = 0;
         o.getNeighbors(j).forEach((wn) => {
           var go;
-          const Gr = (go = r.tiles.get(Se(wn))) == null ? void 0 : go.building;
+          const Gr = (go = r.tiles.get(pointToTile(wn))) == null ? void 0 : go.building;
           !Gr ||
             Gr.capacity <= 0 ||
             forEach(Config.Building[Gr.type].output, (Qe) => {
               if (ne[Qe]) return ++Ae, !0;
             });
         }),
-          Et(Tick.next.tileMultipliers, z, {
+          mapSafePush(Tick.next.tileMultipliers, z, {
             output: Ae,
             unstable: !0,
             source: l,
@@ -112723,8 +112794,8 @@ function Due({ xy: t, offline: e }) {
     }
     case "RhineGorge": {
       let j = 0;
-      for (const z of o.getRange(xe(t), 2)) {
-        const K = Se(z);
+      for (const z of o.getRange(tileToPoint(t), 2)) {
+        const K = pointToTile(z);
         if (K === t) continue;
         const ne = (ie = r.tiles.get(K)) == null ? void 0 : ie.building;
         (ne == null ? void 0 : ne.status) === "completed" && isWorldOrNaturalWonder(ne.type) && ++j;
@@ -112733,19 +112804,19 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "Elbphilharmonie": {
-      for (const j of o.getRange(xe(t), 3)) {
-        const z = Se(j),
+      for (const j of o.getRange(tileToPoint(t), 3)) {
+        const z = pointToTile(j),
           K = Ei(z, r);
         if (!K) continue;
         let ne = 0;
         for (const Ae of o.getNeighbors(j)) {
-          const vt = Ei(Se(Ae), r);
+          const vt = Ei(pointToTile(Ae), r);
           vt &&
             !yr(vt.type) &&
             Config.BuildingTier[K.type] !== Config.BuildingTier[vt.type] &&
             ++ne;
         }
-        Et(Tick.next.tileMultipliers, z, { output: ne, source: l });
+        mapSafePush(Tick.next.tileMultipliers, z, { output: ne, source: l });
       }
       break;
     }
@@ -112766,7 +112837,7 @@ function Due({ xy: t, offline: e }) {
         z = new Map(),
         K = Sr(r);
       j.greatPeople.forEach((ne, Ae) => {
-        Config.TechAge[Ae].idx <= Config.TechAge[K].idx && hr(z, ne, 1);
+        Config.TechAge[Ae].idx <= Config.TechAge[K].idx && mapSafeAdd(z, ne, 1);
       }),
         z.forEach((ne, Ae) => {
           const vt = Config.GreatPerson[Ae];
@@ -112781,8 +112852,8 @@ function Due({ xy: t, offline: e }) {
     }
     case "Lapland": {
       const j = Config.TechAge[Sr(r)].idx + 1;
-      for (const z of o.getRange(xe(t), 2))
-        Et(Tick.next.tileMultipliers, Se(z), { output: j, source: l });
+      for (const z of o.getRange(tileToPoint(t), 2))
+        mapSafePush(Tick.next.tileMultipliers, pointToTile(z), { output: j, source: l });
       break;
     }
     case "RockefellerCenterChristmasTree": {
@@ -112791,8 +112862,8 @@ function Due({ xy: t, offline: e }) {
       break;
     }
     case "YearOfTheSnake": {
-      for (const j of o.getRange(xe(t), 2))
-        Et(Tick.next.tileMultipliers, Se(j), { output: n.level, source: l });
+      for (const j of o.getRange(tileToPoint(t), 2))
+        mapSafePush(Tick.next.tileMultipliers, pointToTile(j), { output: n.level, source: l });
       break;
     }
     case "CambridgeUniversity": {
@@ -112828,8 +112899,8 @@ function Due({ xy: t, offline: e }) {
           xt.forEach((j, z) => {
             j.building.status !== "completed" ||
               j.building.capacity <= 0 ||
-              o.getNeighbors(xe(z)).forEach((K) => {
-                Et(Tick.next.tileMultipliers, Se(K), {
+              o.getNeighbors(tileToPoint(z)).forEach((K) => {
+                mapSafePush(Tick.next.tileMultipliers, pointToTile(K), {
                   output: r.festival ? 2 * n.level : n.level,
                   source: l,
                   unstable: !0,
@@ -112874,18 +112945,18 @@ function Rue(t) {
         break;
       }
       case "EuphratesRiver": {
-        for (const a of Mt(e).getNeighbors(xe(t))) {
-          const o = Se(a),
+        for (const a of getGrid(e).getNeighbors(tileToPoint(t))) {
+          const o = pointToTile(a),
             l = e.tiles.get(o);
-          l && mr(l == null ? void 0 : l.deposit) && vb(o, "Water", !0, e);
+          l && isEmpty(l == null ? void 0 : l.deposit) && vb(o, "Water", !0, e);
         }
         break;
       }
       case "BlackForest": {
-        for (const a of Mt(e).getNeighbors(xe(t))) {
-          const o = Se(a),
+        for (const a of getGrid(e).getNeighbors(tileToPoint(t))) {
+          const o = pointToTile(a),
             l = e.tiles.get(o);
-          l && mr(l == null ? void 0 : l.deposit) && vb(o, "Wood", !0, e);
+          l && isEmpty(l == null ? void 0 : l.deposit) && vb(o, "Wood", !0, e);
         }
         e.tiles.forEach((a, o) => {
           a.deposit.Wood &&
@@ -112925,7 +112996,7 @@ function tickEveryFrame(gs, number) {
   }
   const i = Math.ceil(timeSinceLastTick * tickTileQueueSize * be().ticker.speedUp),
     n = tickTileQueueSize - tickTileQueue.length,
-    a = We(i - n, 0, tickTileQueue.length);
+    a = clamp(i - n, 0, tickTileQueue.length);
   tickTileQueue.splice(0, a).forEach((o) => transportAndConsumeResources(o, resourceProduced, gs, !1));
 }
 
@@ -112944,7 +113015,7 @@ let currentSessionTick = 0;
 function tickEverySecond(gs, offline) {
   if (!offline && !shouldTick()) return;
   (timeSinceLastTick = 0),
-    offline || (tickTileQueue.forEach((i) => transportAndConsumeResources(i, resourceProduced, gs, !1)), oI(gs, !1)),
+    offline || (tickTileQueue.forEach((i) => transportAndConsumeResources(i, resourceProduced, gs, !1)), postTickTiles(gs, !1)),
     (Tick.next.tick = ++currentSessionTick),
     (Tick.current = freezeTickData(Tick.next)),
     (Tick.next = EmptyTickData()),
@@ -112990,10 +113061,11 @@ function tickEverySecond(gs, offline) {
     ? (tiles.forEach(function ([n, a]) {
         transportAndConsumeResources(n, resourceProduced, gs, offline);
       }),
-      oI(gs, offline))
-    : ((tickTileQueue = tiles.map(([i, n]) => i)), (tickTileQueueSize = tickTileQueue.length), jue(gs));
+      postTickTiles(gs, offline))
+    : ((tickTileQueue = tiles.map(([i, n]) => i)), (tickTileQueueSize = tickTileQueue.length), checkForAdvisors(gs));
 }
-function jue(t) {
+
+function checkForAdvisors(t) {
   if (t.tick % 10 !== 0 || Bk()) return;
   const e = getGameOptions();
   forEach(tg, (r, i) => {
@@ -113001,56 +113073,59 @@ function jue(t) {
       return It(s.jsx(L4, { advisor: r })), !0;
   });
 }
-let nI = Date.now(),
-  aI = !1,
-  y1 = it.Tribune;
-function oI(t, e) {
+
+let lastTickTime = Date.now(),
+  hasShownAccountRankUpModal = false,
+  eligibleRank = it.Tribune;
+
+function postTickTiles(gs, offline) {
   var a, o, l;
-  Oue(t), vJ(t), (Tick.next.happiness = mee(t));
-  const { scienceFromWorkers: r } = Pu(),
+  produceResources(gs),
+    tickPower(gs), (Tick.next.happiness = mee(gs));
+  const { scienceFromWorkers: r } = getScienceFromWorkers(),
     i =
       (a = Tick.current.specialBuildings.get("Headquarter")) == null
         ? void 0
         : a.building.resources;
   i && safeAdd(i, "Science", r);
-  let n = t.valueTrackers.get(uf.EmpireValue);
+  let n = gs.valueTrackers.get(uf.EmpireValue);
   for (
     n ||
       ((n = { accumulated: 0, history: [] }),
-      t.valueTrackers.set(uf.EmpireValue, n)),
+      gs.valueTrackers.set(uf.EmpireValue, n)),
       n.accumulated += Tick.next.totalValue,
-      t.tick % 3600 === 0 &&
+      gs.tick % 3600 === 0 &&
         (n.history.push(n.accumulated / 3600), (n.accumulated = 0)),
-      t.valueTrackers.set(uf.EmpireValue, n),
-      ++t.tick;
-    Date.now() - nI > 1e3;
+      gs.valueTrackers.set(uf.EmpireValue, n),
+      ++gs.tick;
+    Date.now() - lastTickTime > 1e3;
 
   )
-    (nI += 1e3), ++t.seconds;
-  if (!e) {
+    (lastTickTime += 1e3), ++gs.seconds;
+  if (!offline) {
     const u = be().ticker.speedUp;
-    t.tick % u === 0 &&
+    gs.tick % u === 0 &&
       (vL.emit(Tick.current),
       (o = be().sceneManager.getCurrent(WorldScene)) == null || o.flushFloater(u),
       Ze()),
-      t.tick % (saveFreq * u) === 0 && Jn().catch(console.error),
-      t.tick % (heartbeatFreq * u) === 0 &&
+      gs.tick % (saveFreq * u) === 0 && Jn().catch(console.error),
+      gs.tick % (heartbeatFreq * u) === 0 &&
         (be().heartbeat.update(E0()),
         qe.queryRankUp().then((c) => {
           const p = getUser();
           p &&
             c > p.level &&
-            ((y1 = c),
-            IL.emit(y1),
-            !aI &&
+            ((eligibleRank = c),
+            IL.emit(eligibleRank),
+            !hasShownAccountRankUpModal &&
               !Bk() &&
-              ((aI = !0), Dk(), It(s.jsx(B4, { rank: y1, user: p }))));
+              ((hasShownAccountRankUpModal = !0), Dk(), It(s.jsx(B4, { rank: eligibleRank, user: p }))));
         }));
   }
   Tick.current.totalValue > 0 &&
     Tick.current.tick > 10 &&
     Dn.add(
-      t.tick,
+      gs.tick,
       Tick.current.totalValue,
       (l = i == null ? void 0 : i.Science) != null ? l : 0
     );
@@ -113076,18 +113151,20 @@ RL.on(({ permanent: t }) => {
   Da(), It(s.jsx(Ra, { permanent: t }));
 });
 const nO = makeObservableHook(vL, () => Tick.current),
-  Gue = makeObservableHook(IL, () => y1);
-function Oue(t) {
+  Gue = makeObservableHook(IL, () => eligibleRank);
+
+function produceResources(gs) {
   var e, r;
   for (const i of resourceProduced) {
     const n =
-      (r = (e = t.tiles.get(i.xy)) == null ? void 0 : e.building) == null
+      (r = (e = gs.tiles.get(i.xy)) == null ? void 0 : e.building) == null
         ? void 0
         : r.resources;
     n && safeAdd(n, i.resource, i.amount);
   }
   resourceProduced.length = 0;
 }
+
 function isAndroid() {
   return Ic.getPlatform() === "android";
 }
@@ -113896,7 +113973,7 @@ function ece({ before: t, after: e, time: r }) {
                           : c.level) != null
                         ? p
                         : 0;
-                    return mr(o) && l === a.level
+                    return isEmpty(o) && l === a.level
                       ? null
                       : s.jsxs(
                           "tr",
@@ -114069,7 +114146,7 @@ function ice(t, e, r, i) {
       }
       const y = v.offlineTime,
         x = ((g = u.offlineProductionPercent) != null ? g : 0) * lf,
-        T = We(y, 0, x);
+        T = clamp(y, 0, x);
       if ((n(Ts, { stage: Ks.OfflineProduction }), y >= 60)) {
         const A = structuredClone(l);
         let C = T;
@@ -114125,7 +114202,7 @@ function nce(t) {
   if (e === null) return;
   const r = new Date(e);
   forEach(tk, (i, n) => {
-    n.condition(r) && wZ(Config.Tech[n.tech], "unlockBuilding", i);
+    n.condition(r) && safePush(Config.Tech[n.tech], "unlockBuilding", i);
   });
 }
 function ace(t) {
@@ -114722,7 +114799,7 @@ function handleChatCommand(command) {
       }
       case "timetravel": {
         requireOfflineRun();
-        const a = We(xi(parts[1], 30), 0, 60 * 4);
+        const a = clamp(safeParseInt(parts[1], 30), 0, 60 * 4);
         addSystemMessage(
           `Time travel ${a} minutes. This could take a while, please be patient...`
         ),
@@ -114776,7 +114853,7 @@ function handleChatCommand(command) {
           (getGameOptions().greatPeople = {}),
             (getGameOptions().greatPeopleChoicesV2 = uk(
               o,
-              Math.floor(o / Tr(Config.GreatPerson)),
+              Math.floor(o / sizeOf(Config.GreatPerson)),
               IP,
               gQ,
               getGameState().city
@@ -114953,7 +115030,7 @@ function handleChatCommand(command) {
       }
       case "gprank": {
         if (!parts[1]) throw new Error("Invalid command format");
-        const a = yield qe.getGreatPeopleLevelRank(xi(parts[1], 10)),
+        const a = yield qe.getGreatPeopleLevelRank(safeParseInt(parts[1], 10)),
           o = JSON.stringify(a);
         navigator.clipboard.writeText(o),
           addSystemMessage(o),
@@ -114978,7 +115055,7 @@ function handleChatCommand(command) {
       }
       case "evrank": {
         if (!parts[1]) throw new Error("Invalid command format");
-        const a = yield qe.getEmpireValueRank(xi(parts[1], 10)),
+        const a = yield qe.getEmpireValueRank(safeParseInt(parts[1], 10)),
           o = JSON.stringify(a);
         navigator.clipboard.writeText(o),
           addSystemMessage(o),
@@ -115581,7 +115658,7 @@ function Sce() {
     r = ki(),
     i = nT(),
     n = se.useRef(null),
-    { workersAfterHappiness: a, workersBusy: o } = Pu(),
+    { workersAfterHappiness: a, workersBusy: o } = getScienceFromWorkers(),
     l = () => {
       var w;
       const k = Array.from(t.notProducingReasons.entries())
@@ -115930,7 +116007,7 @@ function Sce() {
               children: s.jsx("div", {
                 style: { width: "5rem" },
                 children: s.jsx(te, {
-                  value: MZ(
+                  value: mapCount(
                     t.notProducingReasons,
                     (k) =>
                       !(
@@ -115991,7 +116068,7 @@ function Sce() {
                   children: s.jsxs("span", {
                     className: "text-desc",
                     style: { fontWeight: "normal", marginLeft: 5 },
-                    children: ["(", Dt(We(uJ(), 0, 1), 0, lL.Floor), ")"],
+                    children: ["(", Dt(clamp(uJ(), 0, 1), 0, lL.Floor), ")"],
                   }),
                 }),
               ],
@@ -116005,7 +116082,7 @@ function Sce() {
           children: s.jsx("select", {
             value: e.speedUp,
             onChange: (k) => {
-              (e.speedUp = We(Number.parseInt(k.target.value, 10), 1, VP(e))),
+              (e.speedUp = clamp(Number.parseInt(k.target.value, 10), 1, VP(e))),
                 Ze();
             },
             style: { paddingRight: "2.5rem" },
