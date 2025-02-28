@@ -42536,7 +42536,9 @@ function __(t, e) {
       : `${t.toLocaleString()}E${r.toString()}`
   );
 }
-function pr(t, e = !1, r = !1) {
+
+// obfus pr at 569
+function formatNumber(t, e = !1, r = !1) {
   return t == null
     ? ""
     : Number.isFinite(t)
@@ -42554,12 +42556,16 @@ var lL = ((t) => (
   t
 ))(lL || {});
 const SZ = { 0: Math.floor, 1: Math.ceil, 2: Math.round };
-function Pp(t, e, r = 2) {
+
+// obfus Pp at 569
+function round(t, e, r = 2) {
   const i = Math.pow(10, e);
   return SZ[r](t * i) / i;
 }
-function Dt(t, e = 2, r = 2) {
-  return `${Pp(t * 100, Math.abs(t) < 0.1 ? e + 1 : e, r)}%`;
+
+// obfus Dt at 569
+function formatPercent(t, e = 2, r = 2) {
+  return `${round(t * 100, Math.abs(t) < 0.1 ? e + 1 : e, r)}%`;
 }
 function mathSign(t, e = Number.EPSILON) {
   return t > e ? "+" : t < -e ? "-" : "";
@@ -70783,9 +70789,9 @@ function YJ(t) {
         const B = Config.TechAge[C].idx - Config.TechAge[w].idx,
           _ = [];
         for (let D = 0; D < B; D++) _.push("*");
-        (x += `${_.join("")}${P}: ${pr(M)}, `), (y += Config.ResourcePrice[P] * M);
+        (x += `${_.join("")}${P}: ${formatNumber(M)}, `), (y += Config.ResourcePrice[P] * M);
       }),
-        (x = `${v.padEnd(25)} ${pr(y, !1, !0).padEnd(15)}${formatHMS(
+        (x = `${v.padEnd(25)} ${formatNumber(y, !1, !0).padEnd(15)}${formatHMS(
           (1e3 * T) / A,
           !0
         ).padEnd(10)}${x}`),
@@ -70837,7 +70843,7 @@ function YJ(t) {
       T > 0 && ((A = String(T).padStart(10)), T !== x && (A += "*")),
         x > 0 &&
           g.push(
-            `${y.name().padEnd(30)}${numberToRoman(Config.BuildingTier[v]).padStart(10)}${Pp(
+            `${y.name().padEnd(30)}${numberToRoman(Config.BuildingTier[v]).padStart(10)}${round(
               x,
               2
             )
@@ -73274,7 +73280,7 @@ class yQ {
       unlockBuilding: ["CaravelBuilder"],
       buildingMultiplier: { Library: { output: 1 } },
       additionalUpgrades: () => [
-        h(d.SeaTradeUpgrade, { tariff: Dt(OL) }),
+        h(d.SeaTradeUpgrade, { tariff: formatPercent(OL) }),
         h(d.ExplorerRangeUpgradeDesc, { range: 2 }),
       ],
     });
@@ -73329,7 +73335,7 @@ class yQ {
       unlockBuilding: ["LensWorkshop"],
       globalMultiplier: { builderCapacity: 1 },
       buildingMultiplier: { Library: { output: 1 }, School: { output: 1 } },
-      additionalUpgrades: () => [h(d.SeaTradeUpgrade, { tariff: Dt(WL) })],
+      additionalUpgrades: () => [h(d.SeaTradeUpgrade, { tariff: formatPercent(WL) })],
     });
     b(this, "Banking", {
       name: () => h(d.Banking),
@@ -73438,7 +73444,7 @@ class yQ {
         University: { output: 1 },
       },
       unlockBuilding: ["Parliament", "BigBen"],
-      additionalUpgrades: () => [h(d.SeaTradeUpgrade, { tariff: Dt(HL) })],
+      additionalUpgrades: () => [h(d.SeaTradeUpgrade, { tariff: formatPercent(HL) })],
     });
     b(this, "RapidFire", {
       name: () => h(d.RapidFire),
@@ -86256,7 +86262,7 @@ var x4 = { exports: {} };
   })();
 })(x4);
 var Nie = x4.exports;
-const Ke = gp(Nie);
+const classNames = gp(Nie);
 function Bt(t, e, r = () => null) {
   const i = [];
   return (
@@ -86348,7 +86354,7 @@ function li({ gameState: t, xy: e }) {
         },
         children: [
           s.jsx("div", {
-            className: Ke({
+            className: classNames({
               "m-icon small": !0,
               "text-orange fill": t.favoriteTiles.has(e),
             }),
@@ -86429,7 +86435,7 @@ function Tn({ gameState: t, xy: e }) {
     : null;
 }
 function te({ value: t, binary: e }) {
-  return pr(t, e != null ? e : !1, !1);
+  return formatNumber(t, e != null ? e : !1, !1);
 }
 function wi({ gameState: t, xy: e }) {
   var o, l;
@@ -86758,7 +86764,7 @@ function Gie({ gameState: t, xy: e }) {
                             }),
                             s.jsx("div", {
                               className: "text-small text-desc",
-                              children: l.desc(l, Pp(u, 2)),
+                              children: l.desc(l, round(u, 2)),
                             }),
                           ],
                         }),
@@ -86766,7 +86772,7 @@ function Gie({ gameState: t, xy: e }) {
                       s.jsx("td", {
                         style: { width: 0 },
                         children: s.jsx("div", {
-                          className: Ke({
+                          className: classNames({
                             "m-icon pointer": !0,
                             "text-desc": !c,
                             "text-green": c,
@@ -86969,7 +86975,7 @@ function C4({ gameState: t, xy: e, type: r }) {
                     ? s.jsx("img", { src: zg, style: { margin: "0 2px 0 0" } })
                     : null,
                   s.jsx("div", {
-                    className: Ke({ f1: !0, "production-warning": m }),
+                    className: classNames({ f1: !0, "production-warning": m }),
                     children: Config.Resource[c].name(),
                   }),
                   s.jsx("div", {
@@ -87094,7 +87100,7 @@ function Xt({ children: t, icon: e, className: r, onClick: i }) {
   return (
     r && (n[r] = !0),
     s.jsxs("div", {
-      className: Ke(n),
+      className: classNames(n),
       onClick: i,
       children: [
         s.jsx("img", {
@@ -87244,7 +87250,7 @@ function Yie({ gameState: t, xy: e }) {
                 })
               : null,
             s.jsx("div", {
-              className: Ke({
+              className: classNames({
                 "text-strong": !0,
                 "text-green": o === "Active",
                 "text-desc": o !== "Active",
@@ -87390,7 +87396,7 @@ function Vg({ gameState: t, xy: e }) {
                     onClick: () => {
                       (r.inputMode = n), Ze();
                     },
-                    className: Ke({
+                    className: classNames({
                       f1: !0,
                       active: r.inputMode === n,
                       "text-desc": r.inputMode !== n,
@@ -87427,7 +87433,7 @@ function Vg({ gameState: t, xy: e }) {
                 },
                 children: [
                   s.jsx("div", {
-                    className: Ke({
+                    className: classNames({
                       "m-icon small": !0,
                       "text-desc":
                         r.maxInputDistance !== Number.POSITIVE_INFINITY,
@@ -87438,7 +87444,7 @@ function Vg({ gameState: t, xy: e }) {
                         : "check_box_outline_blank",
                   }),
                   s.jsx("div", {
-                    className: Ke({
+                    className: classNames({
                       "text-desc":
                         r.maxInputDistance !== Number.POSITIVE_INFINITY,
                     }),
@@ -87786,7 +87792,7 @@ function $ie({ building: t, resource: e }) {
             icon: "warning",
             children: h(d.ConfirmDestroyResourceContent, {
               resource: Config.Resource[e].name(),
-              amount: pr(i),
+              amount: formatNumber(i),
             }),
           }),
           s.jsx("div", { className: "sep10" }),
@@ -87868,8 +87874,8 @@ function qg({ gameState: t, xy: e }) {
         children: [
           a ? s.jsx("img", { src: zg, style: { margin: "0 2px 0 0" } }) : null,
           s.jsxs("div", {
-            className: Ke({ f1: !0, "production-warning": a }),
-            children: [h(d.Storage), ": ", Dt(n)],
+            className: classNames({ f1: !0, "production-warning": a }),
+            children: [h(d.Storage), ": ", formatPercent(n)],
           }),
         ],
       }),
@@ -88101,7 +88107,7 @@ function O0({ gameState: t, xy: e }) {
                           : 0) < P[M]
                           ? "text-red"
                           : "",
-                      children: [Config.Resource[M].name(), " ", pr(P[M])],
+                      children: [Config.Resource[M].name(), " ", formatNumber(P[M])],
                     }),
                   ],
                 },
@@ -88415,7 +88421,7 @@ function W0({ gameState: t, xy: e }) {
                                           className: "f1",
                                           children: [
                                             h(d.ResourceFromBuilding, {
-                                              resource: `${pr(m.amount)} ${getResourceName(
+                                              resource: `${formatNumber(m.amount)} ${getResourceName(
                                                 m.resource
                                               )}`,
                                               building: getBuildingName(m.fromXy, t),
@@ -88554,7 +88560,7 @@ function W0({ gameState: t, xy: e }) {
                                   })
                                 : null,
                               s.jsx("div", {
-                                className: Ke({
+                                className: classNames({
                                   f1: !0,
                                   "production-warning": o,
                                 }),
@@ -88680,7 +88686,7 @@ function W0({ gameState: t, xy: e }) {
                     children: [
                       h(d.AdjustBuildingCapacity),
                       ": ",
-                      Dt(i.capacity),
+                      formatPercent(i.capacity),
                     ],
                   }),
                 }),
@@ -88804,7 +88810,7 @@ function Xie({ gameState: t, xy: e }) {
                       children: [
                         Config.Resource.TradeValue.name(),
                         ": ",
-                        pr(sy(r.level + 1)),
+                        formatNumber(sy(r.level + 1)),
                       ],
                     }),
                     children: s.jsx("div", {
@@ -88872,7 +88878,7 @@ function Zie({ gameState: t, xy: e }) {
                 className: "f1",
                 children: h(d.PercentageOfProductionWorkers),
               }),
-              s.jsx("div", { className: "text-strong", children: Dt(n / a) }),
+              s.jsx("div", { className: "text-strong", children: formatPercent(n / a) }),
             ],
           }),
         ],
@@ -89125,15 +89131,15 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
                     ],
                   }),
                   s.jsx("td", {
-                    className: Ke({
+                    className: classNames({
                       "text-green": m > 0,
                       "text-red": m < 0,
                       "text-right text-small": !0,
                     }),
                     children: s.jsxs(Kt, {
-                      content: h(d.MarketValueDesc, { value: Dt(m, 0) }),
+                      content: h(d.MarketValueDesc, { value: formatPercent(m, 0) }),
                       noStyle: !0,
-                      children: [mathSign(m, CURRENCY_PERCENT_EPSILON), Dt(Math.abs(m), 0)],
+                      children: [mathSign(m, CURRENCY_PERCENT_EPSILON), formatPercent(Math.abs(m), 0)],
                     }),
                   }),
                   s.jsx("td", {
@@ -89227,15 +89233,15 @@ function Qie({ allMarketTrades: t, gs: e }) {
                 ],
               }),
               s.jsx("td", {
-                className: Ke({
+                className: classNames({
                   "text-green": o > 0,
                   "text-red": o < 0,
                   "text-right text-small": !0,
                 }),
                 children: s.jsxs(Kt, {
-                  content: h(d.MarketValueDesc, { value: Dt(o, 0) }),
+                  content: h(d.MarketValueDesc, { value: formatPercent(o, 0) }),
                   noStyle: !0,
-                  children: [mathSign(o, CURRENCY_PERCENT_EPSILON), Dt(Math.abs(o), 0)],
+                  children: [mathSign(o, CURRENCY_PERCENT_EPSILON), formatPercent(Math.abs(o), 0)],
                 }),
               }),
               s.jsx("td", {
@@ -89714,7 +89720,7 @@ function Xk() {
             ],
           }),
           s.jsx("div", {
-            className: Ke({ "table-view": !0, "sticky-header f1": !0 }),
+            className: classNames({ "table-view": !0, "sticky-header f1": !0 }),
             style: { height: "50vh" },
             children: s.jsxs("table", {
               children: [
@@ -90244,7 +90250,7 @@ function Ra({ permanent: t }) {
                             c,
                             t
                               ? 1
-                              : Pp(
+                              : round(
                                   1 /
                                     (1 +
                                       ((p = e.greatPeople[l]) != null ? p : 0)),
@@ -90344,7 +90350,7 @@ function lne({ greatPerson: t, permanent: e }) {
               s.jsx(te, {
                 value: (p = o == null ? void 0 : o.amount) != null ? p : 0,
               }),
-              n ? `/${pr(l)}` : null,
+              n ? `/${formatNumber(l)}` : null,
             ],
           }),
         ],
@@ -90372,7 +90378,7 @@ function lne({ greatPerson: t, permanent: e }) {
                     value: (m = o == null ? void 0 : o.amount) != null ? m : 0,
                   }),
                   "/",
-                  pr(w0(t)),
+                  formatNumber(w0(t)),
                 ],
               })
             : null,
@@ -91095,7 +91101,7 @@ function E4() {
                     : null,
                   s.jsx("div", { className: "f1" }),
                   s.jsx("div", {
-                    className: Ke("text-link text-strong", { disabled: !t }),
+                    className: classNames("text-link text-strong", { disabled: !t }),
                     onClick: () => {
                       t ? It(s.jsx(bne, {})) : ze();
                     },
@@ -91483,7 +91489,7 @@ function ln({ children: t }) {
         r(i);
       }),
     s.jsxs("div", {
-      className: Ke({ "title-bar": !0, "app-region-drag": isSteam() }),
+      className: classNames({ "title-bar": !0, "app-region-drag": isSteam() }),
       children: [
         s.jsx("div", { className: "title-bar-text", children: t }),
         isSteam()
@@ -91551,7 +91557,7 @@ function Ane({ xy: t }) {
                     className: "f1",
                     children: h(d.PlayerMapTariff),
                   }),
-                  s.jsx("div", { className: "text-strong", children: Dt(r) }),
+                  s.jsx("div", { className: "text-strong", children: formatPercent(r) }),
                 ],
               }),
               s.jsx("div", { className: "sep5" }),
@@ -91717,7 +91723,7 @@ function _4({ xy: t }) {
 // SOURCE src/scripts/ui/FillPlayerTradeModal.tsx
 
 // export function FillPlayerTradeModal({ tradeId, xy }: { tradeId: string; xy?: Tile }): React.ReactNode
-function D4({ tradeId: tradeId, xy: xy }) {
+function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
   const [tiles, setTiles] = se.useState([]),
     map = usePlayerMap(),
     gs = gi(),
@@ -91736,9 +91742,9 @@ function D4({ tradeId: tradeId, xy: xy }) {
     const path = M4(xyToPoint(myXy), xyToPoint(targetXy));
     setTiles(path.map((L) => uL(L)));
   }, [trade, myXy]);
-  const m = BJ(tiles, LP(gs)),
-    g =
-      m +
+  const seaTileCost = BJ(tiles, LP(gs)),
+    totalTariff =
+      seaTileCost +
       tiles.reduce((D, I, L) => {
         const F = map.get(I);
         return !F || L === 0 || L === tiles.length - 1 ? D : D + F.tariffRate;
@@ -91873,9 +91879,9 @@ function D4({ tradeId: tradeId, xy: xy }) {
               h(d.PlayerTradeFillSuccessV2, {
                 success: success,
                 total: total,
-                fillAmount: pr(fillAmount),
+                fillAmount: formatNumber(fillAmount),
                 fillResource: Config.Resource[trade.buyResource].name(),
-                receivedAmount: pr(receivedAmount),
+                receivedAmount: formatNumber(receivedAmount),
                 receivedResource: Config.Resource[trade.sellResource].name(),
               })
             );
@@ -92080,7 +92086,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                                 s.jsx(te, { value: L.total - L.used }),
                                 s.jsx("div", {
                                   className: "text-right text-desc text-small",
-                                  children: Dt(1 - L.used / L.total),
+                                  children: formatPercent(1 - L.used / L.total),
                                 }),
                               ],
                             }),
@@ -92148,7 +92154,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                 children: s.jsxs("details", {
                   children: [
                     s.jsxs("summary", {
-                      className: Ke({ row: !0, "text-strong text-red": !fillsHaveEnoughResource(fills) }),
+                      className: classNames({ row: !0, "text-strong text-red": !fillsHaveEnoughResource(fills) }),
                       children: [
                         s.jsx("div", {
                           className: "f1",
@@ -92161,7 +92167,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                     }),
                     s.jsx("ul", {
                       children: s.jsxs("li", {
-                        className: Ke({
+                        className: classNames({
                           "text-small row": !0,
                           "text-strong text-red": getTotalFillAmount(fills) > trade.buyAmount,
                         }),
@@ -92170,7 +92176,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                             className: "f1",
                             children: h(d.PlayerTradeFillPercentage),
                           }),
-                          s.jsx("div", { children: Dt(getTotalFillAmount(fills) / trade.buyAmount) }),
+                          s.jsx("div", { children: formatPercent(getTotalFillAmount(fills) / trade.buyAmount) }),
                         ],
                       }),
                     }),
@@ -92181,19 +92187,21 @@ function D4({ tradeId: tradeId, xy: xy }) {
                 children: s.jsxs("details", {
                   children: [
                     s.jsxs("summary", {
-                      className: "row",
+                      //className: "row",
+                      // ***** 2025-02-27 bottom table row, summary
+                      className: classNames("row",{"text-strong text-red":(totalTariff>0.03)}),
                       children: [
                         s.jsx("div", {
                           className: "f1",
                           children: h(d.PlayerMapTariff),
                         }),
-                        s.jsx("div", { children: Dt(g) }),
+                        s.jsx("div", { children: formatPercent(totalTariff) }),
                       ],
                     }),
                     s.jsxs("ul", {
                       className: "text-small",
                       children: [
-                        m > 0
+                        seaTileCost > 0
                           ? s.jsxs("li", {
                               className: "row",
                               children: [
@@ -92201,7 +92209,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                                   className: "f1",
                                   children: h(d.SeaTradeCost),
                                 }),
-                                s.jsx("div", { children: Dt(m) }),
+                                s.jsx("div", { children: formatPercent(seaTileCost) }),
                               ],
                             })
                           : null,
@@ -92212,14 +92220,17 @@ function D4({ tradeId: tradeId, xy: xy }) {
                             : s.jsxs(
                                 "li",
                                 {
-                                  className: "row",
+                                  // ***** 2025-02-27 bottom table row, individual
+                                  //className: "row",
+                                  className: classNames("row",{"text-strong text-red":(L.tariffRate>0.01)}),
                                   children: [
                                     s.jsx("div", {
                                       className: "f1",
                                       children: L.handle,
                                     }),
                                     s.jsx("div", {
-                                      children: Dt(L.tariffRate),
+                                      className: "row mv5",
+                                      children: formatPercent(L.tariffRate),
                                     }),
                                   ],
                                 },
@@ -92247,7 +92258,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                           className: "text-strong",
                           children: s.jsx(te, {
                             value:
-                              ((1 - g) * trade.sellAmount * getTotalFillAmount(fills)) / trade.buyAmount,
+                              ((1 - totalTariff) * trade.sellAmount * getTotalFillAmount(fills)) / trade.buyAmount,
                           }),
                         }),
                       ],
@@ -92271,7 +92282,7 @@ function D4({ tradeId: tradeId, xy: xy }) {
                           ],
                         }),
                         s.jsxs("li", {
-                          className: Ke({
+                          className: classNames({
                             "text-small row": !0,
                             "text-strong text-red": !fillsHaveEnoughStorage(fills),
                           }),
@@ -92392,7 +92403,10 @@ function Pne({ xy: t }) {
                 ],
               }),
               s.jsxs("div", {
-                className: "row mv5",
+                // className: "row mv5",
+                // ***** 2025-02-27 tariff row on tiles screen
+                className: classNames("row mv5", {"text-strong text-red":(r.tariffRate>0.03)}),
+
                 children: [
                   s.jsx("div", {
                     className: "f1",
@@ -92400,7 +92414,7 @@ function Pne({ xy: t }) {
                   }),
                   s.jsx("div", {
                     className: "text-strong",
-                    children: Dt(r.tariffRate),
+                    children: formatPercent(r.tariffRate),
                   }),
                 ],
               }),
@@ -92476,7 +92490,7 @@ function Pne({ xy: t }) {
                                   children: s.jsx("div", {
                                     className: "text-strong text-blue pointer",
                                     onClick: () => {
-                                      It(s.jsx(D4, { tradeId: a.id }));
+                                      It(s.jsx(FillPlayerTradeModal, { tradeId: a.id }));
                                     },
                                     children: h(d.PlayerTradeFill),
                                   }),
@@ -93110,7 +93124,7 @@ class Ene extends Pi {
       m.position.set(o * lt + 0.5 * lt, l * lt + 0.5 * lt),
       (m.alpha = c ? 1 : 0.5);
     const g = this.addChild(
-      new Ql(Dt(r.tariffRate), {
+      new Ql(formatPercent(r.tariffRate), {
         fontName: Ai.Cabin,
         fontSize: 20,
         tint: u ? 16771751 : 16777215,
@@ -93297,7 +93311,7 @@ function Nne() {
                         ),
                       children: h(d.TranslationPercentage, {
                         language: d.CurrentLanguage,
-                        percentage: Dt(iQ()),
+                        percentage: formatPercent(iQ()),
                       }),
                     })
                   : null,
@@ -94514,7 +94528,7 @@ function F4() {
         onClick: () => {
           Le(), (t.useModernUI = !t.useModernUI), ut(t), uO(t);
         },
-        className: Ke({
+        className: classNames({
           "m-icon pointer": !0,
           "text-green": t.useModernUI,
           "text-desc": !t.useModernUI,
@@ -95283,7 +95297,7 @@ function An() {
           children: [
             s.jsxs("div", {
               ref: r,
-              className: Ke({ "menu-button": !0, active: t === "view" }),
+              className: classNames({ "menu-button": !0, active: t === "view" }),
               onPointerDown: (a) => {
                 a.nativeEvent.stopPropagation(),
                   e(t === "view" ? null : "view");
@@ -95294,7 +95308,7 @@ function An() {
               children: [
                 s.jsx(rx, { name: h(d.ViewMenu) }),
                 s.jsxs("div", {
-                  className: Ke({ "menu-popover": !0, active: t === "view" }),
+                  className: classNames({ "menu-popover": !0, active: t === "view" }),
                   children: [
                     s.jsx("div", {
                       className: "menu-popover-item",
@@ -95344,7 +95358,7 @@ function An() {
             }),
             s.jsxs("div", {
               ref: r,
-              className: Ke({ "menu-button": !0, active: t === "options" }),
+              className: classNames({ "menu-button": !0, active: t === "options" }),
               onPointerDown: (a) => {
                 a.nativeEvent.stopPropagation(),
                   e(t === "options" ? null : "options");
@@ -95355,7 +95369,7 @@ function An() {
               children: [
                 s.jsx(rx, { name: h(d.OptionsMenu) }),
                 s.jsxs("div", {
-                  className: Ke({
+                  className: classNames({
                     "menu-popover": !0,
                     active: t === "options",
                   }),
@@ -95409,7 +95423,7 @@ function An() {
             }),
             s.jsxs("div", {
               ref: r,
-              className: Ke({ "menu-button": !0, active: t === "help" }),
+              className: classNames({ "menu-button": !0, active: t === "help" }),
               onPointerDown: (a) => {
                 a.nativeEvent.stopPropagation(),
                   e(t === "help" ? null : "help");
@@ -95420,7 +95434,7 @@ function An() {
               children: [
                 s.jsx(rx, { name: h(d.HelpMenu) }),
                 s.jsxs("div", {
-                  className: Ke({ "menu-popover": !0, active: t === "help" }),
+                  className: classNames({ "menu-popover": !0, active: t === "help" }),
                   children: [
                     s.jsx("div", {
                       className: "menu-popover-item",
@@ -95676,7 +95690,7 @@ function aae({ definition: t, gameState: e }) {
                     children: h(d.ConstructionCost, {
                       cost: mapOf(
                         getBuildingCost({ type: a, level: 0 }),
-                        (l, u) => `${Config.Resource[l].name()} x${pr(u)}`
+                        (l, u) => `${Config.Resource[l].name()} x${formatNumber(u)}`
                       ).join(", "),
                     }),
                   }),
@@ -96694,7 +96708,7 @@ function pae({ open: t }) {
                               children: h(d.HappinessUncapped),
                             }),
                             s.jsx("div", {
-                              className: Ke({
+                              className: classNames({
                                 "text-strong": !0,
                                 "text-red": e.uncapped < 0,
                                 "text-green": e.uncapped > 0,
@@ -96720,12 +96734,12 @@ function pae({ open: t }) {
                           children: h(d.WorkerHappinessPercentage),
                         }),
                         s.jsx("div", {
-                          className: Ke({
+                          className: classNames({
                             "text-strong": !0,
                             "text-red": e.workerPercentage < 1,
                             "text-green": e.workerPercentage > 1,
                           }),
-                          children: Dt(e.workerPercentage),
+                          children: formatPercent(e.workerPercentage),
                         }),
                       ],
                     }),
@@ -97064,7 +97078,7 @@ function mae() {
                 className: "mb5",
                 children: mapOf(
                   Config.City[a].deposits,
-                  (y, x) => `${Config.Resource[y].name()}: ${Dt(x)}`
+                  (y, x) => `${Config.Resource[y].name()}: ${formatPercent(x)}`
                 ).join(", "),
               }),
               s.jsx("div", {
@@ -97420,7 +97434,7 @@ function G4() {
           s.jsx("div", { className: "f1", children: h(d.Warp) }),
           s.jsx("div", {
             className: "f1 text-center text-desc",
-            children: Dt(((a = t.building.resources.Warp) != null ? a : 0) / i),
+            children: formatPercent(((a = t.building.resources.Warp) != null ? a : 0) / i),
           }),
           s.jsxs("div", {
             className: "f1 text-right text-strong",
@@ -97731,7 +97745,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
                             }),
                             s.jsx("div", {
                               className: "text-strong",
-                              children: Dt(i),
+                              children: formatPercent(i),
                             }),
                           ],
                         }),
@@ -97759,7 +97773,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
                   }),
                   s.jsx("div", {
                     className: "text-strong",
-                    children: Dt(o > 0 ? y.totalFuel / o : 0),
+                    children: formatPercent(o > 0 ? y.totalFuel / o : 0),
                   }),
                 ],
               }),
@@ -97933,7 +97947,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
                             style: { width: "65px" },
                             children:
                               m < T
-                                ? Dt(m / T, 0)
+                                ? formatPercent(m / T, 0)
                                 : s.jsx("div", {
                                     className: "m-icon text-green small",
                                     children: "check_circle",
@@ -98451,11 +98465,11 @@ function Zk({
     ((a += " text-red"),
     (o = h(d.ResourceNeeded, {
       resource: Config.Resource[e].name(),
-      amount: pr(Math.abs(l)),
+      amount: formatNumber(Math.abs(l)),
     })));
   const u = s.jsxs("span", {
     className: a,
-    children: [i ? Config.Resource[e].name() : null, " x", pr(r)],
+    children: [i ? Config.Resource[e].name() : null, " x", formatNumber(r)],
   });
   return n ? s.jsx(Te, { content: o, disabled: !o, children: u }) : u;
 }
@@ -98802,7 +98816,7 @@ function Cy({ name: t, stage: e, current: r, progress: i }) {
         className: "row",
         children: [
           s.jsxs("div", { className: "f1", children: [t, " ..."] }),
-          i ? s.jsx("div", { children: Dt(i, 0) }) : null,
+          i ? s.jsx("div", { children: formatPercent(i, 0) }) : null,
         ],
       })
     : r > e
@@ -98920,15 +98934,15 @@ function Pae({ gameState: t, xy: e }) {
                         ],
                       }),
                       s.jsx("td", {
-                        className: Ke({
+                        className: classNames({
                           "text-green": f > 0,
                           "text-red": f < 0,
                           "text-right text-small": !0,
                         }),
                         children: s.jsxs(Kt, {
-                          content: h(d.MarketValueDesc, { value: Dt(f, 0) }),
+                          content: h(d.MarketValueDesc, { value: formatPercent(f, 0) }),
                           noStyle: !0,
-                          children: [mathSign(f, CURRENCY_PERCENT_EPSILON), Dt(Math.abs(f), 0)],
+                          children: [mathSign(f, CURRENCY_PERCENT_EPSILON), formatPercent(Math.abs(f), 0)],
                         }),
                       }),
                       s.jsx("td", {
@@ -99141,7 +99155,7 @@ function wae({ gameState: t, xy: e }) {
               h(d.PlayerTradeClaimAllMessageV2, {
                 resources: mapOf(
                   m,
-                  (v, y) => `${Config.Resource[v].name()}: ${pr(y)}`
+                  (v, y) => `${Config.Resource[v].name()}: ${formatNumber(y)}`
                 ).join(", "),
               })
             );
@@ -99402,7 +99416,7 @@ function AddTradeComponent({ gameState: gameState, xy: xy }) {
                       })
                     );
                   },
-                  children: Dt(T),
+                  children: formatPercent(T),
                 },
                 T
               )
@@ -99473,7 +99487,7 @@ function AddTradeComponent({ gameState: gameState, xy: xy }) {
                         ),
                       })
                     ),
-                  children: Dt(T),
+                  children: formatPercent(T),
                 },
                 T
               )
@@ -99884,14 +99898,14 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
           return s.jsxs(
             "tr",
             {
-              className: Ke({
+              className: classNames({
                 blue: A.fromId === (user == null ? void 0 : user.userId),
               }),
               children: [
                 s.jsxs("td", {
                   children: [
                     s.jsx("div", {
-                      className: Ke({ "text-strong": _J(A.buyResource) }),
+                      className: classNames({ "text-strong": _J(A.buyResource) }),
                       children: Config.Resource[A.buyResource].name(),
                     }),
                     s.jsx("div", {
@@ -99920,16 +99934,16 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                   ],
                 }),
                 s.jsx("td", {
-                  className: Ke({
+                  className: classNames({
                     "text-small text-right": !0,
                     "text-red": P <= -CURRENCY_PERCENT_EPSILON,
                     "text-green": P >= CURRENCY_PERCENT_EPSILON,
                     "text-desc": Math.abs(P) < CURRENCY_PERCENT_EPSILON,
                   }),
                   children: s.jsx(Te, {
-                    content: h(d.MarketValueDesc, { value: Dt(P, 0) }),
+                    content: h(d.MarketValueDesc, { value: formatPercent(P, 0) }),
                     children: s.jsxs("div", {
-                      children: [mathSign(P, CURRENCY_PERCENT_EPSILON), Dt(Math.abs(P), 0)],
+                      children: [mathSign(P, CURRENCY_PERCENT_EPSILON), formatPercent(Math.abs(P), 0)],
                     }),
                   }),
                 }),
@@ -100005,11 +100019,11 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                                     }),
                                   children: s.jsx(mt, {
                                     html: h(d.PlayerTradeCancelDescHTML, {
-                                      percent: Dt(1 - ry),
-                                      res: `${pr(
+                                      percent: formatPercent(1 - ry),
+                                      res: `${formatNumber(
                                         A.sellAmount * ry
                                       )} ${Config.Resource[A.sellResource].name()}`,
-                                      discard: pr(k),
+                                      discard: formatNumber(k),
                                     }),
                                   }),
                                 })
@@ -100018,13 +100032,13 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                           children: "delete",
                         })
                       : s.jsx("div", {
-                          className: Ke({
+                          className: classNames({
                             "text-link": !C,
                             "text-strong": !0,
                             "text-desc": C,
                           }),
                           onClick: () => {
-                            C || It(s.jsx(D4, { tradeId: A.id, xy: e }));
+                            C || It(s.jsx(FillPlayerTradeModal, { tradeId: A.id, xy: e }));
                           },
                           children: h(d.PlayerTradeFill),
                         }),
@@ -100117,7 +100131,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
                       onClick: () => {
                         a(Ie(U({}, n), { perCycle: Math.floor(u * f) }));
                       },
-                      children: Dt(f),
+                      children: formatPercent(f),
                     },
                     f
                   )
@@ -100171,7 +100185,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
                       onClick: () => {
                         a(Ie(U({}, n), { cap: Math.floor(r * f) }));
                       },
-                      children: Dt(f),
+                      children: formatPercent(f),
                     },
                     f
                   )
@@ -100198,7 +100212,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
                           onClick: () => {
                             delete n.inputMode, a(U({}, n));
                           },
-                          className: Ke({
+                          className: classNames({
                             f1: !0,
                             active: isNullOrUndefined(n.inputMode),
                             "text-desc": !isNullOrUndefined(n.inputMode),
@@ -100220,7 +100234,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
                               onClick: () => {
                                 a(Ie(U({}, n), { inputMode: f })), Ze();
                               },
-                              className: Ke({
+                              className: classNames({
                                 f1: !0,
                                 active: n.inputMode === f,
                                 "text-desc": n.inputMode !== f,
@@ -100430,7 +100444,7 @@ function H4({ gameState: gameState, xy: xy }) {
         className: "row text-small",
         children: [
           s.jsx("div", {
-            className: Ke({ "text-desc": selected.size === 0 }),
+            className: classNames({ "text-desc": selected.size === 0 }),
             children: h(d.SelectedCount, { count: selected.size }),
           }),
           s.jsx("div", { className: "f1" }),
@@ -104576,7 +104590,7 @@ function kh({
   onFilterChange: a,
 }) {
   const o = s.jsx("button", {
-    className: Ke({ active: ot(r, i) }),
+    className: classNames({ active: ot(r, i) }),
     style: { width: 27, padding: 0 },
     onClick: () => {
       (n = dc(r, i)), a(n);
@@ -108648,7 +108662,7 @@ function BuildingTab({ gameState: t }) {
                     }),
                   }),
                   s.jsx("td", {
-                    className: Ke({
+                    className: classNames({
                       "text-red":
                         Tick.current.notProducingReasons.get(l) ===
                         Jt.NotEnoughWorkers,
@@ -108730,7 +108744,7 @@ function ResourcesTab({ gameState: gameState }) {
           s.jsx(Te, {
             content: h(showTheoreticalValue ? d.TheoreticalData : d.LiveData),
             children: s.jsx("button", {
-              className: Ke({ active: !showTheoreticalValue }),
+              className: classNames({ active: !showTheoreticalValue }),
               style: { width: 27, padding: 0 },
               onClick: () => {
                 setShowTheoreticalValue(!showTheoreticalValue);
@@ -108840,13 +108854,13 @@ function ResourcesTab({ gameState: gameState }) {
                 s.jsxs("td", {
                   children: [
                     s.jsx("div", {
-                      className: Ke({ "text-right": !0, "text-red": deficit < 0 }),
+                      className: classNames({ "text-right": !0, "text-red": deficit < 0 }),
                       children: s.jsx(te, { value: deficit }),
                     }),
                     s.jsx(Te, {
                       content: h(d.StatisticsResourcesDeficitDesc, {
-                        output: pr(output),
-                        input: pr(input),
+                        output: formatNumber(output),
+                        input: formatNumber(input),
                       }),
                       children: s.jsxs("div", {
                         className: "text-small text-right text-desc",
@@ -108870,7 +108884,7 @@ function ResourcesTab({ gameState: gameState }) {
                   ],
                 }),
                 s.jsx("td", {
-                  className: Ke({
+                  className: classNames({
                     "text-red": deficit < 0,
                     "text-right text-small": !0,
                   }),
@@ -108999,7 +109013,7 @@ function uue({ gameState: t, xy: e }) {
                 className: "row mt5 text-desc",
                 children: [
                   s.jsx("div", {
-                    children: Dt(
+                    children: formatPercent(
                       ((a = r.resources.Cycle) != null ? a : 0) / Tb
                     ),
                   }),
@@ -109289,7 +109303,7 @@ function mue({ gameState: t, xy: e }) {
                       }),
                       s.jsx(Te, {
                         content: h(d.WarehouseSettingsAutopilotDesc, {
-                          capacity: pr(i),
+                          capacity: formatNumber(i),
                         }),
                         children: s.jsx("div", {
                           className: "m-icon small ml5 text-desc help-cursor",
@@ -109565,7 +109579,7 @@ function yue({ gameState: t, xy: e }) {
             className: "f1",
             children: h(d.ConstructionProgress),
           }),
-          s.jsx("div", { children: Dt(l, 0) }),
+          s.jsx("div", { children: formatPercent(l, 0) }),
         ],
       }),
       s.jsx("div", { className: "sep5" }),
@@ -109646,7 +109660,7 @@ function yue({ gameState: t, xy: e }) {
                           s.jsx(te, { value: g }),
                           s.jsx("span", {
                             className: "text-desc ml5",
-                            children: Dt(
+                            children: formatPercent(
                               ((x = r.resources[m]) != null ? x : 0) / g
                             ),
                           }),
@@ -109868,7 +109882,7 @@ function bue({ tile: t }) {
                           },
                           children: [
                             s.jsx("div", {
-                              className: Ke({
+                              className: classNames({
                                 "m-icon mr5": !0,
                                 "text-link": n(),
                                 "text-desc": !n(),
@@ -110294,7 +110308,7 @@ function Cue({ tile: t }) {
                                         children: [
                                           Config.Resource[A].name(),
                                           " x",
-                                          pr(C),
+                                          formatNumber(C),
                                         ],
                                       },
                                       A
@@ -110321,7 +110335,7 @@ function Cue({ tile: t }) {
                                         children: [
                                           Config.Resource[A].name(),
                                           " x",
-                                          pr(C),
+                                          formatNumber(C),
                                         ],
                                       },
                                       A
@@ -110651,7 +110665,7 @@ class eI extends Pi {
   flushFloater(r) {
     if (this._floaterValue <= 0 || !this.isInViewport()) return;
     const i = this._world.tooltipPool.allocate();
-    (i.text = `+${pr(this._floaterValue)}`),
+    (i.text = `+${formatNumber(this._floaterValue)}`),
       (this._floaterValue = 0),
       (i.position = this.position),
       (i.y = i.y - 20),
@@ -110768,7 +110782,7 @@ class eI extends Pi {
                   : 0);
               p > 0
                 ? ((this._bottomText.visible = !0),
-                  (this._bottomText.text = pr(p)))
+                  (this._bottomText.text = formatNumber(p)))
                 : (this._bottomText.visible = !1);
               break;
             }
@@ -110776,7 +110790,7 @@ class eI extends Pi {
               const p = Tick.current.storagePercentages.get(r.tile);
               p
                 ? ((this._bottomText.visible = !0),
-                  (this._bottomText.text = Dt(p)))
+                  (this._bottomText.text = formatPercent(p)))
                 : (this._bottomText.visible = !1);
             }
           }
@@ -111711,7 +111725,7 @@ function Due({ xy: t, offline: e }) {
     case "Headquarter": {
       if (
         (mapSafePush(Tick.next.tileMultipliers, t, {
-          output: Pp(Xf(getGameOptions()) * 0.1, 1),
+          output: round(Xf(getGameOptions()) * 0.1, 1),
           source: h(d.PermanentGreatPeople),
         }),
         r.unlockedUpgrades.SpaceshipIdle &&
@@ -114033,7 +114047,7 @@ function ece({ before: t, after: e, time: r }) {
                                         Config.Resource[f].name(),
                                         ":",
                                         s.jsxs("span", {
-                                          className: Ke({
+                                          className: classNames({
                                             "text-red": m < 0,
                                             "text-green": m > 0,
                                             "text-strong": !0,
@@ -114839,7 +114853,7 @@ function handleChatCommand(command) {
             const o = performance.now(),
               l = getGameState();
             for (let u = 0; u < 60 * a; u++) tickEverySecond(l, !0);
-            addSystemMessage(`Completed in ${pr((performance.now() - o) / 1e3)}s`);
+            addSystemMessage(`Completed in ${formatNumber((performance.now() - o) / 1e3)}s`);
           }, 500);
         break;
       }
@@ -115077,7 +115091,7 @@ function handleChatCommand(command) {
                   : 0;
               return [
                 l.handle.padEnd(16),
-                pr(c / (l.totalPlayTime / 3600)).padStart(8),
+                formatNumber(c / (l.totalPlayTime / 3600)).padStart(8),
                 c.toString().padStart(8),
               ].join("");
             }).join(`
@@ -115097,9 +115111,9 @@ function handleChatCommand(command) {
               const u = l.empireValues[l.empireValues.length - 1];
               return [
                 l.handle.padEnd(16),
-                pr(u.value).padStart(8),
-                pr(u.value / u.tick).padStart(8),
-                pr(
+                formatNumber(u.value).padStart(8),
+                formatNumber(u.value / u.tick).padStart(8),
+                formatNumber(
                   u.value /
                     u.tick /
                     ((c = u.totalGreatPeopleLevel) != null ? c : 1)
@@ -115247,7 +115261,7 @@ function vce({ show: t, style: e, onClose: r }) {
                             s.jsx("td", { className: "f1", children: l }),
                             s.jsx("td", {
                               children: s.jsx("div", {
-                                className: Ke({
+                                className: classNames({
                                   "m-icon pointer": !0,
                                   "text-desc": !i.chatChannels.has(o),
                                   "text-green": i.chatChannels.has(o),
@@ -115301,7 +115315,7 @@ function yce() {
     e
       ? null
       : s.jsxs("div", {
-          className: Ke({
+          className: classNames({
             "chat-bar window": !0,
             "last-message": !t.chatHideLatestMessage,
           }),
@@ -115475,7 +115489,7 @@ function Tce({ onChatSend: t, channel: e }) {
       }),
       s.jsx("input", {
         ref: a,
-        className: Ke({ "f1 w100": !0, "is-chat-command": i.startsWith("/") }),
+        className: classNames({ "f1 w100": !0, "is-chat-command": i.startsWith("/") }),
         type: "text",
         style: { margin: "0 2px 0 0" },
         value: i,
@@ -115497,7 +115511,7 @@ function Tce({ onChatSend: t, channel: e }) {
 function Ace({ user: t, chat: e, onImageLoaded: r }) {
   var i, n, a, o;
   return s.jsxs("div", {
-    className: Ke({
+    className: classNames({
       "chat-message-item": !0,
       "is-even": e.id % 2 === 0,
       "mentions-me": t
@@ -115739,7 +115753,7 @@ function Sce() {
       ht.setSize(Math.round(k.width), Math.round(k.height));
     }),
     s.jsxs("div", {
-      className: Ke({ "resource-bar window": !0, "app-region-drag": i }),
+      className: classNames({ "resource-bar window": !0, "app-region-drag": i }),
       style: m,
       ref: n,
       children: [
@@ -115790,7 +115804,7 @@ function Sce() {
               }),
             })
           : s.jsxs("div", {
-              className: Ke({ "menu-button": !0, active: p }),
+              className: classNames({ "menu-button": !0, active: p }),
               children: [
                 s.jsx("div", {
                   onPointerDown: (k) => {
@@ -115800,11 +115814,11 @@ function Sce() {
                     }
                     k.nativeEvent.stopPropagation(), f(!p);
                   },
-                  className: Ke({ "m-icon fill text-orange": !0 }),
+                  className: classNames({ "m-icon fill text-orange": !0 }),
                   children: "kid_star",
                 }),
                 s.jsx("div", {
-                  className: Ke({ "menu-popover": !0, active: p }),
+                  className: classNames({ "menu-popover": !0, active: p }),
                   children: Array.from(e.favoriteTiles)
                     .sort((k, w) =>
                       Config.Building[e.tiles.get(k).building.type]
@@ -115865,7 +115879,7 @@ function Sce() {
               },
               children: [
                 s.jsx("div", {
-                  className: Ke({
+                  className: classNames({
                     "m-icon": !0,
                     "text-red": t.happiness.value < 0,
                     "text-green": t.happiness.value > 0,
@@ -115879,7 +115893,7 @@ function Sce() {
                     : h(d.Happiness),
                   children: s.jsx("div", {
                     style: { width: "4rem" },
-                    children: Pp(
+                    children: round(
                       r.resourceBarShowUncappedHappiness
                         ? t.happiness.uncapped
                         : t.happiness.value,
@@ -115895,7 +115909,7 @@ function Sce() {
           disabled: i,
           content: Config.City[e.city].festivalDesc(),
           children: s.jsxs("div", {
-            className: Ke({
+            className: classNames({
               section: !0,
               pointer: !0,
               "app-region-none": !0,
@@ -115906,7 +115920,7 @@ function Sce() {
             },
             children: [
               s.jsx("div", {
-                className: Ke({ "m-icon": !0 }),
+                className: classNames({ "m-icon": !0 }),
                 children: "celebration",
               }),
               s.jsx("div", {
@@ -115931,7 +115945,7 @@ function Sce() {
           className: "section",
           children: [
             s.jsx("div", {
-              className: Ke({ "m-icon": !0 }),
+              className: classNames({ "m-icon": !0 }),
               children: "person",
             }),
             s.jsx(Te, {
@@ -115956,7 +115970,7 @@ function Sce() {
                   className: "section",
                   children: [
                     s.jsx("div", {
-                      className: Ke({
+                      className: classNames({
                         "m-icon": !0,
                         "text-red":
                           ((x = t.workersAvailable.get("Power")) != null
@@ -116004,7 +116018,7 @@ function Sce() {
           onClick: () => Singleton().sceneManager.loadScene(op),
           children: [
             s.jsx("div", {
-              className: Ke({ "m-icon": !0 }),
+              className: classNames({ "m-icon": !0 }),
               children: "science",
             }),
             s.jsx(Te, {
@@ -116015,7 +116029,7 @@ function Sce() {
                 children: [
                   s.jsx(te, { value: Dn.science[Dn.science.length - 1] }),
                   s.jsxs("span", {
-                    className: Ke({ "text-red": c < 0, "text-green": c > 0 }),
+                    className: classNames({ "text-red": c < 0, "text-green": c > 0 }),
                     style: { fontWeight: "normal", textAlign: "left" },
                     children: [mathSign(c), s.jsx(te, { value: Math.abs(c) })],
                   }),
@@ -116030,7 +116044,7 @@ function Sce() {
           onClick: () => l(),
           children: [
             s.jsx("div", {
-              className: Ke({ "m-icon": !0 }),
+              className: classNames({ "m-icon": !0 }),
               children: "domain_disabled",
             }),
             s.jsx(Te, {
@@ -116060,7 +116074,7 @@ function Sce() {
           className: "section",
           children: [
             s.jsx("div", {
-              className: Ke({ "m-icon": !0 }),
+              className: classNames({ "m-icon": !0 }),
               children: "account_balance",
             }),
             s.jsx(Te, {
@@ -116071,7 +116085,7 @@ function Sce() {
                 children: [
                   s.jsx(te, { value: t.totalValue }),
                   s.jsxs("span", {
-                    className: Ke({ "text-red": u < 0, "text-green": u > 0 }),
+                    className: classNames({ "text-red": u < 0, "text-green": u > 0 }),
                     style: { fontWeight: "normal", textAlign: "left" },
                     children: [mathSign(u), s.jsx(te, { value: Math.abs(u) })],
                   }),
@@ -116100,7 +116114,7 @@ function Sce() {
                   children: s.jsxs("span", {
                     className: "text-desc",
                     style: { fontWeight: "normal", marginLeft: 5 },
-                    children: ["(", Dt(clamp(uJ(), 0, 1), 0, lL.Floor), ")"],
+                    children: ["(", formatPercent(clamp(uJ(), 0, 1), 0, lL.Floor), ")"],
                   }),
                 }),
               ],
@@ -116151,7 +116165,7 @@ function wce() {
           },
           children: [
             s.jsx("div", {
-              className: Ke({ "m-icon": !0 }),
+              className: classNames({ "m-icon": !0 }),
               children: "do_not_disturb_on",
             }),
             s.jsx(Te, {
@@ -116176,7 +116190,7 @@ function wce() {
                             }),
                             s.jsx("div", {
                               className: "ml20",
-                              children: pr(a),
+                              children: formatNumber(a),
                             }),
                             s.jsx("div", {
                               style: { width: "70px", textAlign: "right" },
