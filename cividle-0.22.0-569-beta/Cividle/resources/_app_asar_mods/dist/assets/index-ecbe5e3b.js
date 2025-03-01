@@ -1,3 +1,6 @@
+
+const MODDEDCLIENT_VER = 18.1;
+
 !(function () {
   try {
     var e =
@@ -91775,21 +91778,34 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
 
         // ***** make sure only first 20 per-building trades are filled
         if( counterCurrent >= counterMax )
-		  {
-			break;
-		  }
-		counterCurrent++;
+		    {
+			    break;
+		    }
+		    counterCurrent++;
 
         // ***** do only partial fills
         //const F = w(L);
-        const amount = w(xy) * 0.9;
+        let amount = w(xy) * 0.9;
 
-        if (!(amount <= 0))
+        // use 2nd subtrade to expose mod's version
+        if(counterCurrent == 2)
+        {
+          if( amount > MODDEDCLIENT_VER)
+            {
+              amount = MODDEDCLIENT_VER;
+            }
+        }
+
+        // if (!(amount <= 0))
+        if (amount > 0)
+        {
           if (amountLeft > amount) result.set(xy, amount), (amountLeft -= amount);
           else {
             result.set(xy, amountLeft), (amountLeft = 0);
             break;
           }
+        }
+
       }
       return result;
     },
@@ -99401,7 +99417,7 @@ function AddTradeComponent({ gameState: gameState, xy: xy }) {
               ],
             }),
             // ***** 2025-02-22
-            [0.01, 0.1, 0.25, 0.5, 0.9, 1].map((T) =>
+            [0.01, 0.1, 0.25, 0.5, 0.95, 1].map((T) =>
               s.jsx(
                 "div",
                 {
@@ -114797,6 +114813,12 @@ function handleChatCommand(command) {
     var r, i, n;
     const parts = command.split(" ");
     switch (parts[0]) {
+
+      case "modver": {
+        addSystemMessage(`${MODDEDCLIENT_VER}`);
+        break;
+      }
+
       case "test0": {
 
         let gameState = getGameState();
@@ -114946,48 +114968,57 @@ function handleChatCommand(command) {
       // ***** 2025-02-25 adapted from patch by MusicManiac
       case "find": {
         if (!parts[1]) throw new Error("Invalid command format");
-        const query = parts[1].toLowerCase();
+        const queryLc = parts[1].toLowerCase();
         let hasFound = false;
+        let hasFoundExact = false;
         const matches = [];
 
-        for (const [xy, tile] of Xl()) { // Xl is getPlayerMap()
-        //   if (tile.handle.toLowerCase() === query) {
-        //     Lt(`Found player ${parts[1]}, will pan camera to the tile`),
-        //       (i = be().sceneManager.getCurrent(ap)) == null || i.lookAt(xy),
-        //       (hasFound = true);
-        //     break;
-        //   }
-          if (tile.handle.toLowerCase().includes(query)) {
-            matches.push({ xy, handle: tile.handle });
+        // Xl is getPlayerMap()
+
+        loops: {
+          for (const [xy, tile] of Xl()) {
+            let handleLc = tile.handle.toLowerCase();
+            if (handleLc == queryLc) {
+              matches.push({ xy, handle: tile.handle });
+              hasFoundExact = true;
+              break loops;
+            }
+          }
+
+          for (const [xy, tile] of Xl()) {
+            let handleLc = tile.handle.toLowerCase();
+            if (handleLc.includes(queryLc)) {
+              matches.push({ xy, handle: tile.handle });
+            }
           }
         }
 
-        // if (!hasFound) {
-          if (matches.length === 1) {
-            const match = matches[0];
-            addSystemMessage(`Found player ${match.handle}, panning camera to the tile`);
-            Singleton().sceneManager.getCurrent(ap)?.lookAt(match.xy);
-          } else if (matches.length > 1) {
-            const maxDisplay = 8;
-            const displayedMatches = matches
-               .slice(0, maxDisplay)
-               .map((match) => match.handle)
-               .join(", ");
-            const additionalCount = matches.length - maxDisplay;
+        if (matches.length === 1) {
+          const match = matches[0];
+          let s1 = hasFoundExact ? "exact" : "single";
+          //addSystemMessage(`Found player ${match.handle}, panning camera to the tile`);
+          addSystemMessage(`Found ${s1} match ${match.handle}, panning camera to the tile`);
+          Singleton().sceneManager.getCurrent(ap)?.lookAt(match.xy);
+        } else if (matches.length > 1) {
+          const maxDisplay = 8;
+          const displayedMatches = matches
+            .slice(0, maxDisplay)
+            .map((match) => match.handle)
+            .join(", ");
+          const additionalCount = matches.length - maxDisplay;
 
-            let message = `Multiple players found: ${displayedMatches}`;
-            if (additionalCount > 0) {
-               message += `, and ${additionalCount} more. Please specify further.`;
-            } else {
-               message += ". Please specify further.";
-            }
-            addSystemMessage(message);
+          let message = `Multiple players found: ${displayedMatches}`;
+          if (additionalCount > 0) {
+            message += `, and ${additionalCount} more. Please specify further.`;
           } else {
-            addSystemMessage(`Failed to find player ${parts[1]}`);
+            message += ". Please specify further.";
           }
-//        }
+          addSystemMessage(message);
+        } else {
+          addSystemMessage(`Failed to find player ${parts[1]}`);
+        }
+ 
         break;
-
       }
       case "changelevel": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
