@@ -1,5 +1,5 @@
 
-const MODDEDCLIENT_VER = 18.9;
+const MODDEDCLIENT_VER = 18.11;
 
 var ModdedClientConfig = {
   balancedTransports: true,
@@ -91781,8 +91781,9 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
     myXy = Lc(),
     allTradeBuildings = Tick.current.playerTradeBuildings,
 
-    // *****
-    cSorted = new Map(),
+    // added, to keep buildings in the order of best-ish subtrade candidates
+    // filled later a few lines below "Array.from(allTradeBuildings.entries())"
+    allTradeBuildingsSorted = new Map(),
 
     [fills, setFills] = se.useState(new Map());
   se.useEffect(() => {
@@ -91807,86 +91808,98 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
       return !0;
     },
 
-    // 2025-02-23
-    // ***** calculateMaxFill
-    // x = () => {
+    // IMPORTANT 2025-02-xx
+    // param "hint" can be "greedy" or "fast" to tweak some limits
+    // param "maxError" reserved for future use, to set tolerance for fluctuating, erronous or invalid values
     calculateMaxFill = (hint = "auto", maxError = 0.03) => {
       const result = new Map();
-      
-      // does it really help?
-      // yes it helps. needs more testing and tweaking
-      let amountLeft = trade.buyAmount;
-      //let amountLeft = ( trade.buyAmount < 10000000) ? trade.buyAmount : trade.buyAmount*0.9;
 
+      // enable some tweaks only in large trades
+      let isLargeTrade = trade.buyAmount >= 10000000; // 10 million
+
+      let amountLeft = trade.buyAmount;
+
+      // does it really help?
+      // no, no longer needed with later tweaks as of 2025-02-xx
+      // if(isLargeTrade) {
+      //   amountLeft = amountLeft * 0.90;
+      // }
+
+      // of the goods we're sending to them. first is alias, second is calculated later
       let totalAmountTheyWant = trade.buyAmount;
       let totalAmountWeHave = 0;
 
-      var maxSubtrades = 20;
+      // manual index for loop
       var currentSubtrade = 0;
 
+      // don't ignore subtrades below that number
       var minSubtrades = 10;
-      var maxSubtrades = 20;
 
+      // max number of subtrades allowed
+      var maxSubtrades = 200;
 
-      //addSystemMessage(`111 ${hint}   ${typeof hint}`);
-
-      // if( hint && hint.includes("greedy"))
-      if (typeof hint === "string" && hint.includes("greedy")) {
-        
-        //minSubtrades = 20;
-        maxSubtrades = 200;
+      if (typeof hint === "string" && hint.includes("fast")) {
+        maxSubtrades = 20;
       }
 
-      // precalc loop
-      for (const xy of cSorted.keys()) {
+      // precalculate some things
+      for (const xy of allTradeBuildingsSorted.keys()) {
+        // at this moment, in trade buildings
         totalAmountWeHave += getMaxFill(xy);
       }
+
       // addSystemMessage(`totalAmountWeHave=${formatNumber(totalAmountWeHave)} / `+
       //   `totalAmountTheyWant=${formatNumber(totalAmountTheyWant)}`);
 
 
       // main loop
-      for (const xy of cSorted.keys()) {
+      for (const xy of allTradeBuildingsSorted.keys()) {
 
+        // hard limit, ignore further possible subtrades
         if( currentSubtrade >= maxSubtrades )
 		    {
 			    break;
 		    }
 
-        
+		    currentSubtrade++; // 1-based
 
-        // conditions passed, increase counter and proceed
-		    currentSubtrade++;
-
-        // ***** do only partial fills
-        //const F = w(L);
+        // IMPORTANT
+        // do only partial fills
+        // does not affect the total amount as long as there is some free space
+        // TODO: allow tweaking with errMargin
         let partialAmount = getMaxFill(xy) * 0.9;
-        var subtradeTooSmall = partialAmount < (totalAmountWeHave / 1000);
+
+        // we want to ignore trades that are zero or close to zero,
+        // as they introduce needless delays in client and load on server
+        var isSubtradeTooSmall = partialAmount < (totalAmountWeHave / 1000);
 
         // addSystemMessage(`cS=${currentSubtrade} / maxS=${maxSubtrades}, `+
         //   `pA=${formatNumber(partialAmount)} / aL=${formatNumber(amountLeft)} / `+
         //   ` tAWH=${formatNumber(totalAmountWeHave)} / tATW=${formatNumber(totalAmountTheyWant)}, `+
         // `subtradeTooSmall=${subtradeTooSmall}`);
 
-
         // use 2nd subtrade to expose mod's version
+        // this 'wastes' a single subtrade but is the easiest way to
+        // advertise which version is used with no additions elsewhere
         if(currentSubtrade == 2) {
           if( partialAmount > MODDEDCLIENT_VER) {
             partialAmount = MODDEDCLIENT_VER;
           }
         }
 
+        // tweaks that should run only between minSubtrades to maxSubtrades
         if(currentSubtrade > minSubtrades) {
 
-          if(subtradeTooSmall)
+          if(isSubtradeTooSmall)
           {
-            // do we continue or break?
+            // ignore - prevent from sending to the server - tiny subtrades,
+            // greatly reduces waste both on client and server
+            // during testing often 50-80% of subtrades were these near-zero ones
             continue;
           }
         }
 
 
-        // if (!(amount <= 0))
         if (partialAmount > 0)
         {
           if (amountLeft > partialAmount) result.set(xy, partialAmount), (amountLeft -= partialAmount);
@@ -91901,11 +91914,14 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
     },
 
 
-    // ***** doFill
-    // T = (fills) =>
+    // IMPORTANT 2025-02-xx
+    // param "hint" can be "greedy" or "fast" to tweak some limits
+    // param "maxError" reserved for future use, to set tolerance for fluctuating, erronous or invalid values
     doFill = (fills, hint = "auto", maxError = 0.03) =>
       ae(this, null, function* () {
         var $;
+
+        // split error checking - trust me, it helps
 
         if (!hasValidPath()) {
           addSystemMessage("hasValidPath=false");
@@ -91925,22 +91941,26 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
   
         const totalFillAmount = getTotalFillAmount(fills);
         if(!(totalFillAmount > 0)) {
+          // happens rarely, but usually no less than once / 15 minutes during aggressive trading
           addSystemMessage("totalFillAmount=" + totalFillAmount + " is negative."+
             " This shouldn't happen. Trying to proceed anyway.");
-          //ct(h(d.OperationNotAllowedError)), ze();
+
+          // this is partially recoverable, we do not want to fail here
           //return;
         }
         if(!(totalFillAmount <= trade.buyAmount)) {
+          // needs more testing
           addSystemMessage("totalFillAmount=" + totalFillAmount +
             " is greater than trade.buyAmount="+trade.buyAmount+"."+
             " This shouldn't happen. Trying to proceed anyway.");
+
+          // // seems partially recoverable. needs more testing.
           //ct(h(d.OperationNotAllowedError)), ze();
           //return;
         }
   
   
-        // *****
-        // so it's visible clicking the button actually registered
+        // let user know we're actually doing something
         ct("Filling trades, please wait 5-20 sec...");
 
         let total = 0,
@@ -91948,8 +91968,6 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
           fillAmount = 0,
           receivedAmount = 0;
         const errors = [];
-
-        //let totalAmountTheyWant = trade.buyAmount;
 
         let fillsSize = fills.size;
 
@@ -91959,9 +91977,10 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
           const re = FL(trade.buyResource, amount, [tile], gs);
           try {
 
-            let tradeStr = "" + total + "/" + fillsSize;
-            
-            ct("Filling trades " + tradeStr + `, sending: ${formatNumber(fillAmount)} ${trade.buyResource}...`);
+            // todo: localize
+            let tradeStr = `${total} / ${fillsSize}`;
+            let resourceStr = `${formatNumber(fillAmount)} ${trade.buyResource}`;
+            ct("Filling trades " + tradeStr + `, sending: ${resourceStr}...`);
 
             const V = yield qe.fillTrade({
               id: trade.id,
@@ -91976,14 +91995,14 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
             }),
               ++success;
           } catch (V) {
-            addSystemMessage("Error at trade "+tradeStr+": "+v);
+            addSystemMessage(`Error at trade ${tradeStr}": `+v);
             errors.push(String(V));
           } finally {
             re.rollback();
           }
         }
         if (success > 0) {
-          var str1=  h(d.PlayerTradeFillSuccessV2, {
+          var str1 = h(d.PlayerTradeFillSuccessV2, {
             success: success,
             total: total,
             fillAmount: formatNumber(fillAmount),
@@ -91991,19 +92010,12 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
             receivedAmount: formatNumber(receivedAmount),
             receivedResource: Config.Resource[trade.sellResource].name(),
           });
-          Fg(),
-            // errors.unshift(
-            //   h(d.PlayerTradeFillSuccessV2, {
-            //     success: success,
-            //     total: total,
-            //     fillAmount: formatNumber(fillAmount),
-            //     fillResource: Config.Resource[trade.buyResource].name(),
-            //     receivedAmount: formatNumber(receivedAmount),
-            //     receivedResource: Config.Resource[trade.sellResource].name(),
-            //   })
-            // );
             errors.unshift(str1);
-            addSystemMessage(str1);
+
+            // todo: do we want it?
+            // some testers liked having it in chat window, some didn't
+            // addSystemMessage(str1);
+
           const X = Tick.current.specialBuildings.get("EastIndiaCompany");
           X &&
             safeAdd(
@@ -92164,7 +92176,9 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
                       );
                     })
                     .map(([D, I]) => {
-                      cSorted.set(D, I);
+                      // IMPORTANT
+                      // save the order for later use in other places
+                      allTradeBuildingsSorted.set(D, I);
 
                       var F, W, H;
                       const L = getStorageFor(D, gs);
