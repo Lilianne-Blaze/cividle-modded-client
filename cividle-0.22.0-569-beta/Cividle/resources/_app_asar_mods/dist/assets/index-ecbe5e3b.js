@@ -1,5 +1,10 @@
 
-const MODDEDCLIENT_VER = 18.1;
+const MODDEDCLIENT_VER = 18.9;
+
+var ModdedClientConfig = {
+  balancedTransports: true,
+  marketsDontSellLessForMore: true,
+};
 
 !(function () {
   try {
@@ -42888,26 +42893,26 @@ function pad(t) {
 function isNullOrUndefined(t) {
   return t === null || typeof t == "undefined";
 }
-function ot(t, e) {
+function hasFlag(t, e) {
   return (t & e) !== 0;
 }
-function RZ(t, e) {
+function setFlag(t, e) {
   return t | e;
 }
-function IZ(t, e) {
+function clearFlag(t, e) {
   return t & ~e;
 }
-function dc(t, e) {
+function toggleFlag(t, e) {
   return t ^ e;
 }
-function xh(t, e, r) {
-  return ot(t, r) ? RZ(e, r) : IZ(e, r);
+function copyFlag(t, e, r) {
+  return hasFlag(t, r) ? setFlag(e, r) : clearFlag(e, r);
 }
-function NZ(t) {
+function base64ToBytes(t) {
   const e = atob(t);
   return Uint8Array.from(e, (r) => r.charCodeAt(0));
 }
-function FZ(t) {
+function bytesToBase64(t) {
   let e = "";
   const r = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
     i = new Uint8Array(t),
@@ -62509,7 +62514,8 @@ const Tick = { current: freezeTickData(EmptyTickData()), next: EmptyTickData() }
     input: () => h(d.ConsumptionMultiplier),
   },
   vL = new TypedEvent();
-function Ci(t, e) {
+
+function hasFeature(t, e) {
   switch (t) {
     case 0:
       return !!e.unlockedTech.Herding;
@@ -62529,7 +62535,7 @@ function Ci(t, e) {
       return !1;
   }
 }
-var mi = ((t) => (
+var GameFeature = ((t) => (
   (t[(t.BuildingProductionPriority = 0)] = "BuildingProductionPriority"),
   (t[(t.BuildingStockpileMode = 1)] = "BuildingStockpileMode"),
   (t[(t.WarehouseUpgrade = 2)] = "WarehouseUpgrade"),
@@ -62538,7 +62544,7 @@ var mi = ((t) => (
   (t[(t.WarehouseExtension = 5)] = "WarehouseExtension"),
   (t[(t.Festival = 6)] = "Festival"),
   t
-))(mi || {});
+))(GameFeature || {});
 class Lm {
   constructor(e, r) {
     (this.x = e), (this.y = r);
@@ -62936,7 +62942,7 @@ function getBuildingIO(xy, type, options, gs) {
         type === "output" &&
           forEach(f.sellResources, (m) => {
             const g = f.availableResources[m];
-            p[g] = eg(m, YP(m, g), g, xy, gs);
+            p[g] = getMarketBuyAmount(m, YP(m, g), g, xy, gs);
           });
     }
     if ("resourceImports" in l && type === "input") {
@@ -63421,11 +63427,14 @@ var gb = ((t) => (
     (t[(t.ManualSuspended = 1)] = "ManualSuspended"),
     t
   ))(gb || {}),
-  sf = ((t) => (
+
+  MarketOptions = ((t) => (
     (t[(t.None = 0)] = "None"),
     (t[(t.ClearAfterUpdate = 1)] = "ClearAfterUpdate"),
+// ***** ?????    (t[(t.DontSellForSmaller = 2)] = "DontSellForSmaller"),
     t
-  ))(sf || {}),
+  ))(MarketOptions || {}),
+
   mn = ((t) => (
     (t[(t.None = 0)] = "None"),
     (t[(t.ExportBelowCap = 1)] = "ExportBelowCap"),
@@ -63433,12 +63442,14 @@ var gb = ((t) => (
     (t[(t.ManagedImport = 4)] = "ManagedImport"),
     t
   ))(mn || {}),
-  fs = ((t) => (
+
+  WarehouseOptions = ((t) => (
     (t[(t.None = 0)] = "None"),
     (t[(t.Autopilot = 1)] = "Autopilot"),
     (t[(t.AutopilotRespectCap = 2)] = "AutopilotRespectCap"),
     t
-  ))(fs || {});
+  ))(WarehouseOptions || {});
+
 const dk = 0,
   hk = 10,
   pk = 0,
@@ -63742,7 +63753,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
         source: h(d.SourceResearch, { tech: h(d.Banking) }),
       }),
     building.type === "Caravansary" &&
-      (Tick.next.playerTradeBuildings.set(xy, building), Ci(mi.WarehouseExtension, gs)))
+      (Tick.next.playerTradeBuildings.set(xy, building), hasFeature(GameFeature.WarehouseExtension, gs)))
   )
     for (const B of getGrid(gs).getNeighbors(tileToPoint(xy))) {
       const _ = pointToTile(B),
@@ -63753,7 +63764,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
     }
   if ("resourceImports" in building) {
     const B = building;
-    if (ot(B.resourceImportOptions, mn.ManagedImport)) {
+    if (hasFlag(B.resourceImportOptions, mn.ManagedImport)) {
       const _ = getStorageFor(xy, gs),
         D = getResourceImportCapacity(B, totalMultiplierFor(xy, "output", 1, !1, gs)),
         I = new Map();
@@ -63827,39 +63838,70 @@ function transportAndConsumeResources(xy, result, gs, offline) {
       Tick.next.notProducingReasons.set(xy, Jt.NoActiveTransports),
     building.type === "Market")
   ) {
-    const B = building;
-    let _ = 0;
-    forEach(B.sellResources, function (I) {
+    const market = building;
+    let totalBought = 0;
+    forEach(market.sellResources, function (sellResource) {
       var H;
-      const L = B.availableResources[I];
-      if (!L) {
-        delete B.sellResources[I];
+      const buyResource = market.availableResources[sellResource];
+      if (!buyResource) {
+        delete market.sellResources[sellResource];
         return;
       }
-      const F = clamp(
-          building.capacity * Ab(I, xy, gs),
+      const sellAmount = clamp(
+          building.capacity * getMarketSellAmount(sellResource, xy, gs),
           0,
-          (H = building.resources[I]) != null ? H : 0
+          (H = building.resources[sellResource]) != null ? H : 0
         ),
-        W = eg(I, F, L, xy, gs);
-      if (c - F + W > u) {
+        buyAmount = getMarketBuyAmount(sellResource, sellAmount, buyResource, xy, gs);
+      if (c - sellAmount + buyAmount > u) {
         Tick.next.notProducingReasons.set(xy, Jt.StorageFull);
         return;
       }
-      safeAdd(building.resources, I, -F),
-        result.push({ xy: xy, resource: L, amount: W }),
-        (_ += W);
-    }),
-      _ > 0 && (jm.emit({ xy: xy, amount: _ }), o1.emit({ xy: xy, offline: offline }));
+
+      // *****
+      if( sellAmount <= buyAmount)
+      {
+        return;
+        //addSystemMessage(`112 warning: trying to sell ${sellAmount}x ${sellResource} for `+
+          //`${buyAmount} of ${buyResource}, ignoring trade.`);
+      }
+
+      safeAdd(building.resources, sellResource, -sellAmount);
+      result.push({ xy: xy, resource: buyResource, amount: buyAmount });
+      totalBought += buyAmount;
+
+    });
+
+    totalBought > 0 && (jm.emit({ xy: xy, amount: totalBought }), o1.emit({ xy: xy, offline: offline }));
+      
     return;
   }
+
+  // if ("resourceImports" in building) {
+  //   if (Ci(mi.WarehouseUpgrade, gs) && "warehouseOptions" in building) {
+  //     const B = building;
+  //     hasFlag(B.warehouseOptions, fs.Autopilot) && tickWarehouseAutopilot(B, xy, transportSourceCache, gs);
+  //   }
+  //   return;
+  // }
+
   if ("resourceImports" in building) {
-    if (Ci(mi.WarehouseUpgrade, gs) && "warehouseOptions" in building) {
-      const B = building;
-      ot(B.warehouseOptions, fs.Autopilot) && tickWarehouseAutopilot(B, xy, transportSourceCache, gs);
+    if (hasFeature(GameFeature.WarehouseUpgrade, gs) && "warehouseOptions" in building) {
+       const warehouse = building;
+       if (hasFlag(warehouse.warehouseOptions, WarehouseOptions.Autopilot)) {
+
+if(Math.random()<1.10)
+{
+
+          tickWarehouseAutopilot(warehouse, xy, transportSourceCache, gs);
+
+       }
+
+       }
     }
     return;
   }
+
   if (building.type === "CloneFactory") {
     const B = building,
       _ = (k = m[B.inputResource]) != null ? k : 0;
@@ -63912,7 +63954,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
     } else Tick.next.notProducingReasons.set(xy, Jt.StorageFull);
     return;
   }
-  if (Ci(mi.Electricity, gs) && Sk(building.type) && building.electrification > 0) {
+  if (hasFeature(GameFeature.Electricity, gs) && Sk(building.type) && building.electrification > 0) {
     let B = clamp(building.electrification, 0, building.level);
     gs.unlockedUpgrades.Liberalism5 && (B *= 2);
     const _ = aj(building);
@@ -63968,7 +64010,7 @@ function tickWarehouseAutopilot(warehouse, xy, transportSourceCache, gs) {
   const { total: l, used: u } = getStorageFor(xy, gs);
   if (((capacity = clamp(capacity, 0, l - u)), capacity <= 0)) return;
   const c = new Set();
-  ot(warehouse.warehouseOptions, fs.AutopilotRespectCap) &&
+  hasFlag(warehouse.warehouseOptions, WarehouseOptions.AutopilotRespectCap) &&
     forEach(warehouse.resourceImports, (m, g) => {
       var v;
       ((v = warehouse.resources[m]) != null ? v : 0) < g.cap ? c.add(m) : c.delete(m);
@@ -63982,7 +64024,7 @@ function tickWarehouseAutopilot(warehouse, xy, transportSourceCache, gs) {
     const v = getBuildingIO(m, "output", br.None, gs),
       y = keysOf(g.resources)
         .filter((x) =>
-          ot(warehouse.warehouseOptions, fs.AutopilotRespectCap)
+          hasFlag(warehouse.warehouseOptions, WarehouseOptions.AutopilotRespectCap)
             ? c.has(x) && v[x]
             : v[x]
         )
@@ -64088,7 +64130,7 @@ function transportResource(t, e, r, i, n, a, o, l = void 0) {
           : M.type;
     if (L === "Warehouse" || F === "Warehouse") {
       if (n.unlockedUpgrades.Liberalism3) I = Number.POSITIVE_INFINITY;
-      else if (Ci(mi.WarehouseUpgrade, n)) {
+      else if (hasFeature(GameFeature.WarehouseUpgrade, n)) {
         const X = tileToPoint(w);
         getGrid(n).distance(X.x, X.y, p.x, p.y) <= 1 &&
           (I = Number.POSITIVE_INFINITY);
@@ -64125,15 +64167,15 @@ function st(t, e, r) {
     i.push(Ie(U({}, e), { source: r })),
     Tick.next.buildingMultipliers.set(t, i);
 }
-function TJ() {
+function getPriceId() {
   return Math.floor(Date.now() / HOUR);
 }
-function NL(t) {
+function convertPriceIdToTime(t) {
   return t * HOUR;
 }
-function AJ(t) {
+function tickPrice(t) {
   var o;
-  const e = TJ();
+  const e = getPriceId();
   let r = !1;
   t.lastPriceUpdated !== e && ((r = !0), (t.lastPriceUpdated = e), EL.emit(t));
   const i = Dg(unlockedResources(t), (l) => !NoPrice[l] && !NoStorage[l]),
@@ -64159,7 +64201,7 @@ function AJ(t) {
           for (; v[x % v.length] === T; ) x++;
           p.availableResources[T] = v[x % v.length];
         }
-        ot(p.marketOptions, sf.ClearAfterUpdate)
+        hasFlag(p.marketOptions, MarketOptions.ClearAfterUpdate)
           ? (p.sellResources = {})
           : forEach(p.sellResources, (T) => {
               p.availableResources[T] || delete p.sellResources[T];
@@ -72848,7 +72890,7 @@ function hQ(t, e, r, i) {
     n.multipliers.forEach((l) => {
       o[l] = t.value(e);
     }),
-      ot(i, 1) && (o.unstable = !0),
+      hasFlag(i, 1) && (o.unstable = !0),
       st(a, o, r);
   });
 }
@@ -74606,7 +74648,7 @@ function filterNonTransportable(t) {
 
 // obfus ej at 569
 function getStockpileMax(b) {
-  return Ci(mi.BuildingStockpileMode, getGameState())
+  return hasFeature(GameFeature.BuildingStockpileMode, getGameState())
     ? b.stockpileMax === 0
       ? Number.POSITIVE_INFINITY
       : b.stockpileMax
@@ -74615,7 +74657,7 @@ function getStockpileMax(b) {
 
 // obfus qP at 569
 function getStockpileCapacity(b) {
-  return Ci(mi.BuildingStockpileMode, getGameState()) ? b.stockpileCapacity : kL;
+  return hasFeature(GameFeature.BuildingStockpileMode, getGameState()) ? b.stockpileCapacity : kL;
 }
 
 // obfus ay at 569
@@ -74766,7 +74808,7 @@ function NQ(t) {
 // TODO: make it switchable
 // obfuscated as K_
 function getCurrentPriority(t, e) {
-  if (!Ci(mi.BuildingProductionPriority, e)) return rn;
+  if (!hasFeature(GameFeature.BuildingProductionPriority, e)) return rn;
   switch (
     ((t.constructionPriority = clamp(t.constructionPriority, rn, vu)),
     (t.productionPriority = clamp(t.productionPriority, rn, vu)),
@@ -74782,13 +74824,13 @@ function getCurrentPriority(t, e) {
   }
 }
 function X_(t, e) {
-  return Ci(mi.BuildingInputMode, e) ? t.inputMode : $l.Distance;
+  return hasFeature(GameFeature.BuildingInputMode, e) ? t.inputMode : $l.Distance;
 }
 function FQ(t, e) {
-  return Ci(mi.BuildingInputMode, e)
+  return hasFeature(GameFeature.BuildingInputMode, e)
     ? t.status === "completed" &&
       "resourceImports" in t &&
-      ot(t.resourceImportOptions, mn.ManagedImport)
+      hasFlag(t.resourceImportOptions, mn.ManagedImport)
       ? B0
       : t.maxInputDistance
     : Number.POSITIVE_INFINITY;
@@ -74889,14 +74931,14 @@ function YP(t, e) {
     ) / ((n = Config.ResourcePrice[t]) != null ? n : 1)
   );
 }
-function Ab(t, e, r) {
+function getMarketSellAmount(t, e, r) {
   var o;
   const i = (o = r.tiles.get(e)) == null ? void 0 : o.building;
   if (!i || !("availableResources" in i)) return 0;
   const a = i.availableResources[t];
   return a ? i.level * YP(t, a) * totalMultiplierFor(e, "output", 1, !1, r) : 0;
 }
-function eg(t, e, r, i, n) {
+function getMarketBuyAmount(t, e, r, i, n) {
   var l, u, c, p;
   const a = mb(n.lastPriceUpdated + i + t),
     o =
@@ -74921,11 +74963,11 @@ function GQ(t, e, r, i) {
     const p = n;
     if (
       n.type === ((u = getXyBuildings(i).get(e)) == null ? void 0 : u.type) &&
-      !ot(p.resourceImportOptions, mn.ExportToSameType)
+      !hasFlag(p.resourceImportOptions, mn.ExportToSameType)
     )
       return 0;
     const f = p.resourceImports[r];
-    return f && !ot(p.resourceImportOptions, mn.ExportBelowCap)
+    return f && !hasFlag(p.resourceImportOptions, mn.ExportBelowCap)
       ? clamp(a - ((c = f.cap) != null ? c : 0), 0, Number.POSITIVE_INFINITY)
       : a;
   }
@@ -81029,7 +81071,7 @@ const ht = kj({
 });
 typeof IPCBridge != "undefined" &&
   IPCBridge.onClose(() => {
-    Jn()
+    saveGame()
       .then(() => ht.quit())
       .catch((t) => {
         ze(), ct(String(t));
@@ -81189,7 +81231,7 @@ function $j() {
                       c.message
                         .toLowerCase()
                         .includes(` @${user.handle.toLowerCase()}`),
-                    f = ot(c.attr, Ul.Announce);
+                    f = hasFlag(c.attr, Ul.Announce);
                   (p || f) && (Rk(), ct(`${c.name}: ${c.message}`)),
                     chatMessages.push(Ie(U({}, c), { id: ++iS }));
                 }),
@@ -81202,7 +81244,7 @@ function $j() {
             user = u.user;
             const c = getGameOptions();
             c.userId || (c.userId = user.userId),
-              Jn().catch(console.error),
+              saveGame().catch(console.error),
               OnUserChanged.emit(user),
               (platformInfo = u.platformInfo),
               OnPlatformInfoChanged.emit(platformInfo);
@@ -86803,10 +86845,15 @@ function Gie({ gameState: t, xy: e }) {
     ],
   });
 }
-var $k = ((t) => (
+
+// SOURCE src/scripts/ui/ApplyToAllComponent.tsx
+
+var ApplyToAllFlag = ((t) => (
   (t[(t.None = 0)] = "None"), (t[(t.NoDefault = 1)] = "NoDefault"), t
-))($k || {});
-function gn({ xy: t, getOptions: e, gameState: r, flags: i }) {
+))(ApplyToAllFlag || {});
+
+
+function ApplyToAllComponent({ xy: t, getOptions: e, gameState: r, flags: i }) {
   var u;
   const n = (u = r.tiles.get(t)) == null ? void 0 : u.building;
   if (!n) return null;
@@ -86901,7 +86948,7 @@ function gn({ xy: t, getOptions: e, gameState: r, flags: i }) {
           )
         ),
         s.jsx("div", { className: "f1" }),
-        ot(i, 1)
+        hasFlag(i, 1)
           ? null
           : s.jsx(Te, {
               content: h(d.SetAsDefaultBuilding, { building: a.name() }),
@@ -87167,7 +87214,7 @@ function Vie({ gameState: t, xy: e }) {
           ),
         }),
         s.jsx("div", { className: "sep10" }),
-        s.jsx(gn, {
+        s.jsx(ApplyToAllComponent, {
           xy: e,
           getOptions: () => ({
             inputResource: n.inputResource,
@@ -87225,7 +87272,7 @@ function qie({ gameState: t, xy: e }) {
 function Yie({ gameState: t, xy: e }) {
   var a;
   const r = (a = t.tiles.get(e)) == null ? void 0 : a.building;
-  if (!Ci(mi.Electricity, t) || !r) return null;
+  if (!hasFeature(GameFeature.Electricity, t) || !r) return null;
   const i = Tick.current.powerGrid.has(e);
   let n = null;
   if (Sk(r.type)) {
@@ -87324,7 +87371,7 @@ function Yie({ gameState: t, xy: e }) {
           className: "mh0",
         }),
         s.jsx("div", { className: "sep15" }),
-        s.jsx(gn, {
+        s.jsx(ApplyToAllComponent, {
           xy: e,
           getOptions: () => ({ electrification: r.electrification }),
           gameState: t,
@@ -87378,7 +87425,7 @@ function Vg({ gameState: t, xy: e }) {
   var i;
   const r = (i = t.tiles.get(e)) == null ? void 0 : i.building;
   return r == null ||
-    !Ci(mi.BuildingInputMode, t) ||
+    !hasFeature(GameFeature.BuildingInputMode, t) ||
     (r.status === "completed" && isEmpty(getBuildingIO(e, "input", br.None, t)) && !_0(r))
     ? null
     : s.jsxs("fieldset", {
@@ -87412,7 +87459,7 @@ function Vg({ gameState: t, xy: e }) {
             }),
           }),
           s.jsx("div", { className: "sep10" }),
-          s.jsx(gn, {
+          s.jsx(ApplyToAllComponent, {
             xy: e,
             getOptions: (n) => ({ inputMode: r.inputMode }),
             gameState: t,
@@ -87479,7 +87526,7 @@ function Vg({ gameState: t, xy: e }) {
             ],
           }),
           s.jsx("div", { className: "sep10" }),
-          s.jsx(gn, {
+          s.jsx(ApplyToAllComponent, {
             xy: e,
             getOptions: (n) => ({ maxInputDistance: r.maxInputDistance }),
             gameState: t,
@@ -87514,7 +87561,7 @@ function j0({ gameState: t, xy: e }) {
   var i;
   const r = (i = t.tiles.get(e)) == null ? void 0 : i.building;
   return r == null ||
-    !Ci(mi.BuildingProductionPriority, t) ||
+    !hasFeature(GameFeature.BuildingProductionPriority, t) ||
     (isEmpty(getBuildingIO(e, "input", br.None, t)) &&
       isEmpty(getBuildingIO(e, "output", br.None, t)) &&
       !_0(r))
@@ -87538,7 +87585,7 @@ function j0({ gameState: t, xy: e }) {
             }),
           }),
           s.jsx("div", { className: "sep15" }),
-          s.jsx(gn, {
+          s.jsx(ApplyToAllComponent, {
             xy: e,
             getOptions: (n) => ({ productionPriority: r.productionPriority }),
             gameState: t,
@@ -87701,7 +87748,7 @@ function S4({ gameState: t, xy: e }) {
   var i;
   const r = (i = t.tiles.get(e)) == null ? void 0 : i.building;
   return r == null ||
-    !Ci(mi.BuildingStockpileMode, t) ||
+    !hasFeature(GameFeature.BuildingStockpileMode, t) ||
     (isEmpty(getBuildingIO(e, "input", br.None, t)) && !_0(r))
     ? null
     : s.jsxs("fieldset", {
@@ -87724,7 +87771,7 @@ function S4({ gameState: t, xy: e }) {
             }),
           }),
           s.jsx("div", { className: "sep15" }),
-          s.jsx(gn, {
+          s.jsx(ApplyToAllComponent, {
             xy: e,
             getOptions: () => ({ stockpileCapacity: r.stockpileCapacity }),
             gameState: t,
@@ -87761,7 +87808,7 @@ function S4({ gameState: t, xy: e }) {
             }),
           }),
           s.jsx("div", { className: "sep15" }),
-          s.jsx(gn, {
+          s.jsx(ApplyToAllComponent, {
             xy: e,
             getOptions: () => ({ stockpileMax: r.stockpileMax }),
             gameState: t,
@@ -88705,7 +88752,7 @@ function W0({ gameState: t, xy: e }) {
                   },
                 }),
                 s.jsx("div", { className: "sep10" }),
-                s.jsx(gn, {
+                s.jsx(ApplyToAllComponent, {
                   xy: e,
                   getOptions: () => ({ capacity: i.capacity }),
                   gameState: t,
@@ -89309,13 +89356,13 @@ function ene({ gameState: t, xy: e }) {
       m.status === "completed" &&
         forEach(m.availableResources, (g, v) => {
           n.add(g), n.add(v);
-          const y = Ab(g, f, t);
+          const y = getMarketSellAmount(g, f, t);
           a.push({
             xy: f,
             sellResource: g,
             sellAmount: y,
             buyResource: v,
-            buyAmount: eg(g, y, v, f, t),
+            buyAmount: getMarketBuyAmount(g, y, v, f, t),
           });
         });
     });
@@ -89343,7 +89390,7 @@ function ene({ gameState: t, xy: e }) {
               }),
               s.jsx("div", {
                 className: "text-strong",
-                children: formatHMS(NL(t.lastPriceUpdated + 1) - Date.now()),
+                children: formatHMS(convertPriceIdToTime(t.lastPriceUpdated + 1) - Date.now()),
               }),
             ],
           }),
@@ -90877,7 +90924,7 @@ function B4({ rank: t, user: e }) {
             onClick: () =>
               ae(this, null, function* () {
                 try {
-                  Le(), yield qe.rankUp(), yield Jn(), window.location.reload();
+                  Le(), yield qe.rankUp(), yield saveGame(), window.location.reload();
                 } catch (r) {
                   ze(), ct(String(r));
                 }
@@ -91044,7 +91091,7 @@ function E4() {
   return s.jsxs("fieldset", {
     children: [
       s.jsx("legend", { children: h(d.PlayerHandle) }),
-      ot(
+      hasFlag(
         (o = t == null ? void 0 : t.attr) != null ? o : Ir.None,
         Ir.TribuneOnly
       )
@@ -91093,7 +91140,7 @@ function E4() {
                       src: yl(t.flag),
                     }),
                   }),
-                  ot(t.attr, Ir.DLC1)
+                  hasFlag(t.attr, Ir.DLC1)
                     ? s.jsx(Te, {
                         content: h(d.AccountSupporter),
                         children: s.jsx("img", {
@@ -91127,7 +91174,7 @@ function E4() {
                   s.jsx("div", { children: la[n]() }),
                 ],
               }),
-              ot(t.attr, Ir.DLC1)
+              hasFlag(t.attr, Ir.DLC1)
                 ? s.jsxs("div", {
                     className: "row text-strong mt5",
                     children: [
@@ -91190,7 +91237,7 @@ function Tne() {
     });
   }, [r]);
   const i = t * 1e3 > xd[it.Quaestor],
-    n = ot((o = r == null ? void 0 : r.attr) != null ? o : 0, Ir.DLC1),
+    n = hasFlag((o = r == null ? void 0 : r.attr) != null ? o : 0, Ir.DLC1),
     a = () =>
       wp() +
         sizeOf(getGameState().greatPeople) +
@@ -91455,7 +91502,7 @@ function Tne() {
                                 c.level >= p && ((c.level = p), (c.amount = 0));
                               }),
                               (l.ageWisdom = {}),
-                              yield Jn(),
+                              yield saveGame(),
                               window.location.reload();
                           } catch (l) {
                             ze(), ct(String(l));
@@ -91521,7 +91568,7 @@ function ln({ children: t }) {
                 s.jsx("button", {
                   "aria-label": "Close",
                   onClick: () => {
-                    Jn()
+                    saveGame()
                       .then(() => ht.quit())
                       .catch((i) => {
                         ze(), ct(String(i));
@@ -91763,7 +91810,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
     // 2025-02-23
     // ***** calculateMaxFill
     // x = () => {
-    calculateMaxFill = () => {
+    calculateMaxFill = (hint = "auto", maxError = 0.03) => {
       const result = new Map();
       
       // does it really help?
@@ -91771,35 +91818,78 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
       let amountLeft = trade.buyAmount;
       //let amountLeft = ( trade.buyAmount < 10000000) ? trade.buyAmount : trade.buyAmount*0.9;
 
-      // ***** make sure only first 20 per-building trades are filled
-      var counterMax = 20;
-      var counterCurrent = 0;
+      let totalAmountTheyWant = trade.buyAmount;
+      let totalAmountWeHave = 0;
+
+      var maxSubtrades = 20;
+      var currentSubtrade = 0;
+
+      var minSubtrades = 10;
+      var maxSubtrades = 20;
+
+
+      //addSystemMessage(`111 ${hint}   ${typeof hint}`);
+
+      // if( hint && hint.includes("greedy"))
+      if (typeof hint === "string" && hint.includes("greedy")) {
+        
+        //minSubtrades = 20;
+        maxSubtrades = 200;
+      }
+
+      // precalc loop
+      for (const xy of cSorted.keys()) {
+        totalAmountWeHave += getMaxFill(xy);
+      }
+      // addSystemMessage(`totalAmountWeHave=${formatNumber(totalAmountWeHave)} / `+
+      //   `totalAmountTheyWant=${formatNumber(totalAmountTheyWant)}`);
+
+
+      // main loop
       for (const xy of cSorted.keys()) {
 
-        // ***** make sure only first 20 per-building trades are filled
-        if( counterCurrent >= counterMax )
+        if( currentSubtrade >= maxSubtrades )
 		    {
 			    break;
 		    }
-		    counterCurrent++;
+
+        
+
+        // conditions passed, increase counter and proceed
+		    currentSubtrade++;
 
         // ***** do only partial fills
         //const F = w(L);
-        let amount = w(xy) * 0.9;
+        let partialAmount = getMaxFill(xy) * 0.9;
+        var subtradeTooSmall = partialAmount < (totalAmountWeHave / 1000);
+
+        // addSystemMessage(`cS=${currentSubtrade} / maxS=${maxSubtrades}, `+
+        //   `pA=${formatNumber(partialAmount)} / aL=${formatNumber(amountLeft)} / `+
+        //   ` tAWH=${formatNumber(totalAmountWeHave)} / tATW=${formatNumber(totalAmountTheyWant)}, `+
+        // `subtradeTooSmall=${subtradeTooSmall}`);
+
 
         // use 2nd subtrade to expose mod's version
-        if(counterCurrent == 2)
-        {
-          if( amount > MODDEDCLIENT_VER)
-            {
-              amount = MODDEDCLIENT_VER;
-            }
+        if(currentSubtrade == 2) {
+          if( partialAmount > MODDEDCLIENT_VER) {
+            partialAmount = MODDEDCLIENT_VER;
+          }
         }
 
+        if(currentSubtrade > minSubtrades) {
+
+          if(subtradeTooSmall)
+          {
+            // do we continue or break?
+            continue;
+          }
+        }
+
+
         // if (!(amount <= 0))
-        if (amount > 0)
+        if (partialAmount > 0)
         {
-          if (amountLeft > amount) result.set(xy, amount), (amountLeft -= amount);
+          if (amountLeft > partialAmount) result.set(xy, partialAmount), (amountLeft -= partialAmount);
           else {
             result.set(xy, amountLeft), (amountLeft = 0);
             break;
@@ -91813,7 +91903,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
 
     // ***** doFill
     // T = (fills) =>
-    doFill = (fills) =>
+    doFill = (fills, hint = "auto", maxError = 0.03) =>
       ae(this, null, function* () {
         var $;
 
@@ -91859,6 +91949,8 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
           receivedAmount = 0;
         const errors = [];
 
+        //let totalAmountTheyWant = trade.buyAmount;
+
         let fillsSize = fills.size;
 
         for (const [tile, amount] of fills) {
@@ -91868,7 +91960,8 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
           try {
 
             let tradeStr = "" + total + "/" + fillsSize;
-            ct("Filling trades " + tradeStr + "...");
+            
+            ct("Filling trades " + tradeStr + `, sending: ${formatNumber(fillAmount)} ${trade.buyResource}...`);
 
             const V = yield qe.fillTrade({
               id: trade.id,
@@ -91890,17 +91983,27 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
           }
         }
         if (success > 0) {
+          var str1=  h(d.PlayerTradeFillSuccessV2, {
+            success: success,
+            total: total,
+            fillAmount: formatNumber(fillAmount),
+            fillResource: Config.Resource[trade.buyResource].name(),
+            receivedAmount: formatNumber(receivedAmount),
+            receivedResource: Config.Resource[trade.sellResource].name(),
+          });
           Fg(),
-            errors.unshift(
-              h(d.PlayerTradeFillSuccessV2, {
-                success: success,
-                total: total,
-                fillAmount: formatNumber(fillAmount),
-                fillResource: Config.Resource[trade.buyResource].name(),
-                receivedAmount: formatNumber(receivedAmount),
-                receivedResource: Config.Resource[trade.sellResource].name(),
-              })
-            );
+            // errors.unshift(
+            //   h(d.PlayerTradeFillSuccessV2, {
+            //     success: success,
+            //     total: total,
+            //     fillAmount: formatNumber(fillAmount),
+            //     fillResource: Config.Resource[trade.buyResource].name(),
+            //     receivedAmount: formatNumber(receivedAmount),
+            //     receivedResource: Config.Resource[trade.sellResource].name(),
+            //   })
+            // );
+            errors.unshift(str1);
+            addSystemMessage(str1);
           const X = Tick.current.specialBuildings.get("EastIndiaCompany");
           X &&
             safeAdd(
@@ -91912,6 +92015,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
             Qt();
         } else ze(), ct(errors.join("<br />"));
       }),
+
     A = (D) =>
       clamp((trade.sellAmount * D) / trade.buyAmount - D, 0, Number.POSITIVE_INFINITY),
     fillsHaveEnoughStorage = (D) => {
@@ -91933,12 +92037,13 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
       return I;
     },
     k = () => trade.sellAmount > trade.buyAmount,
-    w = (D) => {
+    
+    getMaxFill = (D) => {
       var L, F, W;
-      let I = trade.buyAmount;
+      let amountLeft = trade.buyAmount;
       if (
-        ((I = clamp(
-          I,
+        ((amountLeft = clamp(
+          amountLeft,
           0,
           (W =
             (F = (L = gs.tiles.get(D)) == null ? void 0 : L.building) == null
@@ -91951,9 +92056,9 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
       ) {
         const H = getStorageFor(D, gs),
           $ = clamp(H.total - H.used, 0, Number.POSITIVE_INFINITY);
-        I = clamp(I, 0, ($ * trade.buyAmount) / (trade.sellAmount - trade.buyAmount));
+        amountLeft = clamp(amountLeft, 0, ($ * trade.buyAmount) / (trade.sellAmount - trade.buyAmount));
       }
-      return I;
+      return amountLeft;
     },
 
     // ***** fillsAreValid
@@ -92090,7 +92195,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
                                 s.jsx("div", {
                                   className: "text-right text-small text-link",
                                   onClick: () => {
-                                    setFills(($) => ($.set(D, w(D)), new Map(fills)));
+                                    setFills(($) => ($.set(D, getMaxFill(D)), new Map(fills)));
                                   },
                                   children: h(d.PlayerTradeFillAmountMaxV2),
                                 }),
@@ -92156,9 +92261,17 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
                 children: h(d.PlayerTradeClearAll),
               }),
               s.jsx("div", {
+                // className: "text-strong text-link",
+                className: "text-strong text-link mr20",
+                onClick: () => setFills(calculateMaxFill("greedy")),
+//                children: h(d.PlayerTradeMaxAll),
+                  children: "Fill greedy"
+              }),
+              s.jsx("div", {
                 className: "text-strong text-link",
-                onClick: () => setFills(calculateMaxFill),
-                children: h(d.PlayerTradeMaxAll),
+                onClick: () => setFills(calculateMaxFill("fast")),
+//                children: h(d.PlayerTradeMaxAll),
+                  children: "Fill fast"
               }),
             ],
           }),
@@ -92332,21 +92445,36 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
                 // x is calculateMaxFill
                 // T is doFill
                 onClick: () => {
-                  const D = calculateMaxFill();
+                  const D = calculateMaxFill("fast",0.03);
                   D.size > 0
-                    ? doFill(D)
+                    ? doFill(D,"fast",0.03)
                     : (ze(),
                       ct(h(d.PlayerTradeNoFillBecauseOfResources)),
                       Qt());
                 },
-                children: h(d.PlayerTradeFillAmountMaxV2),
+                children: "Trade Max Fast",
+              }),
+              s.jsx("div", { style: { width: "6px" } }),
+              s.jsx("button", { // ***** Fill Max button
+                // x is calculateMaxFill
+                // T is doFill
+                onClick: () => {
+                  const D = calculateMaxFill("greedy",0.03);
+                  D.size > 0
+                    ? doFill(D,"greedy",0.03)
+                    : (ze(),
+                      ct(h(d.PlayerTradeNoFillBecauseOfResources)),
+                      Qt());
+                },
+                children: "Trade Max Greedy",
               }),
               s.jsx("div", { style: { width: "6px" } }),
               s.jsx("button", {
                 className: "text-strong",
                 disabled: !fillsAreValid(fills),
-                onClick: () => doFill(fills),
-                children: h(d.PlayerTradeFillTradeButton),
+                onClick: () => doFill(fills,"auto",0.03),
+                // children: h(d.PlayerTradeFillTradeButton),
+                children: "Trade Selected",
               }),
             ],
           }),
@@ -92407,7 +92535,7 @@ function Pne({ xy: t }) {
                       className: "player-flag ml5",
                     }),
                   }),
-                  ot(r.attr, Ir.DLC1)
+                  hasFlag(r.attr, Ir.DLC1)
                     ? s.jsx(Te, {
                         content: h(d.AccountSupporter),
                         children: s.jsx("img", {
@@ -95422,7 +95550,7 @@ function An() {
                       onPointerDown: () =>
                         ae(this, null, function* () {
                           try {
-                            yield Jn(),
+                            yield saveGame(),
                               (window.location.search = "?scene=Save");
                           } catch (a) {
                             ze(), ct(String(a));
@@ -95520,7 +95648,7 @@ function An() {
                       ? s.jsx("div", {
                           className: "menu-popover-item",
                           onPointerDown: () => {
-                            Jn()
+                            saveGame()
                               .then(() => ht.quit())
                               .catch((a) => {
                                 ze(), ct(String(a));
@@ -95541,7 +95669,7 @@ function An() {
                           onPointerDown: () =>
                             ae(this, null, function* () {
                               try {
-                                yield Jn(),
+                                yield saveGame(),
                                   yield qe.checkInSave(yield compressSave()),
                                   ht.quit();
                               } catch (a) {
@@ -96803,7 +96931,7 @@ function pae({ open: t }) {
               }),
             ],
           }),
-          Ci(mi.Festival, n)
+          hasFeature(GameFeature.Festival, n)
             ? s.jsxs(s.Fragment, {
                 children: [
                   s.jsx("div", { className: "separator" }),
@@ -96896,7 +97024,7 @@ function mae() {
     c = () => {
       var y;
       return Config.City[a].requireSupporterPack
-        ? ot(
+        ? hasFlag(
             (y = e == null ? void 0 : e.attr) != null ? y : Ir.None,
             Ir.DLC1
           ) || jA() === a
@@ -97034,7 +97162,7 @@ function mae() {
           }),
           s.jsxs("fieldset", {
             children: [
-              ot(
+              hasFlag(
                 (g = e == null ? void 0 : e.attr) != null ? g : Ir.None,
                 Ir.DLC1
               )
@@ -97231,7 +97359,7 @@ function mae() {
                             children: h(d.SupporterPackRequired),
                           }),
                           s.jsx("div", {
-                            children: ot(
+                            children: hasFlag(
                               (v = e == null ? void 0 : e.attr) != null
                                 ? v
                                 : Ir.None,
@@ -97305,7 +97433,7 @@ function mae() {
                       yield CM(a),
                       Le();
                     try {
-                      yield Jn(), window.location.reload();
+                      yield saveGame(), window.location.reload();
                     } catch (x) {
                       ze(), ct(String(x));
                     }
@@ -98845,17 +98973,21 @@ function Cy({ name: t, stage: e, current: r, progress: i }) {
       })
     : null;
 }
-const Cae = { column: 0, asc: !0 };
-function Pae({ gameState: t, xy: e }) {
+
+// obfus Cae at 569
+const marketSortingState = { column: 0, asc: !0 };
+
+// obfus Pae at 569
+function MarketBuildingBody({ gameState: gameState, xy: xy }) {
   var a;
-  const r = (a = t.tiles.get(e)) == null ? void 0 : a.building;
-  if (r == null || !r.sellResources) return null;
-  const i = r,
+  const building = (a = gameState.tiles.get(xy)) == null ? void 0 : a.building;
+  if (building == null || !building.sellResources) return null;
+  const i = building,
     n = new Map();
   return (
     forEach(i.availableResources, (o, l) => {
-      const u = Ab(o, e, t),
-        c = eg(o, u, l, e, t),
+      const u = getMarketSellAmount(o, xy, gameState),
+        c = getMarketBuyAmount(o, u, l, xy, gameState),
         p = Config.ResourcePrice[o] * u,
         m = (Config.ResourcePrice[l] * c) / p - 1;
       n.set(o, m);
@@ -98863,7 +98995,7 @@ function Pae({ gameState: t, xy: e }) {
     s.jsxs("div", {
       className: "window-body",
       children: [
-        s.jsx(O0, { gameState: t, xy: e }, e),
+        s.jsx(O0, { gameState: gameState, xy: xy }, xy),
         s.jsx("fieldset", {
           children: s.jsxs("div", {
             className: "row",
@@ -98874,7 +99006,7 @@ function Pae({ gameState: t, xy: e }) {
               }),
               s.jsx("div", {
                 className: "text-strong",
-                children: formatHMS(NL(t.lastPriceUpdated + 1) - Date.now()),
+                children: formatHMS(convertPriceIdToTime(gameState.lastPriceUpdated + 1) - Date.now()),
               }),
             ],
           }),
@@ -98889,7 +99021,7 @@ function Pae({ gameState: t, xy: e }) {
                 { name: h(d.Storage), sortable: !0 },
                 { name: h(d.MarketSell), sortable: !1 },
               ],
-              sortingState: Cae,
+              sortingState: marketSortingState,
               data: keysOf(i.availableResources),
               compareFunc: (o, l, u) => {
                 var c, p, f, m;
@@ -98912,8 +99044,8 @@ function Pae({ gameState: t, xy: e }) {
                     );
                   case 3:
                     return (
-                      ((f = r.resources[o]) != null ? f : 0) -
-                      ((m = r.resources[l]) != null ? m : 0)
+                      ((f = building.resources[o]) != null ? f : 0) -
+                      ((m = building.resources[l]) != null ? m : 0)
                     );
                   default:
                     return 0;
@@ -98923,9 +99055,9 @@ function Pae({ gameState: t, xy: e }) {
                 var m, g;
                 const l = Config.Resource[o];
                 if (!l || NoPrice[o] || NoStorage[o]) return null;
-                const u = Ab(o, e, t),
+                const u = getMarketSellAmount(o, xy, gameState),
                   c = i.availableResources[o],
-                  p = eg(o, u, c, e, t),
+                  p = getMarketBuyAmount(o, u, c, xy, gameState),
                   f = (m = n.get(o)) != null ? m : 0;
                 return s.jsxs(
                   "tr",
@@ -98964,19 +99096,19 @@ function Pae({ gameState: t, xy: e }) {
                       s.jsx("td", {
                         className: "right",
                         children: s.jsx(te, {
-                          value: (g = r.resources[o]) != null ? g : 0,
+                          value: (g = building.resources[o]) != null ? g : 0,
                         }),
                       }),
                       s.jsx("td", {
                         className: "pointer",
                         onClick: () => {
                           Le(),
-                            r.sellResources[o]
-                              ? delete r.sellResources[o]
-                              : (r.sellResources[o] = !0),
+                            building.sellResources[o]
+                              ? delete building.sellResources[o]
+                              : (building.sellResources[o] = !0),
                             Ze();
                         },
-                        children: r.sellResources[o]
+                        children: building.sellResources[o]
                           ? s.jsx("div", {
                               className: "m-icon text-green",
                               children: "toggle_on",
@@ -98993,24 +99125,25 @@ function Pae({ gameState: t, xy: e }) {
               },
             }),
             s.jsx("div", { className: "sep10" }),
-            s.jsx(gn, {
-              xy: e,
+            s.jsx(ApplyToAllComponent, {
+              xy: xy,
               getOptions: () => ({
-                sellResources: structuredClone(r.sellResources),
+                sellResources: structuredClone(building.sellResources),
               }),
-              gameState: t,
-              flags: $k.NoDefault,
+              gameState: gameState,
+              flags: ApplyToAllFlag.NoDefault,
             }),
           ],
         }),
-        s.jsx(W0, { gameState: t, xy: e }),
-        s.jsx(qg, { gameState: t, xy: e }),
-        s.jsx(j0, { gameState: t, xy: e }),
-        s.jsx(S4, { gameState: t, xy: e }),
-        s.jsx(Vg, { gameState: t, xy: e }),
+        s.jsx(W0, { gameState: gameState, xy: xy }),
+        s.jsx(qg, { gameState: gameState, xy: xy }),
+        s.jsx(j0, { gameState: gameState, xy: xy }),
+        s.jsx(S4, { gameState: gameState, xy: xy }),
+        s.jsx(Vg, { gameState: gameState, xy: xy }),
         s.jsxs("fieldset", {
           children: [
             s.jsx("legend", { children: h(d.MarketSettings) }),
+
             s.jsxs("div", {
               className: "row",
               children: [
@@ -99022,13 +99155,13 @@ function Pae({ gameState: t, xy: e }) {
                   className: "pointer",
                   onClick: () => {
                     Le(),
-                      (i.marketOptions = dc(
+                      (i.marketOptions = toggleFlag(
                         i.marketOptions,
-                        sf.ClearAfterUpdate
+                        MarketOptions.ClearAfterUpdate
                       )),
                       Ze();
                   },
-                  children: ot(i.marketOptions, sf.ClearAfterUpdate)
+                  children: hasFlag(i.marketOptions, MarketOptions.ClearAfterUpdate)
                     ? s.jsx("div", {
                         className: "m-icon text-green",
                         children: "toggle_on",
@@ -99041,22 +99174,22 @@ function Pae({ gameState: t, xy: e }) {
               ],
             }),
             s.jsx("div", { className: "sep10" }),
-            s.jsx(gn, {
-              xy: e,
+            s.jsx(ApplyToAllComponent, {
+              xy: xy,
               getOptions: (o) => ({
-                marketOptions: xh(
+                marketOptions: copyFlag(
                   i.marketOptions,
                   o.marketOptions,
-                  sf.ClearAfterUpdate
+                  MarketOptions.ClearAfterUpdate
                 ),
               }),
-              gameState: t,
+              gameState: gameState,
             }),
           ],
         }),
-        s.jsx(wi, { gameState: t, xy: e }),
-        s.jsx(li, { gameState: t, xy: e }),
-        s.jsx(G0, { gameState: t, xy: e }),
+        s.jsx(wi, { gameState: gameState, xy: xy }),
+        s.jsx(li, { gameState: gameState, xy: xy }),
+        s.jsx(G0, { gameState: gameState, xy: xy }),
       ],
     })
   );
@@ -99229,7 +99362,7 @@ function wae({ gameState: t, xy: e }) {
                   {
                     children: [
                       s.jsx("td", {
-                        children: ot(o.flag, AL.Tariff)
+                        children: hasFlag(o.flag, AL.Tariff)
                           ? s.jsx(Te, {
                               content: h(d.PlayerTradeTariffTooltip),
                               children: s.jsx("div", {
@@ -99984,7 +100117,7 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                               }),
                             })
                           : null,
-                        ot(A.fromAttr, Ir.DLC1)
+                        hasFlag(A.fromAttr, Ir.DLC1)
                           ? s.jsx(Te, {
                               content: h(d.AccountSupporter),
                               children: s.jsx("img", {
@@ -100210,7 +100343,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
             ],
           }),
           s.jsx("div", { className: "sep10" }),
-          Ci(mi.BuildingInputMode, o)
+          hasFeature(GameFeature.BuildingInputMode, o)
             ? s.jsxs("fieldset", {
                 className: "mb10",
                 children: [
@@ -100585,13 +100718,13 @@ function H4({ gameState: gameState, xy: xy }) {
         ],
       }),
       s.jsx("div", { className: "sep10" }),
-      s.jsx(gn, {
+      s.jsx(ApplyToAllComponent, {
         xy: xy,
         getOptions: () => ({
           resourceImports: structuredClone(building.resourceImports),
         }),
         gameState: gameState,
-        flags: $k.NoDefault,
+        flags: ApplyToAllFlag.NoDefault,
       }),
       s.jsx("div", { className: "separator" }),
       s.jsx("ul", {
@@ -100696,13 +100829,13 @@ function H4({ gameState: gameState, xy: xy }) {
             className: "pointer ml20",
             onClick: () => {
               Le(),
-                (building.resourceImportOptions = dc(
+                (building.resourceImportOptions = toggleFlag(
                   building.resourceImportOptions,
                   mn.ExportBelowCap
                 )),
                 Ze();
             },
-            children: ot(building.resourceImportOptions, mn.ExportBelowCap)
+            children: hasFlag(building.resourceImportOptions, mn.ExportBelowCap)
               ? s.jsx("div", {
                   className: "m-icon text-green",
                   children: "toggle_on",
@@ -100714,10 +100847,10 @@ function H4({ gameState: gameState, xy: xy }) {
           }),
         ],
       }),
-      s.jsx(gn, {
+      s.jsx(ApplyToAllComponent, {
         xy: xy,
         getOptions: (f) => ({
-          resourceImportOptions: xh(
+          resourceImportOptions: copyFlag(
             building.resourceImportOptions,
             f.resourceImportOptions,
             mn.ExportBelowCap
@@ -100742,13 +100875,13 @@ function H4({ gameState: gameState, xy: xy }) {
             className: "pointer ml20",
             onClick: () => {
               Le(),
-                (building.resourceImportOptions = dc(
+                (building.resourceImportOptions = toggleFlag(
                   building.resourceImportOptions,
                   mn.ExportToSameType
                 )),
                 Ze();
             },
-            children: ot(building.resourceImportOptions, mn.ExportToSameType)
+            children: hasFlag(building.resourceImportOptions, mn.ExportToSameType)
               ? s.jsx("div", {
                   className: "m-icon text-green",
                   children: "toggle_on",
@@ -100760,10 +100893,10 @@ function H4({ gameState: gameState, xy: xy }) {
           }),
         ],
       }),
-      s.jsx(gn, {
+      s.jsx(ApplyToAllComponent, {
         xy: xy,
         getOptions: (f) => ({
-          resourceImportOptions: xh(
+          resourceImportOptions: copyFlag(
             building.resourceImportOptions,
             f.resourceImportOptions,
             mn.ExportToSameType
@@ -100789,7 +100922,7 @@ function H4({ gameState: gameState, xy: xy }) {
             onClick: () => {
               var f;
               Le(),
-                (building.resourceImportOptions = dc(
+                (building.resourceImportOptions = toggleFlag(
                   building.resourceImportOptions,
                   mn.ManagedImport
                 )),
@@ -100797,7 +100930,7 @@ function H4({ gameState: gameState, xy: xy }) {
                   f.drawSelection(null, []),
                 Ze();
             },
-            children: ot(building.resourceImportOptions, mn.ManagedImport)
+            children: hasFlag(building.resourceImportOptions, mn.ManagedImport)
               ? s.jsx("div", {
                   className: "m-icon text-green",
                   children: "toggle_on",
@@ -100809,10 +100942,10 @@ function H4({ gameState: gameState, xy: xy }) {
           }),
         ],
       }),
-      s.jsx(gn, {
+      s.jsx(ApplyToAllComponent, {
         xy: xy,
         getOptions: (f) => ({
-          resourceImportOptions: xh(
+          resourceImportOptions: copyFlag(
             building.resourceImportOptions,
             f.resourceImportOptions,
             mn.ManagedImport
@@ -104606,10 +104739,10 @@ function kh({
   onFilterChange: a,
 }) {
   const o = s.jsx("button", {
-    className: classNames({ active: ot(r, i) }),
+    className: classNames({ active: hasFlag(r, i) }),
     style: { width: 27, padding: 0 },
     onClick: () => {
-      (n = dc(r, i)), a(n);
+      (n = toggleFlag(r, i)), a(n);
     },
     children: e,
   });
@@ -108553,7 +108686,7 @@ function BuildingTab({ gameState: t }) {
               if (Config.Building[l.type].special === tl.NaturalWonder) return !1;
               let u = (buildingFilter & 268435455) === 0;
               for (let p = 0; p < 12; p++)
-                ot(buildingFilter, 1 << p) && (u || (u = Config.BuildingTier[l.type] === p));
+                hasFlag(buildingFilter, 1 << p) && (u || (u = Config.BuildingTier[l.type] === p));
               const c = search.toLowerCase();
               return u && Config.Building[l.type].name().toLowerCase().includes(c);
             })
@@ -108785,7 +108918,7 @@ function ResourcesTab({ gameState: gameState }) {
         data: keysOf(unlockedResourcesList).filter((g) => {
           let v = (savedResourceTierFilter & 268435455) === 0;
           for (let x = 0; x < 12; x++)
-            ot(savedResourceTierFilter, 1 << x) && (v || (v = Config.ResourceTier[g] === x));
+            hasFlag(savedResourceTierFilter, 1 << x) && (v || (v = Config.ResourceTier[g] === x));
           const y = search.toLowerCase();
           return v && Config.Resource[g].name().toLowerCase().includes(y);
         }),
@@ -109298,7 +109431,7 @@ function mue({ gameState: t, xy: e }) {
       s.jsx(O0, { gameState: t, xy: e }, e),
       s.jsx(H4, { gameState: t, xy: e }),
       s.jsx(qg, { gameState: t, xy: e }),
-      Ci(mi.WarehouseUpgrade, t)
+      hasFeature(GameFeature.WarehouseUpgrade, t)
         ? s.jsxs(s.Fragment, {
             children: [
               s.jsx(Xt, {
@@ -109331,13 +109464,13 @@ function mue({ gameState: t, xy: e }) {
                         className: "pointer ml20",
                         onClick: () => {
                           Le(),
-                            (r.warehouseOptions = dc(
+                            (r.warehouseOptions = toggleFlag(
                               r.warehouseOptions,
-                              fs.Autopilot
+                              WarehouseOptions.Autopilot
                             )),
                             Ze();
                         },
-                        children: ot(r.warehouseOptions, fs.Autopilot)
+                        children: hasFlag(r.warehouseOptions, WarehouseOptions.Autopilot)
                           ? s.jsx("div", {
                               className: "m-icon text-green",
                               children: "toggle_on",
@@ -109349,13 +109482,13 @@ function mue({ gameState: t, xy: e }) {
                       }),
                     ],
                   }),
-                  s.jsx(gn, {
+                  s.jsx(ApplyToAllComponent, {
                     xy: e,
                     getOptions: (a) => ({
-                      warehouseOptions: xh(
+                      warehouseOptions: copyFlag(
                         r.warehouseOptions,
                         a.warehouseOptions,
-                        fs.Autopilot
+                        WarehouseOptions.Autopilot
                       ),
                     }),
                     gameState: t,
@@ -109383,13 +109516,13 @@ function mue({ gameState: t, xy: e }) {
                         className: "pointer ml20",
                         onClick: () => {
                           Le(),
-                            (r.warehouseOptions = dc(
+                            (r.warehouseOptions = toggleFlag(
                               r.warehouseOptions,
-                              fs.AutopilotRespectCap
+                              WarehouseOptions.AutopilotRespectCap
                             )),
                             Ze();
                         },
-                        children: ot(r.warehouseOptions, fs.AutopilotRespectCap)
+                        children: hasFlag(r.warehouseOptions, WarehouseOptions.AutopilotRespectCap)
                           ? s.jsx("div", {
                               className: "m-icon text-green",
                               children: "toggle_on",
@@ -109401,13 +109534,13 @@ function mue({ gameState: t, xy: e }) {
                       }),
                     ],
                   }),
-                  s.jsx(gn, {
+                  s.jsx(ApplyToAllComponent, {
                     xy: e,
                     getOptions: (a) => ({
-                      warehouseOptions: xh(
+                      warehouseOptions: copyFlag(
                         r.warehouseOptions,
                         a.warehouseOptions,
-                        fs.AutopilotRespectCap
+                        WarehouseOptions.AutopilotRespectCap
                       ),
                     }),
                     gameState: t,
@@ -109493,7 +109626,7 @@ function fue({ gameState: t, xy: e }) {
 
 const gue = {
   Headquarter: vae,
-  Market: Pae,
+  Market: MarketBuildingBody,
   Statistics: StatisticsBuildingBody,
   Caravansary: Rae,
   Warehouse: mue,
@@ -109925,7 +110058,7 @@ function bue({ tile: t }) {
                     }),
                   ],
                 }),
-            Ci(mi.BuildingProductionPriority, r)
+            hasFeature(GameFeature.BuildingProductionPriority, r)
               ? s.jsxs("fieldset", {
                   children: [
                     s.jsxs("legend", {
@@ -109946,7 +110079,7 @@ function bue({ tile: t }) {
                       },
                     }),
                     s.jsx("div", { className: "sep15" }),
-                    s.jsx(gn, {
+                    s.jsx(ApplyToAllComponent, {
                       xy: t.tile,
                       getOptions: (l) => ({
                         constructionPriority: e.constructionPriority,
@@ -109956,7 +110089,7 @@ function bue({ tile: t }) {
                   ],
                 })
               : null,
-            Ci(mi.BuildingInputMode, r)
+            hasFeature(GameFeature.BuildingInputMode, r)
               ? s.jsx(Vg, { gameState: r, xy: t.tile })
               : null,
             e.level > 0 ? s.jsx(Aue, { building: e }) : s.jsx(Tue, { tile: t }),
@@ -110161,8 +110294,8 @@ function Cue({ tile: t }) {
                 return !1;
               let g = (i & 268435455) === 0;
               for (let C = 0; C < 12; C++)
-                ot(i, 1 << C) && (g || (g = Config.BuildingTier[m] === C));
-              ot(i, du.NotBuilt) &&
+                hasFlag(i, 1 << C) && (g || (g = Config.BuildingTier[m] === C));
+              hasFlag(i, du.NotBuilt) &&
                 g &&
                 (g =
                   ((A = (T = f.get(m)) == null ? void 0 : T.size) != null
@@ -110687,8 +110820,9 @@ class eI extends Pi {
       (i.y = i.y - 20),
       gr
         .sequence(
-          gr.to(i, { y: i.y - 10, alpha: 1 }, 0.25 * r, aa.OutQuad),
-          gr.to(i, { y: i.y - 40, alpha: 0 }, 1.25 * r, aa.InQuad),
+          // gr.to(i, { y: i.y - 10, alpha: 1 }, 0.25 * r, aa.OutQuad),
+          // gr.to(i, { y: i.y - 40, alpha: 0 }, 1.25 * r, aa.InQuad),
+          gr.to(i, { y: i.y - 10, alpha: 1 }, 0.75 * r, aa.OutQuad),
           gr.runFunc(() => {
             this._world.tooltipPool.release(i);
           })
@@ -110822,7 +110956,8 @@ class eI extends Pi {
             ? ((this._notProducing.texture = Ti("Misc_Bolt", i)),
               this.fadeInTopLeftIcon())
             : this.fadeOutTopLeftIcon(),
-            (this._spinner.visible = !0);
+            // (this._spinner.visible = !0);
+            (this._spinner.visible = !1);
         }
       }
     }
@@ -111301,16 +111436,16 @@ class WorldScene extends H0 {
           break;
         }
         case "Caravansary": {
-          ot(a.resourceImportOptions, mn.ManagedImport) &&
+          hasFlag(a.resourceImportOptions, mn.ManagedImport) &&
             this.highlightRange(o, B0);
           break;
         }
         case "Warehouse": {
-          if (ot(a.resourceImportOptions, mn.ManagedImport)) {
+          if (hasFlag(a.resourceImportOptions, mn.ManagedImport)) {
             this.highlightRange(o, 2);
             break;
           }
-          Ci(mi.WarehouseUpgrade, r) && this.highlightRange(o, 1);
+          hasFeature(GameFeature.WarehouseUpgrade, r) && this.highlightRange(o, 1);
           break;
         }
         case "ColossusOfRhodes":
@@ -111369,6 +111504,13 @@ class WorldScene extends H0 {
     this._transportLines.clear();
     const n = {};
     r.transportationV2.forEach((a) => {
+
+      if(Math.random()>0.05)
+      {
+        return;
+      }
+
+      
       var c;
       if (a.fromXy !== i && a.toXy !== i) return;
       const o = tileToPoint(a.fromXy),
@@ -111376,6 +111518,8 @@ class WorldScene extends H0 {
         u = [a.resource, (o.y - l.y) / (o.x - l.x)].join(",");
       n[u] ||
         ((n[u] = !0),
+
+        // *****
         this._transportLines.lineStyle({
           color: Za(
             (c = getGameOptions().resourceColors[a.resource]) != null ? c : "#ffffff"
@@ -111388,6 +111532,7 @@ class WorldScene extends H0 {
         }),
         this._transportLines.moveTo(a.fromPosition.x, a.fromPosition.y),
         this._transportLines.lineTo(a.toPosition.x, a.toPosition.y));
+        
     });
   }
   highlightRange(r, i) {
@@ -111746,7 +111891,7 @@ function Due({ xy: t, offline: e }) {
         }),
         r.unlockedUpgrades.SpaceshipIdle &&
           Gm(Config.Upgrade.SpaceshipIdle, h(d.WishlistSpaceshipIdle), r),
-        Ci(mi.Festival, r))
+        hasFeature(GameFeature.Festival, r))
       )
         if (r.festival)
           ((c = n.resources.Festival) != null ? c : 0) >= Xh
@@ -113044,7 +113189,7 @@ function shouldTick() {
 }
 
 pee.addListener("appStateChange", ({ isActive: t }) => {
-  isSteam() || (t ? Kj() : (Jn(), Rte()));
+  isSteam() || (t ? Kj() : (saveGame(), Rte()));
 });
 
 let timeSinceLastTick = 0;
@@ -113111,7 +113256,7 @@ function tickEverySecond(gs, offline) {
       });
     }),
 
-    AJ(gs),
+    tickPrice(gs),
     fJ(gs);
 
     // obfuscated: r in b569
@@ -113170,7 +113315,7 @@ function postTickTiles(gs, offline) {
       (vL.emit(Tick.current),
       (o = Singleton().sceneManager.getCurrent(WorldScene)) == null || o.flushFloater(u),
       Ze()),
-      gs.tick % (saveFreq * u) === 0 && Jn().catch(console.error),
+      gs.tick % (saveFreq * u) === 0 && saveGame().catch(console.error),
       gs.tick % (heartbeatFreq * u) === 0 &&
         (Singleton().heartbeat.update(E0()),
         qe.queryRankUp().then((c) => {
@@ -113318,7 +113463,7 @@ function MS(t, e) {
 }
 const SAVE_KEY = "CivIdle",
   saveGameQueue = [];
-function Jn() {
+function saveGame() {
   return ae(this, null, function* () {
     let t = null,
       e = null;
@@ -113337,6 +113482,11 @@ function doSaveGame(t) {
         yield ht.fileWriteBytes(SAVE_KEY, compressed);
 
         try {
+          yield ht.fileWriteBytes("ModdedClientConfig.json", JSON.stringify(ModdedClientConfig,undefined,2));
+        }
+        catch(_){}
+
+        try {
           yield ht.fileWriteBytes("last_trades.json", JSON.stringify(getTrades()));
           yield ht.fileWriteBytes("last_savegame.json", JSON.stringify(savedGame));
           yield ht.fileWriteBytes("last_messages.json", JSON.stringify(chatMessages));
@@ -113350,7 +113500,7 @@ function doSaveGame(t) {
 
       } else if (isAndroid() || isIOS()) {
         //yield Preferences.set({ key: SAVE_KEY, value: bytesToBase64(compressed) });
-        yield yj.set({ key: SAVE_KEY, value: FZ(compressed) });
+        yield yj.set({ key: SAVE_KEY, value: bytesToBase64(compressed) });
       } else {
         //yield idbSet(SAVE_KEY, compressed);
         yield _k(SAVE_KEY, compressed);
@@ -113370,25 +113520,31 @@ function compressSave() {
     return yield kS(new TextEncoder().encode(aQ(t)));
   });
 }
-function Cf(t) {
+function decompressSave(t) {
   return ae(this, null, function* () {
     return oQ(new TextDecoder().decode(yield Hue(t)));
   });
 }
-function Vue() {
+function loadGame() {
   return ae(this, null, function* () {
     try {
       if ((console.time("Loading Save file"), isSteam())) {
         const e = yield ht.fileReadBytes(SAVE_KEY);
-        return yield Cf(new Uint8Array(e));
+
+      try{
+          ModdedClientConfig = JSON.parse(yield ht.fileReadBytes("ModdedClientConfig.json"));
+        }
+        catch(_){}
+
+        return yield decompressSave(new Uint8Array(e));
       }
       if (isAndroid() || isIOS()) {
         const e = (yield yj.get({ key: SAVE_KEY })).value;
-        return e ? yield Cf(NZ(e)) : null;
+        return e ? yield decompressSave(base64ToBytes(e)) : null;
       }
       const t = yield Ek(SAVE_KEY);
       if (!t) throw new Error("Save does not exists");
-      return yield Cf(t);
+      return yield decompressSave(t);
     } catch (t) {
       return console.warn("loadGame failed", t), null;
     } finally {
@@ -113928,9 +114084,9 @@ function cI() {
                             const l = yield qe.checkOutSaveStart();
                             if (l.length <= 0)
                               throw new Error("Your cloud save is corrupted");
-                            const u = yield Cf(l);
+                            const u = yield decompressSave(l);
                             sO(u),
-                              yield Jn(),
+                              yield saveGame(),
                               yield qe.checkOutSaveEnd(),
                               (window.location.search = "");
                           } catch (l) {
@@ -114153,7 +114309,7 @@ function ice(t, e, r, i) {
     const n = (v, y) => i.emit({ component: v, params: y });
     console.log("CivIdle version:", Mk()), n(Ts, { stage: Ks.LoadSave });
     let a = !1;
-    const o = yield Vue();
+    const o = yield loadGame();
     if (o) {
       if (!findSpecialBuilding("Headquarter", o.current)) {
         ze(), n(tce, {});
@@ -114883,10 +115039,10 @@ function handleChatCommand(command) {
         requireDevelopment();
         const [a] = yield window.showOpenFilePicker(),
           l = yield (yield a.getFile()).arrayBuffer(),
-          u = yield Cf(new Uint8Array(l));
+          u = yield decompressSave(new Uint8Array(l));
         (u.options.userId = `web:${pb()}`),
           sO(u),
-          yield Jn(),
+          yield saveGame(),
           addSystemMessage("Load save file"),
           window.location.reload();
         break;
@@ -114927,7 +115083,7 @@ function handleChatCommand(command) {
               getGameState().city
             )),
             yield CM(qf(Config.City)),
-            yield Jn(),
+            yield saveGame(),
             window.location.reload();
         }
         const a = yield qe.getGreatPeopleRecovery();
@@ -114938,7 +115094,7 @@ function handleChatCommand(command) {
       }
       case "togglearrow": {
         (getGameOptions().showTransportArrow = !getGameOptions().showTransportArrow),
-          yield Jn(),
+          yield saveGame(),
           window.location.reload();
         break;
       }
@@ -115068,12 +115224,12 @@ function handleChatCommand(command) {
         addSystemMessage(
           [
             `Flag=${a.toString(2)}`,
-            `Mod=${ot(a, Ir.Mod)}`,
-            `DLC1=${ot(a, Ir.DLC1)}`,
-            `DLC2=${ot(a, Ir.DLC2)}`,
-            `Banned=${ot(a, Ir.Banned)}`,
-            `TribuneOnly=${ot(a, Ir.TribuneOnly)}`,
-            `NoRename=${ot(a, Ir.DisableRename)}`,
+            `Mod=${hasFlag(a, Ir.Mod)}`,
+            `DLC1=${hasFlag(a, Ir.DLC1)}`,
+            `DLC2=${hasFlag(a, Ir.DLC2)}`,
+            `Banned=${hasFlag(a, Ir.Banned)}`,
+            `TribuneOnly=${hasFlag(a, Ir.TribuneOnly)}`,
+            `NoRename=${hasFlag(a, Ir.DisableRename)}`,
           ].join(", ")
         );
         break;
@@ -115084,12 +115240,12 @@ function handleChatCommand(command) {
         addSystemMessage(
           [
             `Flag=${a.toString(2)}`,
-            `Mod=${ot(a, Ir.Mod)}`,
-            `DLC1=${ot(a, Ir.DLC1)}`,
-            `DLC2=${ot(a, Ir.DLC2)}`,
-            `Banned=${ot(a, Ir.Banned)}`,
-            `TribuneOnly=${ot(a, Ir.TribuneOnly)}`,
-            `NoRename=${ot(a, Ir.DisableRename)}`,
+            `Mod=${hasFlag(a, Ir.Mod)}`,
+            `DLC1=${hasFlag(a, Ir.DLC1)}`,
+            `DLC2=${hasFlag(a, Ir.DLC2)}`,
+            `Banned=${hasFlag(a, Ir.Banned)}`,
+            `TribuneOnly=${hasFlag(a, Ir.TribuneOnly)}`,
+            `NoRename=${hasFlag(a, Ir.DisableRename)}`,
           ].join(", ")
         );
         break;
@@ -115547,7 +115703,7 @@ function Ace({ user: t, chat: e, onImageLoaded: r }) {
       "is-even": e.id % 2 === 0,
       "mentions-me": t
         ? e.message.toLowerCase().includes(`@${t.handle.toLowerCase()} `) ||
-          ot(e.attr, Ul.Announce)
+          hasFlag(e.attr, Ul.Announce)
         : !1,
     }),
     children: [
@@ -115583,7 +115739,7 @@ function Ace({ user: t, chat: e, onImageLoaded: r }) {
                     }),
                   })
                 : null,
-              ot(e.attr, Ul.Supporter)
+              hasFlag(e.attr, Ul.Supporter)
                 ? s.jsx(Te, {
                     content: h(d.AccountSupporter),
                     children: s.jsx("img", {
@@ -115592,7 +115748,7 @@ function Ace({ user: t, chat: e, onImageLoaded: r }) {
                     }),
                   })
                 : null,
-              ot(e.attr, Ul.Mod)
+              hasFlag(e.attr, Ul.Mod)
                 ? s.jsx(Te, {
                     content: h(d.AccountLevelMod),
                     children: s.jsx("img", {
@@ -115642,7 +115798,7 @@ function Ace({ user: t, chat: e, onImageLoaded: r }) {
                     }),
                   })
                 : null,
-              ot(e.attr, Ul.Supporter)
+              hasFlag(e.attr, Ul.Supporter)
                 ? s.jsx(Te, {
                     content: h(d.AccountSupporter),
                     children: s.jsx("img", {
@@ -115651,7 +115807,7 @@ function Ace({ user: t, chat: e, onImageLoaded: r }) {
                     }),
                   })
                 : null,
-              ot(e.attr, Ul.Mod)
+              hasFlag(e.attr, Ul.Mod)
                 ? s.jsx(Te, {
                     content: h(d.AccountLevelMod),
                     children: s.jsx("img", {
@@ -115704,7 +115860,7 @@ function xce({ messages: t }) {
 const Cce = se.memo(
   function ({ chat: e, onImageLoaded: r }) {
     const i = e.message;
-    if (e.level <= it.Tribune && !ot(e.attr, Ul.Mod)) return i;
+    if (e.level <= it.Tribune && !hasFlag(e.attr, Ul.Mod)) return i;
     const n =
         i.startsWith("https://i.imgur.com/") ||
         i.startsWith("https://i.gyazo.com/") ||
@@ -115994,7 +116150,7 @@ function Sce() {
           ],
         }),
         s.jsx("div", { className: "separator-vertical" }),
-        Ci(mi.Electricity, e)
+        hasFeature(GameFeature.Electricity, e)
           ? s.jsxs(s.Fragment, {
               children: [
                 s.jsxs("div", {
