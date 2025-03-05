@@ -1,5 +1,5 @@
 
-const MODDEDCLIENT_VER = 18.11;
+const MODDEDCLIENT_VER = 19.1;
 
 var ModdedClientConfig = {
   balancedTransports: true,
@@ -1283,11 +1283,11 @@ function DW(t) {
       status: "ok",
       errors: 0,
       ignoreDuration: !1,
-      toJSON: () => IW(r),
+      toJSON: () => sessionToJSON(r),
     };
-  return t && Dh(r, t), r;
+  return t && updateSession(r, t), r;
 }
-function Dh(t, e = {}) {
+function updateSession(t, e = {}) {
   if (
     (e.user &&
       (!t.ipAddress && e.user.ip_address && (t.ipAddress = e.user.ip_address),
@@ -1316,12 +1316,12 @@ function Dh(t, e = {}) {
     typeof e.errors == "number" && (t.errors = e.errors),
     e.status && (t.status = e.status);
 }
-function RW(t, e) {
+function closeSession(t, e) {
   let r = {};
   e ? (r = { status: e }) : t.status === "ok" && (r = { status: "exited" }),
-    Dh(t, r);
+    updateSession(t, r);
 }
-function IW(t) {
+function sessionToJSON(t) {
   return Qa({
     sid: `${t.sid}`,
     init: t.init,
@@ -1431,7 +1431,7 @@ class GS {
         ip_address: void 0,
         username: void 0,
       }),
-      this._session && Dh(this._session, { user: e }),
+      this._session && updateSession(this._session, { user: e }),
       this._notifyScopeListeners(),
       this
     );
@@ -2572,7 +2572,7 @@ function B2(t) {
     ),
     u = r.getSession();
   return (
-    u && u.status === "ok" && Dh(u, { status: "exited" }),
+    u && u.status === "ok" && updateSession(u, { status: "exited" }),
     HI(),
     r.setSession(l),
     i.setSession(l),
@@ -2583,7 +2583,7 @@ function HI() {
   const t = bg(),
     e = Rs(),
     r = e.getSession() || t.getSession();
-  r && RW(r), UI(), t.setSession(), e.setSession();
+  r && closeSession(r), UI(), t.setSession(), e.setSession();
 }
 function UI() {
   const t = bg(),
@@ -2775,7 +2775,7 @@ class sU {
     typeof e.release != "string"
       ? Mr &&
         ft.warn("Discarded session because of missing or non-string release")
-      : (this.sendSession(e), Dh(e, { init: !1 }));
+      : (this.sendSession(e), updateSession(e, { init: !1 }));
   }
   getDsn() {
     return this._dsn;
@@ -2889,7 +2889,7 @@ class sU {
     }
     const o = e.status === "ok";
     ((o && e.errors === 0) || (o && i)) &&
-      (Dh(
+      (updateSession(
         e,
         Ie(U({}, i && { status: "crashed" }), {
           errors: e.errors || Number(n || i),
@@ -7387,7 +7387,7 @@ var QS = qc,
     skipNulls: !1,
     strictNullHandling: !1,
   },
-  O8 = function (e) {
+  isNonNullishPrimitive = function (e) {
     return (
       typeof e == "string" ||
       typeof e == "number" ||
@@ -7396,15 +7396,15 @@ var QS = qc,
       typeof e == "bigint"
     );
   },
-  HT = {},
-  W8 = function t(e, r, i, n, a, o, l, u, c, p, f, m, g, v, y, x) {
-    for (var T = e, A = x, C = 0, P = !1; (A = A.get(HT)) !== void 0 && !P; ) {
+  sentinel = {},
+  stringify = function t(e, r, i, n, a, o, l, u, c, p, f, m, g, v, y, x) {
+    for (var T = e, A = x, C = 0, P = !1; (A = A.get(sentinel)) !== void 0 && !P; ) {
       var M = A.get(e);
       if (((C += 1), typeof M != "undefined")) {
         if (M === C) throw new RangeError("Cyclic object value");
         P = !0;
       }
-      typeof A.get(HT) == "undefined" && (C = 0);
+      typeof A.get(sentinel) == "undefined" && (C = 0);
     }
     if (
       (typeof u == "function"
@@ -7421,7 +7421,7 @@ var QS = qc,
       if (a) return l && !v ? l(r, _n.encoder, y, "key", m) : r;
       T = "";
     }
-    if (O8(T) || jy.isBuffer(T)) {
+    if (isNonNullishPrimitive(T) || jy.isBuffer(T)) {
       if (l) {
         var k = v ? r : l(r, _n.encoder, y, "key", m);
         return [g(k) + "=" + g(l(T, _n.encoder, y, "value", m))];
@@ -7457,7 +7457,7 @@ var QS = qc,
           : D + (p ? "." + L : "[" + L + "]");
         x.set(e, C);
         var H = SN();
-        H.set(HT, x),
+        H.set(sentinel, x),
           wN(
             w,
             t(
@@ -7572,7 +7572,7 @@ var QS = qc,
       (i.skipNulls && r[m] === null) ||
         wN(
           o,
-          W8(
+          stringify(
             r[m],
             m,
             u,
@@ -43314,7 +43314,7 @@ const UZ = [
   BigInt("0x8ebc6af09c88c6e3"),
   BigInt("0x589965cc75374cc3"),
 ];
-function zZ(t, e, r) {
+function wyhash_str(t, e, r) {
   let i = 0;
   const n = t.length;
   e ^= r[0];
@@ -43351,8 +43351,8 @@ function zZ(t, e, r) {
   }
   return Td(r[1] ^ BigInt(n), Td(a ^ r[1], o ^ e));
 }
-function ak(t, e) {
-  return zZ(t, e, UZ);
+function wyhash(t, e) {
+  return wyhash_str(t, e, UZ);
 }
 const VZ = {
     About: "O službě CivIdle",
@@ -71123,27 +71123,27 @@ function getGameState() {
 function getGameOptions() {
   return savedGame.options;
 }
-function aQ(t = savedGame) {
+function serializeSave(t = savedGame) {
   t.options.checksum = null;
-  const e = ak(E0(t), BigInt(0)).toString(16);
+  const e = wyhash(serializeSaveLite(t), BigInt(0)).toString(16);
   return (t.options.checksum = e), JSON.stringify(t, JL);
 }
-function E0(t = savedGame) {
+function serializeSaveLite(t = savedGame) {
   const e = t.current.transportationV2;
   t.current.transportationV2 = [];
   const r = JSON.stringify(t, JL);
   return (t.current.transportationV2 = e), new TextEncoder().encode(r);
 }
-const Ya = { expected: "", actual: "" };
-function oQ(t) {
+const checksum = { expected: "", actual: "" };
+function deserializeSave(t) {
   const e = JSON.parse(t, uQ),
     r = e.options.checksum;
   return (
     r &&
-      ((Ya.expected = r),
+      ((checksum.expected = r),
       (e.options.checksum = null),
-      (Ya.actual = ak(E0(e), BigInt(0)).toString(16)),
-      "transportation" in e.current && (Ya.actual = Ya.expected)),
+      (checksum.actual = wyhash(serializeSaveLite(e), BigInt(0)).toString(16)),
+      "transportation" in e.current && (checksum.actual = checksum.expected)),
     e
   );
 }
@@ -77767,7 +77767,7 @@ class rg extends Error {
     (this.code = i), (this.data = n), Object.setPrototypeOf(this, rg.prototype);
   }
 }
-function kj(t) {
+function rpcClient(t) {
   let e;
   return (
     "request" in t ? (e = t.request) : (e = ete.bind(null, t)),
@@ -79435,15 +79435,15 @@ const Bj = [
       ],
     },
   ],
-  Ej = 569;
-function Mk() {
-  return `${Om()} Build ${ec()}`;
+  build = 569;
+function getFullVersion() {
+  return `${getVersion()} Build ${getBuildNumber()}`;
 }
-function Om() {
+function getVersion() {
   return Bj[0].version;
 }
-function ec() {
-  return Ej;
+function getBuildNumber() {
+  return build;
 }
 function makeObservableHook(t, e) {
   return function () {
@@ -79535,7 +79535,7 @@ function tte() {
 }
 const Ij = new TypedEvent(),
   Nj = new TypedEvent();
-function ct(t, e = 5e3) {
+function showToast(t, e = 5e3) {
   Ij.emit({ content: t, timeout: e });
 }
 function rte() {
@@ -81033,37 +81033,37 @@ Si.add("ageup", gte).singleInstance = !0;
 Si.add("ding", Tte).singleInstance = !0;
 Si.add("success", Ste).singleInstance = !0;
 Si.add("upgrade", wte).singleInstance = !0;
-function Le() {
+function playClick() {
   getGameOptions().soundEffect && Si.play("click");
 }
-function ze() {
+function playError() {
   getGameOptions().soundEffect && Si.play("error");
 }
-function Fg() {
+function playKaching() {
   getGameOptions().soundEffect && Si.play("kaching");
 }
-function Da() {
+function playAgeUp() {
   getGameOptions().soundEffect && Si.play("ageup");
 }
-function Dk() {
+function playLevelUp() {
   getGameOptions().soundEffect && Si.play("levelup");
 }
-function Rk() {
+function playBubble() {
   getGameOptions().soundEffect && Si.play("bubble");
 }
-function kte() {
+function playDing() {
   getGameOptions().soundEffect && Si.play("ding");
 }
-function Lg() {
+function playUpgrade() {
   getGameOptions().soundEffect && Si.play("upgrade");
 }
-function pc() {
+function playSuccess() {
   getGameOptions().soundEffect && Si.play("success");
 }
 function isSteam() {
   return typeof IPCBridge != "undefined";
 }
-const ht = kj({
+const SteamClient = rpcClient({
   request: (t, e) => {
     if (!IPCBridge) throw new Error("SteamClient is not defined");
     return IPCBridge.rpcCall(t, e);
@@ -81072,9 +81072,9 @@ const ht = kj({
 typeof IPCBridge != "undefined" &&
   IPCBridge.onClose(() => {
     saveGame()
-      .then(() => ht.quit())
+      .then(() => SteamClient.quit())
       .catch((t) => {
-        ze(), ct(String(t));
+        playError(), showToast(String(t));
       });
   });
 let user = null,
@@ -81095,7 +81095,7 @@ function Xl() {
   return playerMap;
 }
 let pn = null;
-const qe = kj({
+const qe = rpcClient({
   request: (t, e) =>
     new Promise((r, i) => {
       if (!pn || pn.readyState !== WebSocket.OPEN)
@@ -81152,19 +81152,19 @@ function $j() {
     const t = Ic.getPlatform();
     if (isSteam()) {
       (!dy || Date.now() - lD > 30 * SECOND) &&
-        ((dy = yield ht.getAuthSessionTicket()), (lD = Date.now()));
-      const a = yield ht.getSteamId();
+        ((dy = yield SteamClient.getAuthSessionTicket()), (lD = Date.now()));
+      const a = yield SteamClient.getSteamId();
       getGameOptions().userId || (getGameOptions().userId = `steam:${a}`);
       const o = [
-        `appId=${yield ht.getAppId()}`,
+        `appId=${yield SteamClient.getAppId()}`,
         `ticket=${dy}`,
         "platform=steam",
         `steamId=${a}`,
         `userId=${getGameOptions().userId}`,
-        `version=${Om()}`,
-        `build=${ec()}`,
+        `version=${getVersion()}`,
+        `build=${getBuildNumber()}`,
         `gameId=${getGameState().id}`,
-        `checksum=${Ya.expected}${Ya.actual}`,
+        `checksum=${checksum.expected}${checksum.actual}`,
       ];
       pn = new WebSocket(`${cy()}/?${o.join("&")}`);
     } else if (t === "android") {
@@ -81173,22 +81173,22 @@ function $j() {
           (yield Mte.requestServerSideAccess({ clientId: qJ })).serverAuthToken
         }`,
         "platform=android",
-        `version=${Om()}`,
-        `build=${ec()}`,
+        `version=${getVersion()}`,
+        `build=${getBuildNumber()}`,
         `userId=${(i = getGameOptions().userId) != null ? i : ""}`,
         `gameId=${getGameState().id}`,
-        `checksum=${Ya.expected}${Ya.actual}`,
+        `checksum=${checksum.expected}${checksum.actual}`,
       ];
       pn = new WebSocket(`${cy()}/?${o.join("&")}`);
     } else if (t === "ios") {
       const o = [
         `ticket=${(yield Bte.getAuthTicket()).ticket}`,
         "platform=ios",
-        `version=${Om()}`,
-        `build=${ec()}`,
+        `version=${getVersion()}`,
+        `build=${getBuildNumber()}`,
         `userId=${(n = getGameOptions().userId) != null ? n : ""}`,
         `gameId=${getGameState().id}`,
-        `checksum=${Ya.expected}${Ya.actual}`,
+        `checksum=${checksum.expected}${checksum.actual}`,
       ];
       pn = new WebSocket(`${cy()}/?${o.join("&")}`);
     } else {
@@ -81198,11 +81198,11 @@ function $j() {
       const o = [
         `ticket=${a}`,
         "platform=web",
-        `version=${Om()}`,
-        `build=${ec()}`,
+        `version=${getVersion()}`,
+        `build=${getBuildNumber()}`,
         `userId=${getGameOptions().userId}`,
         `gameId=${getGameState().id}`,
-        `checksum=${Ya.expected}${Ya.actual}`,
+        `checksum=${checksum.expected}${checksum.actual}`,
       ];
       pn = new WebSocket(`${cy()}/?${o.join("&")}`);
     }
@@ -81232,7 +81232,7 @@ function $j() {
                         .toLowerCase()
                         .includes(` @${user.handle.toLowerCase()}`),
                     f = hasFlag(c.attr, Ul.Announce);
-                  (p || f) && (Rk(), ct(`${c.name}: ${c.message}`)),
+                  (p || f) && (playBubble(), showToast(`${c.name}: ${c.message}`)),
                     chatMessages.push(Ie(U({}, c), { id: ++iS }));
                 }),
               (chatMessages = KQ(chatMessages)),
@@ -81301,8 +81301,8 @@ function $j() {
             const u = o;
             user &&
               u.claims[user.userId] &&
-              (getGameOptions().tradeFilledSound && Fg(),
-              ct(
+              (getGameOptions().tradeFilledSound && playKaching(),
+              showToast(
                 h(d.PlayerTradeClaimAvailable, { count: u.claims[user.userId] })
               ),
               Vj.emit());
@@ -81354,8 +81354,8 @@ function Ite(t) {
   const { offlineTime: e } = t;
   console.log("[convertOfflineTimeToWarp] offlineTime:", e),
     e >= 60 &&
-      (Rk(),
-      ct(h(d.PetraOfflineTimeReconciliation, { count: e })),
+      (playBubble(),
+      showToast(h(d.PetraOfflineTimeReconciliation, { count: e })),
       addPetraOfflineTime(e, getGameState()));
 }
 function Nte(t) {
@@ -86632,7 +86632,7 @@ function Fie({ gameState: t, xy: e }) {
                     (l.building = u),
                     Zf.emit(e),
                     Ze(),
-                    Lg();
+                    playUpgrade();
                 },
                 children: h(d.BritishMuseumTransform),
               }),
@@ -86707,7 +86707,7 @@ const GD = new Fj("cividle-great-person", "keyval");
 function jie(t, e) {
   return ae(this, null, function* () {
     const r = yield Ek(t, GD);
-    if ((r == null ? void 0 : r.build) === ec()) return r.image;
+    if ((r == null ? void 0 : r.build) === getBuildNumber()) return r.image;
     const i = e.app.renderer.extract.canvas(Lie(t, e));
     let n, a;
     const o = new Promise((l, u) => {
@@ -86716,7 +86716,7 @@ function jie(t, e) {
     return (
       i.toBlob((l) => {
         l
-          ? (_k(t, { image: l, build: ec() }, GD), n(l))
+          ? (_k(t, { image: l, build: getBuildNumber() }, GD), n(l))
           : a(`Failed to generate image for ${t}`);
       }, "image/png"),
       o
@@ -86823,7 +86823,7 @@ function Gie({ gameState: t, xy: e }) {
                             "text-green": c,
                           }),
                           onClick: () => {
-                            Le(),
+                            playClick(),
                               r.greatPeople.clear(),
                               r.greatPeople.add(o),
                               Ze();
@@ -86871,9 +86871,9 @@ function ApplyToAllComponent({ xy: t, getOptions: e, gameState: r, flags: i }) {
           children: s.jsx("button", {
             style: { width: 27, padding: 0 },
             onClick: () => {
-              pc();
+              playSuccess();
               const c = ij(n.type, e, r);
-              ct(
+              showToast(
                 h(d.ApplyToBuildingsToastHTML, { count: c, building: a.name() })
               );
             },
@@ -86920,7 +86920,7 @@ function ApplyToAllComponent({ xy: t, getOptions: e, gameState: r, flags: i }) {
                     p.drawSelection(null, []);
                 },
                 onClick: () => {
-                  pc();
+                  playSuccess();
                   let p = 0;
                   getGrid(r)
                     .getRange(tileToPoint(t), c)
@@ -86934,7 +86934,7 @@ function ApplyToAllComponent({ xy: t, getOptions: e, gameState: r, flags: i }) {
                       (f == null ? void 0 : f.type) === n.type &&
                         (++p, Object.assign(f, e(n)));
                     }),
-                    ct(
+                    showToast(
                       h(d.ApplyToBuildingsToastHTML, {
                         count: p,
                         building: a.name(),
@@ -86955,7 +86955,7 @@ function ApplyToAllComponent({ xy: t, getOptions: e, gameState: r, flags: i }) {
               children: s.jsx("button", {
                 style: { width: 27, padding: 0 },
                 onClick: () => {
-                  pc();
+                  playSuccess();
                   const c = o.buildingDefaults;
                   c[n.type] || (c[n.type] = {}),
                     Object.assign(c[n.type], e(n)),
@@ -87204,7 +87204,7 @@ function Vie({ gameState: t, xy: e }) {
           className: "w100",
           value: n.inputResource,
           onChange: (o) => {
-            Le();
+            playClick();
             const l = o.target.value;
             n.inputResource !== l &&
               ((n.inputResource = l), (n.transportedAmount = 0), Ze());
@@ -87613,7 +87613,7 @@ function Kk({ title: t, children: e, onConfirm: r }) {
               s.jsx("button", {
                 style: { width: "80px", fontWeight: "bold" },
                 onClick: () => {
-                  Le(), r(), Qt();
+                  playClick(), r(), Qt();
                 },
                 children: h(d.ConfirmYes),
               }),
@@ -87621,7 +87621,7 @@ function Kk({ title: t, children: e, onConfirm: r }) {
               s.jsx("button", {
                 style: { width: "80px" },
                 onClick: () => {
-                  Le(), Qt();
+                  playClick(), Qt();
                 },
                 children: h(d.ConfirmNo),
               }),
@@ -87703,7 +87703,7 @@ function G0({ gameState: t, xy: e }) {
                     s.jsx(Kk, {
                       title: h(d.DemolishAllBuildingConfirmTitle, { count: l }),
                       onConfirm: () => {
-                        pc();
+                        playSuccess();
                         let u = 0;
                         getGrid(t)
                           .getRange(tileToPoint(e), o)
@@ -87721,7 +87721,7 @@ function G0({ gameState: t, xy: e }) {
                           }),
                           clearTransportSourceCache(),
                           Ze(),
-                          ct(
+                          showToast(
                             h(d.ApplyToBuildingsToastHTML, {
                               count: u,
                               building: a.name(),
@@ -87872,7 +87872,7 @@ function $ie({ building: t, resource: e }) {
                 onClick: () => {
                   var o;
                   if (i <= 0) {
-                    ze();
+                    playError();
                     return;
                   }
                   safeAdd(
@@ -87881,7 +87881,7 @@ function $ie({ building: t, resource: e }) {
                     -clamp(i, 0, (o = t.resources[e]) != null ? o : 0)
                   ),
                     Ze(),
-                    Le(),
+                    playClick(),
                     Qt();
                 },
                 children: h(d.ConfirmYes),
@@ -87890,7 +87890,7 @@ function $ie({ building: t, resource: e }) {
               s.jsx("button", {
                 style: { width: "80px" },
                 onClick: () => {
-                  Le(), Qt();
+                  playClick(), Qt();
                 },
                 children: h(d.ConfirmNo),
               }),
@@ -88360,7 +88360,7 @@ function O0({ gameState: t, xy: e }) {
               onClick: () =>
                 ae(this, null, function* () {
                   var M, k, w;
-                  Le(), ct(h(d.MoveBuildingSelectTileToastHTML), 1e7), p(!0);
+                  playClick(), showToast(h(d.MoveBuildingSelectTileToastHTML), 1e7), p(!0);
                   const A = yield (M = Singleton().sceneManager.getCurrent(WorldScene)) == null
                     ? void 0
                     : M.hijackSelectGrid();
@@ -88372,13 +88372,13 @@ function O0({ gameState: t, xy: e }) {
                       ((k = f.building.resources.Teleport) != null ? k : 0) <=
                         0)
                   ) {
-                    ze();
+                    playError();
                     return;
                   }
                   const C = pointToTile(A),
                     P = t.tiles.get(C);
                   P && !P.building && P.explored
-                    ? (pc(),
+                    ? (playSuccess(),
                       (P.building = i),
                       safeAdd(f.building.resources, "Teleport", -1),
                       delete r.building,
@@ -88389,7 +88389,7 @@ function O0({ gameState: t, xy: e }) {
                       clearIntraTickCache(),
                       (w = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                         w.selectGrid(A))
-                    : (ct(d.MoveBuildingFail), ze());
+                    : (showToast(d.MoveBuildingFail), playError());
                 }),
               children: [
                 s.jsx("div", {
@@ -88840,10 +88840,10 @@ function Xie({ gameState: t, xy: e }) {
                   var c;
                   const u = sy(r.level + 1);
                   if (((c = r.resources.TradeValue) != null ? c : 0) < u) {
-                    ze();
+                    playError();
                     return;
                   }
-                  safeAdd(r.resources, "TradeValue", -u), r.level++, Le(), Ze();
+                  safeAdd(r.resources, "TradeValue", -u), r.level++, playClick(), Ze();
                 },
                 children: [
                   s.jsx("div", {
@@ -89195,7 +89195,7 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
                   s.jsx("td", {
                     className: "pointer",
                     onClick: () => {
-                      Le(),
+                      playClick(),
                         c.sellResources[u.sellResource]
                           ? delete c.sellResources[u.sellResource]
                           : ((c.capacity = c.capacity === 0 ? 1 : c.capacity),
@@ -89218,7 +89218,7 @@ function Jie({ allMarketTrades: t, availableResourcesSet: e, gs: r }) {
                       className: "m-icon small pointer",
                       onPointerDown: () => {
                         var v;
-                        Le(),
+                        playClick(),
                           (v = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                             v.lookAtTile(u.xy, Oc.Select);
                       },
@@ -89299,7 +89299,7 @@ function Qie({ allMarketTrades: t, gs: e }) {
                 children: s.jsx("div", {
                   className: "m-icon small text-red pointer",
                   onClick: () => {
-                    Le(), delete i.sellResources[r.sellResource], Ze();
+                    playClick(), delete i.sellResources[r.sellResource], Ze();
                   },
                   children: "delete",
                 }),
@@ -89310,7 +89310,7 @@ function Qie({ allMarketTrades: t, gs: e }) {
                   className: "m-icon small pointer",
                   onPointerDown: () => {
                     var u;
-                    Le(),
+                    playClick(),
                       (u = Singleton().sceneManager.getCurrent(WorldScene)) == null ||
                         u.lookAtTile(r.xy, Oc.Select);
                   },
@@ -89467,7 +89467,7 @@ DL.on((t) => {
   if (isSteam())
     switch (t) {
       case "Future": {
-        ht.unlockAchievement("Future");
+        SteamClient.unlockAchievement("Future");
         break;
       }
     }
@@ -89476,39 +89476,39 @@ function rne(t) {
   if (isSteam())
     switch (t) {
       case "BronzeAge": {
-        ht.unlockAchievement("Bronze");
+        SteamClient.unlockAchievement("Bronze");
         break;
       }
       case "IronAge": {
-        ht.unlockAchievement("Iron");
+        SteamClient.unlockAchievement("Iron");
         break;
       }
       case "ClassicalAge": {
-        ht.unlockAchievement("Classical");
+        SteamClient.unlockAchievement("Classical");
         break;
       }
       case "MiddleAge": {
-        ht.unlockAchievement("Medieval");
+        SteamClient.unlockAchievement("Medieval");
         break;
       }
       case "RenaissanceAge": {
-        ht.unlockAchievement("Renaissance");
+        SteamClient.unlockAchievement("Renaissance");
         break;
       }
       case "IndustrialAge": {
-        ht.unlockAchievement("Industrial");
+        SteamClient.unlockAchievement("Industrial");
         break;
       }
       case "WorldWarAge": {
-        ht.unlockAchievement("WorldWars");
+        SteamClient.unlockAchievement("WorldWars");
         break;
       }
       case "ColdWarAge": {
-        ht.unlockAchievement("ColdWar");
+        SteamClient.unlockAchievement("ColdWar");
         break;
       }
       case "InformationAge": {
-        ht.unlockAchievement("Information");
+        SteamClient.unlockAchievement("Information");
         break;
       }
     }
@@ -89517,39 +89517,39 @@ function ine(t, e) {
   if (isSteam() && t >= 1)
     switch (e.city) {
       case "Rome": {
-        ht.unlockAchievement("PaxRomana");
+        SteamClient.unlockAchievement("PaxRomana");
         break;
       }
       case "Athens": {
-        ht.unlockAchievement("Olympian");
+        SteamClient.unlockAchievement("Olympian");
         break;
       }
       case "Memphis": {
-        ht.unlockAchievement("EyeOfHorus");
+        SteamClient.unlockAchievement("EyeOfHorus");
         break;
       }
       case "Beijing": {
-        ht.unlockAchievement("MandateOfHeaven");
+        SteamClient.unlockAchievement("MandateOfHeaven");
         break;
       }
       case "NewYork": {
-        ht.unlockAchievement("TheBigApple");
+        SteamClient.unlockAchievement("TheBigApple");
         break;
       }
       case "Babylon": {
-        ht.unlockAchievement("LionOfBabylon");
+        SteamClient.unlockAchievement("LionOfBabylon");
         break;
       }
       case "Kyoto": {
-        ht.unlockAchievement("Heian-kyo");
+        SteamClient.unlockAchievement("Heian-kyo");
         break;
       }
       case "German": {
-        ht.unlockAchievement("EisernerKanzler");
+        SteamClient.unlockAchievement("EisernerKanzler");
         break;
       }
       case "English": {
-        ht.unlockAchievement("ThreeLions");
+        SteamClient.unlockAchievement("ThreeLions");
         break;
       }
     }
@@ -89586,7 +89586,7 @@ function w4() {
           s.jsxs("button", {
             className: "row mb10 w100",
             onClick: () => {
-              Le(), It(s.jsx(Xk, {}));
+              playClick(), It(s.jsx(Xk, {}));
             },
             children: [
               s.jsx("div", {
@@ -89649,10 +89649,10 @@ function w4() {
                       disabled: a.size > 0,
                       onClick: () => {
                         if (L_(e).size > 0) {
-                          ze();
+                          playError();
                           return;
                         }
-                        Dk(),
+                        playLevelUp(),
                           S0(e).forEach((u) => {
                             const c = t.greatPeople[u];
                             c && (c.amount -= w0(u));
@@ -89756,7 +89756,7 @@ function Xk() {
               s.jsxs("button", {
                 className: "row",
                 onClick: () => {
-                  Le(), It(s.jsx(w4, {}));
+                  playClick(), It(s.jsx(w4, {}));
                 },
                 children: [
                   s.jsx("div", { children: h(d.ManageAgeWisdom) }),
@@ -89901,8 +89901,8 @@ function ane({ greatPerson: t }) {
         children: s.jsxs("button", {
           onClick: () => {
             n && n.amount >= o
-              ? ((n.amount -= o), n.level++, ut(e), Lg())
-              : ze();
+              ? ((n.amount -= o), n.level++, ut(e), playUpgrade())
+              : playError();
           },
           className: "w100 row text-strong w100",
           disabled: !n || n.amount < o,
@@ -89959,7 +89959,7 @@ function ane({ greatPerson: t }) {
               disabled: !isOnlineUser(),
               onClick: () => {
                 isOnlineUser() &&
-                  (Le(), (n.amount += Kf(t, n.level)), (n.level = 0), ut());
+                  (playClick(), (n.amount += Kf(t, n.level)), (n.level = 0), ut());
               },
               children: s.jsx(Te, {
                 content: isOnlineUser()
@@ -90044,11 +90044,11 @@ function one({ greatPerson: t }) {
           className: "w100 text-strong",
           onClick: () => {
             if (Config.GreatPerson[l].type === ga.Wildcard) {
-              ze();
+              playError();
               return;
             }
             if (r && r.amount > 0) {
-              --r.amount, C0(l, 1), Lg(), ut();
+              --r.amount, C0(l, 1), playUpgrade(), ut();
               return;
             }
           },
@@ -90186,10 +90186,10 @@ function sne({ greatPerson: t }) {
           onClick: () => {
             const g = e.greatPeople[u];
             if (!m || !r || !g) {
-              ze();
+              playError();
               return;
             }
-            --r.amount, --g.amount, C0(p, 1), ut(), Da();
+            --r.amount, --g.amount, C0(p, 1), ut(), playAgeUp();
           },
           children: h(d.GreatPersonPromotionPromote),
         }),
@@ -90221,15 +90221,15 @@ function Ra({ permanent: t }) {
       (o = r.greatPeopleChoicesV2.length),
       (a = (u) => {
         if (!i) {
-          ze();
+          playError();
           return;
         }
         const c = r.greatPeopleChoicesV2.indexOf(l);
         if (c === -1) {
-          ze();
+          playError();
           return;
         }
-        Le(),
+        playClick(),
           r.greatPeopleChoicesV2.splice(c, 1),
           C0(u, l.amount),
           ut(r),
@@ -90243,15 +90243,15 @@ function Ra({ permanent: t }) {
       (o = e.greatPeopleChoicesV2.length),
       (a = (u) => {
         if (!i) {
-          ze();
+          playError();
           return;
         }
         const c = e.greatPeopleChoicesV2.indexOf(l);
         if (c === -1) {
-          ze();
+          playError();
           return;
         }
-        Le(),
+        playClick(),
           e.greatPeopleChoicesV2.splice(c, 1),
           safeAdd(e.greatPeople, u, l.amount),
           Ze(),
@@ -90861,7 +90861,7 @@ function jc(t) {
 }
 function Xo(t) {
   if (isSteam()) {
-    ht.openUrl(t);
+    SteamClient.openUrl(t);
     return;
   }
   window.open(t, "_blank");
@@ -90924,9 +90924,9 @@ function B4({ rank: t, user: e }) {
             onClick: () =>
               ae(this, null, function* () {
                 try {
-                  Le(), yield qe.rankUp(), yield saveGame(), window.location.reload();
+                  playClick(), yield qe.rankUp(), yield saveGame(), window.location.reload();
                 } catch (r) {
-                  ze(), ct(String(r));
+                  playError(), showToast(String(r));
                 }
               }),
             children: [
@@ -90958,7 +90958,7 @@ function yne({ title: t, children: e }) {
             children: s.jsx("button", {
               style: { width: "80px" },
               onClick: () => {
-                Le(), Qt();
+                playClick(), Qt();
               },
               children: h(d.Ok),
             }),
@@ -91065,7 +91065,7 @@ function bne() {
                         OnUserChanged.emit(U({}, t)),
                         Qt();
                     } catch (o) {
-                      ze(), ct(String(o));
+                      playError(), showToast(String(o));
                     }
                   }),
                 children: h(d.ChangePlayerHandle),
@@ -91120,7 +91120,7 @@ function E4() {
                     icon: "info",
                     className: "mb10 text-small text-strong",
                     onClick: () => {
-                      Le(), It(s.jsx(B4, { rank: e, user: t }));
+                      playClick(), It(s.jsx(B4, { rank: e, user: t }));
                     },
                     children: h(d.AccountRankUpTip),
                   })
@@ -91153,7 +91153,7 @@ function E4() {
                   s.jsx("div", {
                     className: classNames("text-link text-strong", { disabled: !t }),
                     onClick: () => {
-                      t ? It(s.jsx(bne, {})) : ze();
+                      t ? It(s.jsx(bne, {})) : playError();
                     },
                     children: h(d.ChangePlayerHandle),
                   }),
@@ -91192,7 +91192,7 @@ function E4() {
                                 OnUserChanged.emit(U({}, t)),
                                 OnUserChanged.emit(yield qe.changeColor(u));
                             } catch (u) {
-                              ct(String(u)), ze();
+                              showToast(String(u)), playError();
                             }
                           }),
                         className: "condensed code",
@@ -91475,8 +91475,8 @@ function Tne() {
                 className: "w100 text-strong row",
                 disabled: !i && !n,
                 onClick: () => {
-                  if ((Le(), !a())) {
-                    ze(),
+                  if ((playClick(), !a())) {
+                    playError(),
                       It(
                         s.jsx(yne, {
                           title: h(d.TribuneUpgradeDescGreatPeopleWarningTitle),
@@ -91493,7 +91493,7 @@ function Tne() {
                       onConfirm: () =>
                         ae(this, null, function* () {
                           try {
-                            yield qe.upgrade(), Dk(), yield CM(getGameState().city);
+                            yield qe.upgrade(), playLevelUp(), yield CM(getGameState().city);
                             const l = getGameOptions();
                             (l.greatPeopleChoicesV2 = []),
                               hJ(l),
@@ -91505,7 +91505,7 @@ function Tne() {
                               yield saveGame(),
                               window.location.reload();
                           } catch (l) {
-                            ze(), ct(String(l));
+                            playError(), showToast(String(l));
                           }
                         }),
                       children: s.jsx(mt, {
@@ -91535,7 +91535,7 @@ function ln({ children: t }) {
   const [e, r] = se.useState(!1);
   return (
     isSteam() &&
-      ht.isMaximized().then((i) => {
+      SteamClient.isMaximized().then((i) => {
         r(i);
       }),
     s.jsxs("div", {
@@ -91549,29 +91549,29 @@ function ln({ children: t }) {
                 s.jsx("button", {
                   "aria-label": "Minimize",
                   onClick: () => {
-                    Le(), ht.minimize();
+                    playClick(), SteamClient.minimize();
                   },
                 }),
                 e
                   ? s.jsx("button", {
                       "aria-label": "Restore",
                       onClick: () => {
-                        Le(), ht.restore(), r(!1);
+                        playClick(), SteamClient.restore(), r(!1);
                       },
                     })
                   : s.jsx("button", {
                       "aria-label": "Maximize",
                       onClick: () => {
-                        Le(), ht.maximize(), r(!0);
+                        playClick(), SteamClient.maximize(), r(!0);
                       },
                     }),
                 s.jsx("button", {
                   "aria-label": "Close",
                   onClick: () => {
                     saveGame()
-                      .then(() => ht.quit())
+                      .then(() => SteamClient.quit())
                       .catch((i) => {
-                        ze(), ct(String(i));
+                        playError(), showToast(String(i));
                       });
                   },
                 }),
@@ -91636,7 +91636,7 @@ function Ane({ xy: t }) {
                     try {
                       yield qe.setTariffRate(r);
                     } catch (l) {
-                      ct(String(l));
+                      showToast(String(l));
                     }
                   }),
                 children: [
@@ -91752,7 +91752,7 @@ function _4({ xy: t }) {
             try {
               yield qe.claimTile(t);
             } catch (n) {
-              ze(), ct(String(n));
+              playError(), showToast(String(n));
             }
           }),
         children: [
@@ -91800,8 +91800,8 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
         const F = map.get(I);
         return !F || L === 0 || L === tiles.length - 1 ? D : D + F.tariffRate;
       }, 0);
-  if (!trade) return Qt(), ze(), null;
-  if (!myXy) return Qt(), ze(), ct(h(d.PlayerTradeClaimTileFirstWarning)), null;
+  if (!trade) return Qt(), playError(), null;
+  if (!myXy) return Qt(), playError(), showToast(h(d.PlayerTradeClaimTileFirstWarning)), null;
   const hasValidPath = () => tiles.length > 0,
     fillsHaveEnoughResource = (D) => {
       for (const [I, L] of D) if (!Z_(I, trade.buyResource, L, gs)) return !1;
@@ -91925,17 +91925,20 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
 
         if (!hasValidPath()) {
           addSystemMessage("hasValidPath=false");
-          ct(h(d.OperationNotAllowedError)), ze();
+          showToast(h(d.OperationNotAllowedError));
+          playError();
           return;
         }
         if(!fillsHaveEnoughResource(fills)) {
           addSystemMessage("fillsHaveEnoughResource=false");
-          ct(h(d.OperationNotAllowedError)), ze();
+          showToast(h(d.OperationNotAllowedError));
+          playError();
           return;
         }
         if(!fillsHaveEnoughStorage(fills)) {
           addSystemMessage("fillsHaveEnoughStorage=false");
-          ct(h(d.OperationNotAllowedError)), ze();
+          showToast(h(d.OperationNotAllowedError));
+          playError();
           return;
         }
   
@@ -91961,7 +91964,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
   
   
         // let user know we're actually doing something
-        ct("Filling trades, please wait 5-20 sec...");
+        showToast("Filling trades, please wait 5-20 sec...");
 
         let total = 0,
           success = 0,
@@ -91980,7 +91983,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
             // todo: localize
             let tradeStr = `${total} / ${fillsSize}`;
             let resourceStr = `${formatNumber(fillAmount)} ${trade.buyResource}`;
-            ct("Filling trades " + tradeStr + `, sending: ${resourceStr}...`);
+            showToast("Filling trades " + tradeStr + `, sending: ${resourceStr}...`);
 
             const V = yield qe.fillTrade({
               id: trade.id,
@@ -92023,21 +92026,23 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
               "TradeValue",
               fillAmount * (($ = Config.ResourcePrice[trade.buyResource]) != null ? $ : 0)
             ),
-            ct(errors.join("<br />")),
+            showToast(errors.join("<br />")),
             Qt();
-        } else ze(), ct(errors.join("<br />"));
+        } else playError(), showToast(errors.join("<br />"));
       }),
 
-    A = (D) =>
+    getStorageRequired = (D) =>
       clamp((trade.sellAmount * D) / trade.buyAmount - D, 0, Number.POSITIVE_INFINITY),
+
     fillsHaveEnoughStorage = (D) => {
       if (!k()) return !0;
       for (const [I, L] of D) {
-        const F = A(L);
+        const F = getStorageRequired(L);
         if (!J_(I, F, gs)) return !1;
       }
       return !0;
     },
+    
     getTotalFillAmount = (fills) => {
       let total = 0;
       for (const [tile, amount] of fills) total += amount;
@@ -92045,7 +92050,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
     },
     M = (D) => {
       let I = 0;
-      for (const [L, F] of D) I += A(F);
+      for (const [L, F] of D) I += getStorageRequired(F);
       return I;
     },
     k = () => trade.sellAmount > trade.buyAmount,
@@ -92107,7 +92112,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
     },
 
     // ***** isFillValid
-    _ = (D, I) => Z_(D, trade.buyResource, I, gs) && (!k() || J_(D, A(I), gs));
+    _ = (D, I) => Z_(D, trade.buyResource, I, gs) && (!k() || J_(D, getStorageRequired(I), gs));
 
 
   return s.jsxs("div", {
@@ -92462,8 +92467,8 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
                   const D = calculateMaxFill("fast",0.03);
                   D.size > 0
                     ? doFill(D,"fast",0.03)
-                    : (ze(),
-                      ct(h(d.PlayerTradeNoFillBecauseOfResources)),
+                    : (playError(),
+                      showToast(h(d.PlayerTradeNoFillBecauseOfResources)),
                       Qt());
                 },
                 children: "Trade Max Fast",
@@ -92476,8 +92481,8 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
                   const D = calculateMaxFill("greedy",0.03);
                   D.size > 0
                     ? doFill(D,"greedy",0.03)
-                    : (ze(),
-                      ct(h(d.PlayerTradeNoFillBecauseOfResources)),
+                    : (playError(),
+                      showToast(h(d.PlayerTradeNoFillBecauseOfResources)),
                       Qt());
                 },
                 children: "Trade Max Greedy",
@@ -93330,7 +93335,7 @@ function Dne() {
                     className: "text-strong",
                     children: h(d.CivIdle),
                   }),
-                  s.jsx("div", { children: Mk() }),
+                  s.jsx("div", { children: getFullVersion() }),
                   s.jsx("div", { children: h(d.CivIdleInfo) }),
                   d.CurrentLanguage === "English"
                     ? null
@@ -93355,17 +93360,17 @@ function Dne() {
                         children: [
                           s.jsx("div", {
                             className: "text-small text-link mt5",
-                            onClick: () => ht.openMainSaveFolder(),
+                            onClick: () => SteamClient.openMainSaveFolder(),
                             children: h(d.OpenSaveFolder),
                           }),
                           s.jsx("div", {
                             className: "text-small text-link",
-                            onClick: () => ht.openBackupSaveFolder(),
+                            onClick: () => SteamClient.openBackupSaveFolder(),
                             children: h(d.OpenSaveBackupFolder),
                           }),
                           s.jsx("div", {
                             className: "text-small text-link",
-                            onClick: () => ht.openLogFolder(),
+                            onClick: () => SteamClient.openLogFolder(),
                             children: h(d.OpenLogFolder),
                           }),
                         ],
@@ -93389,7 +93394,7 @@ function Dne() {
               s.jsx("button", {
                 style: { padding: "0 30px" },
                 onClick: () => {
-                  Le(), Qt();
+                  playClick(), Qt();
                 },
                 children: h(d.Ok),
               }),
@@ -93415,7 +93420,7 @@ function I4() {
       s.jsx("div", { className: "f1", children: h(d.SoundEffect) }),
       s.jsx("div", {
         onClick: () => {
-          (t.soundEffect = !t.soundEffect), Le(), ut(t);
+          (t.soundEffect = !t.soundEffect), playClick(), ut(t);
         },
         className: "ml10 pointer",
         children: t.soundEffect
@@ -93617,7 +93622,7 @@ function Nne() {
                   contentHTML: h(d.GreedyTransportDescHTML),
                   value: t.greedyTransport,
                   onValueChange: (e) => {
-                    Le(), (t.greedyTransport = e), ut(t);
+                    playClick(), (t.greedyTransport = e), ut(t);
                   },
                 }),
               ],
@@ -93696,7 +93701,7 @@ function Nne() {
                     }),
                     s.jsx("div", {
                       onClick: () => {
-                        Le(),
+                        playClick(),
                           (t.resourceBarShowUncappedHappiness =
                             !t.resourceBarShowUncappedHappiness),
                           ut(t);
@@ -93726,7 +93731,7 @@ function Nne() {
                     }),
                     s.jsx("div", {
                       onClick: () => {
-                        Le(),
+                        playClick(),
                           (t.resourceBarExcludeTurnedOffOrNoActiveTransport =
                             !t.resourceBarExcludeTurnedOffOrNoActiveTransport),
                           ut(t);
@@ -93754,7 +93759,7 @@ function Nne() {
                     }),
                     s.jsx("div", {
                       onClick: () => {
-                        Le(),
+                        playClick(),
                           (t.resourceBarExcludeStorageFull =
                             !t.resourceBarExcludeStorageFull),
                           ut(t);
@@ -93801,7 +93806,7 @@ function Nne() {
                   contentHTML: h(d.PorcelainTowerMaxPickPerRollDescHTML),
                   value: t.porcelainTowerMaxPickPerRoll,
                   onValueChange: (e) => {
-                    Le(), (t.porcelainTowerMaxPickPerRoll = e), ut(t);
+                    playClick(), (t.porcelainTowerMaxPickPerRoll = e), ut(t);
                   },
                 }),
               ],
@@ -93824,7 +93829,7 @@ function Nne() {
                             s.jsx("div", {
                               onClick: () => {
                                 (t.tradeFilledSound = !t.tradeFilledSound),
-                                  Le(),
+                                  playClick(),
                                   ut(t);
                               },
                               className: "ml10 pointer",
@@ -93857,7 +93862,7 @@ function Nne() {
                     }),
                     s.jsx("div", {
                       onClick: () => {
-                        Le(),
+                        playClick(),
                           (t.chatHideLatestMessage = !t.chatHideLatestMessage),
                           ut(t);
                       },
@@ -93884,13 +93889,13 @@ function Nne() {
                   contentHTML: h(d.TransportPlanCacheDescHTML),
                   value: t.enableTransportSourceCache,
                   onValueChange: (e) => {
-                    Le(), (t.enableTransportSourceCache = e), ut(t);
+                    playClick(), (t.enableTransportSourceCache = e), ut(t);
                   },
                 }),
                 s.jsx("button", {
                   className: "jcc w100 mt10",
                   onClick: () => {
-                    Le(), clearTransportSourceCache();
+                    playClick(), clearTransportSourceCache();
                   },
                   children: h(d.ClearTransportPlanCache),
                 }),
@@ -93900,7 +93905,7 @@ function Nne() {
                   contentHTML: h(d.ShowTransportArrowDescHTML),
                   value: t.showTransportArrow,
                   onValueChange: (e) => {
-                    Le(), (t.showTransportArrow = e), ut(t);
+                    playClick(), (t.showTransportArrow = e), ut(t);
                   },
                 }),
               ],
@@ -93979,7 +93984,7 @@ function yy({ title: t, contentHTML: e, value: r, onValueChange: i }) {
       }),
       s.jsx("div", {
         onClick: () => {
-          Le(), i(!r);
+          playClick(), i(!r);
         },
         className: "ml10 pointer",
         children: r
@@ -94206,7 +94211,7 @@ function jne({ action: t }) {
                       ut(e),
                       Qt());
                   } catch (a) {
-                    ze(), console.error(a), ct(String(a));
+                    playError(), console.error(a), showToast(String(a));
                   }
                 },
                 children: h(d.ShortcutSave),
@@ -94684,7 +94689,7 @@ function F4() {
       s.jsx("div", { className: "f1", children: h(d.OptionsUseModernUIV2) }),
       s.jsx("div", {
         onClick: () => {
-          Le(), (t.useModernUI = !t.useModernUI), ut(t), uO(t);
+          playClick(), (t.useModernUI = !t.useModernUI), ut(t), uO(t);
         },
         className: classNames({
           "m-icon pointer": !0,
@@ -94896,7 +94901,7 @@ function Une() {
               s.jsx("div", {
                 className: "mv5 text-link pointer text-strong",
                 onClick: () => {
-                  Le(), ZJ();
+                  playClick(), ZJ();
                 },
                 children: h(d.ThemeColorReset),
               }),
@@ -94961,7 +94966,7 @@ function Une() {
               s.jsx("div", {
                 className: "mv5 text-link pointer text-strong",
                 onClick: () => {
-                  Le(), JJ();
+                  playClick(), JJ();
                 },
                 children: h(d.ThemeColorResetBuildingColors),
               }),
@@ -95011,7 +95016,7 @@ function Une() {
               s.jsx("div", {
                 className: "mv5 text-link pointer text-strong",
                 onClick: () => {
-                  Le(), QJ();
+                  playClick(), QJ();
                 },
                 children: h(d.ThemeColorResetResourceColors),
               }),
@@ -95101,7 +95106,7 @@ function L4({ advisor: t }) {
             s.jsx("div", {
               className: "text-desc text-small",
               onClick: () => {
-                Le(),
+                playClick(),
                   Qt(),
                   forEach(tg, (r) => {
                     getGameOptions().disabledTutorials.add(r);
@@ -95113,7 +95118,7 @@ function L4({ advisor: t }) {
             s.jsx("button", {
               className: "text-strong",
               onClick: () => {
-                Le(), Qt();
+                playClick(), Qt();
               },
               children: h(d.AdvisorOkay),
             }),
@@ -95172,7 +95177,7 @@ function j4() {
             s.jsx("button", {
               className: "text-strong",
               onClick: () => {
-                e(t + 1), Le();
+                e(t + 1), playClick();
               },
               children: h(d.FirstTimeGuideNext),
             }),
@@ -95191,7 +95196,7 @@ function j4() {
             s.jsx("button", {
               className: "text-strong",
               onClick: () => {
-                e(t + 1), Le();
+                e(t + 1), playClick();
               },
               children: h(d.FirstTimeGuideNext),
             }),
@@ -95249,14 +95254,14 @@ function rae({ submitEvent: t }) {
       ae(this, null, function* () {
         try {
           e
-            ? (Le(),
+            ? (playClick(),
               yield qe.changeHandle(r, n),
               (e.handle = r),
               (e.flag = n),
               OnUserChanged.emit(U({}, e)))
-            : (ze(), ct(h(d.OfflineErrorMessage)));
+            : (playError(), showToast(h(d.OfflineErrorMessage)));
         } catch (c) {
-          ze(), ct(String(c));
+          playError(), showToast(String(c));
         } finally {
           Qt();
         }
@@ -95278,7 +95283,7 @@ function rae({ submitEvent: t }) {
                 value: r,
                 onChange: (c) =>
                   ae(this, null, function* () {
-                    e ? i(c.target.value) : ct(h(d.OfflineErrorMessage));
+                    e ? i(c.target.value) : showToast(h(d.OfflineErrorMessage));
                   }),
                 type: "text",
                 className: "w100",
@@ -95322,7 +95327,7 @@ function rae({ submitEvent: t }) {
                   onClick: () =>
                     ae(this, null, function* () {
                       if (!e) {
-                        ze(), ct(h(d.OfflineErrorMessage));
+                        playError(), showToast(h(d.OfflineErrorMessage));
                         return;
                       }
                       a(c);
@@ -95567,7 +95572,7 @@ function An() {
                             yield saveGame(),
                               (window.location.search = "?scene=Save");
                           } catch (a) {
-                            ze(), ct(String(a));
+                            playError(), showToast(String(a));
                           }
                         }),
                       children: s.jsx(Hn, {
@@ -95663,9 +95668,9 @@ function An() {
                           className: "menu-popover-item",
                           onPointerDown: () => {
                             saveGame()
-                              .then(() => ht.quit())
+                              .then(() => SteamClient.quit())
                               .catch((a) => {
-                                ze(), ct(String(a));
+                                playError(), showToast(String(a));
                               });
                           },
                           children: s.jsx(Hn, {
@@ -95685,9 +95690,9 @@ function An() {
                               try {
                                 yield saveGame(),
                                   yield qe.checkInSave(yield compressSave()),
-                                  ht.quit();
+                                  SteamClient.quit();
                               } catch (a) {
-                                ze(), ct(String(a));
+                                playError(), showToast(String(a));
                               }
                             }),
                           children: s.jsx(Hn, {
@@ -96020,8 +96025,8 @@ function oae({ id: t }) {
           jJ(v, e);
         }),
         e.greatPeopleChoicesV2.length > 0
-          ? (Da(), It(s.jsx(Ra, { permanent: !1 })))
-          : Lg(),
+          ? (playAgeUp(), It(s.jsx(Ra, { permanent: !1 })))
+          : playUpgrade(),
         Ze(),
         (g = Singleton().sceneManager.getCurrent(op)) == null ||
           g.renderTechTree("animate", !0));
@@ -96968,7 +96973,7 @@ function pae({ open: t }) {
                       s.jsx("div", { className: "f1" }),
                       s.jsx("div", {
                         onClick: () => {
-                          Le(), (n.festival = !n.festival), Ze();
+                          playClick(), (n.festival = !n.festival), Ze();
                         },
                         className: "ml10 pointer",
                         children: n.festival
@@ -97408,7 +97413,7 @@ function mae() {
               s.jsx("button", {
                 style: { padding: "0 15px" },
                 onClick: () => {
-                  Le(), Qt();
+                  playClick(), Qt();
                 },
                 children: h(d.Cancel),
               }),
@@ -97420,14 +97425,14 @@ function mae() {
                 onClick: () =>
                   ae(this, null, function* () {
                     if (Xf(getGameOptions()) < Config.City[a].requireGreatPeopleLevel || !c()) {
-                      ze();
+                      playError();
                       return;
                     }
                     try {
                       yield Promise.race([qe.rebirth(), nk(10)]);
                     } catch (x) {
                       if ((console.error(x), isOnlineUser())) {
-                        ze(), ct(h(d.RebornOfflineWarning));
+                        playError(), showToast(h(d.RebornOfflineWarning));
                         return;
                       }
                     }
@@ -97445,11 +97450,11 @@ function mae() {
                       (n.rebirthed = !0)),
                       ine(y, n),
                       yield CM(a),
-                      Le();
+                      playClick();
                     try {
                       yield saveGame(), window.location.reload();
                     } catch (x) {
-                      ze(), ct(String(x));
+                      playError(), showToast(String(x));
                     }
                   }),
                 children: h(d.Reborn),
@@ -98173,7 +98178,7 @@ function yae({ gameState: t, options: e }) {
               className: "pointer",
               onClick: () => {
                 t.greatPeopleChoicesV2.length > 0 &&
-                  (Da(), It(s.jsx(Ra, { permanent: !1 })));
+                  (playAgeUp(), It(s.jsx(Ra, { permanent: !1 })));
               },
               children: s.jsx(mt, { html: h(d.UnclaimedGreatPersonThisRun) }),
             }),
@@ -98187,7 +98192,7 @@ function yae({ gameState: t, options: e }) {
               className: "pointer",
               onClick: () => {
                 e.greatPeopleChoicesV2.length > 0 &&
-                  (Da(), It(s.jsx(Ra, { permanent: !0 })));
+                  (playAgeUp(), It(s.jsx(Ra, { permanent: !0 })));
               },
               children: s.jsx(mt, { html: h(d.UnclaimedGreatPersonPermanent) }),
             }),
@@ -98666,13 +98671,13 @@ function Jk({
                     className: "text-link text-strong",
                     onClick: () => {
                       if (i() && i() !== t) {
-                        ze();
+                        playError();
                         return;
                       }
-                      Le(),
+                      playClick(),
                         i()
                           ? (r.desiredLevel++, (r.status = "upgrading"))
-                          : (Lg(), n(t)),
+                          : (playUpgrade(), n(t)),
                         Ze();
                     },
                     children: h(d.UnlockBuilding),
@@ -98887,30 +98892,30 @@ function Aae({ gameState: t, xy: e }) {
     : null;
 }
 const xae = "" + new URL("energy_star-fe4624cf.png", import.meta.url).href;
-var Ks = ((t) => (
+var LoadingPageStage = ((t) => (
   (t[(t.LoadSave = 0)] = "LoadSave"),
   (t[(t.CheckSave = 1)] = "CheckSave"),
   (t[(t.SteamSignIn = 2)] = "SteamSignIn"),
   (t[(t.OfflineProduction = 3)] = "OfflineProduction"),
   t
-))(Ks || {});
-function Ts({ stage: t, onload: e, progress: r }) {
+))(LoadingPageStage || {});
+function LoadingPage({ stage: t, onload: e, progress: r }) {
   return (
     se.useEffect(() => {
       e == null || e();
     }, [e]),
     uo(D0, (i) => {
       i.key === "d" && Xo(bk),
-        i.key === "s" && isSteam() && ht.openMainSaveFolder(),
-        i.key === "b" && isSteam() && ht.openBackupSaveFolder(),
-        i.key === "l" && isSteam() && ht.openLogFolder();
+        i.key === "s" && isSteam() && SteamClient.openMainSaveFolder(),
+        i.key === "b" && isSteam() && SteamClient.openBackupSaveFolder(),
+        i.key === "l" && isSteam() && SteamClient.openLogFolder();
     }),
     s.jsxs("div", {
       className: "loading-page",
       children: [
         s.jsx("img", { className: "energy-star", src: xae }),
         "CivIdle ",
-        Mk(),
+        getFullVersion(),
         s.jsx("br", {}),
         "Proudly Presented by Fish Pond Studio",
         s.jsx("br", {}),
@@ -98929,20 +98934,20 @@ function Ts({ stage: t, onload: e, progress: r }) {
             s.jsx("div", { children: "... Done" }),
           ],
         }),
-        s.jsx(Cy, { name: "Loading Save", stage: 0, current: t, progress: r }),
-        s.jsx(Cy, {
+        s.jsx(ShowStage, { name: "Loading Save", stage: 0, current: t, progress: r }),
+        s.jsx(ShowStage, {
           name: "Verifying Data",
           stage: 1,
           current: t,
           progress: r,
         }),
-        s.jsx(Cy, {
+        s.jsx(ShowStage, {
           name: "Connecting to Steam",
           stage: 2,
           current: t,
           progress: r,
         }),
-        s.jsx(Cy, {
+        s.jsx(ShowStage, {
           name: "Calculating Offline Production",
           stage: 3,
           current: t,
@@ -98968,7 +98973,7 @@ function Ts({ stage: t, onload: e, progress: r }) {
     })
   );
 }
-function Cy({ name: t, stage: e, current: r, progress: i }) {
+function ShowStage({ name: t, stage: e, current: r, progress: i }) {
   return r === e
     ? s.jsxs("div", {
         className: "row",
@@ -99116,7 +99121,7 @@ function MarketBuildingBody({ gameState: gameState, xy: xy }) {
                       s.jsx("td", {
                         className: "pointer",
                         onClick: () => {
-                          Le(),
+                          playClick(),
                             building.sellResources[o]
                               ? delete building.sellResources[o]
                               : (building.sellResources[o] = !0),
@@ -99168,7 +99173,7 @@ function MarketBuildingBody({ gameState: gameState, xy: xy }) {
                 s.jsx("div", {
                   className: "pointer",
                   onClick: () => {
-                    Le(),
+                    playClick(),
                       (i.marketOptions = toggleFlag(
                         i.marketOptions,
                         MarketOptions.ClearAfterUpdate
@@ -99233,7 +99238,7 @@ function Sae({ gameState: t, xy: e }) {
             onClick: () => {
               i.resources.Warp && i.resources.Warp >= n
                 ? ((i.resources.Warp -= n), r.level++, Ze())
-                : ze();
+                : playError();
             },
             children: [
               s.jsx("div", {
@@ -99313,8 +99318,8 @@ function wae({ gameState: t, xy: e }) {
           }),
           sizeOf(m) > 0)
         ) {
-          Fg(),
-            ct(
+          playKaching(),
+            showToast(
               h(d.PlayerTradeClaimAllMessageV2, {
                 resources: mapOf(
                   m,
@@ -99332,9 +99337,9 @@ function wae({ gameState: t, xy: e }) {
                 y * ((x = Config.ResourcePrice[v]) != null ? x : 0)
               );
             });
-        } else ze(), ct(h(d.PlayerTradeClaimAllFailedMessageV2));
+        } else playError(), showToast(h(d.PlayerTradeClaimAllFailedMessageV2));
       } catch (l) {
-        ze(), ct(String(l));
+        playError(), showToast(String(l));
       }
     });
   return s.jsxs(s.Fragment, {
@@ -99672,7 +99677,7 @@ function AddTradeComponent({ gameState: gameState, xy: xy }) {
                     !enabled ||
                     ((A = availableResources[trade.sellResource]) != null ? A : 0) < trade.sellAmount
                   ) {
-                    ze(), ct(h(d.OperationNotAllowedError));
+                    playError(), showToast(h(d.OperationNotAllowedError));
                     return;
                   }
                   const T = FL(
@@ -99686,10 +99691,10 @@ function AddTradeComponent({ gameState: gameState, xy: xy }) {
                     (trade.sellAmount *= C),
                       (trade.buyAmount *= C),
                       yield qe.addTrade(trade),
-                      Fg(),
-                      ct(h(d.PlayerTradeAddSuccess));
+                      playKaching(),
+                      showToast(h(d.PlayerTradeAddSuccess));
                   } catch (C) {
-                    T.rollback(), ze(), ct(String(C));
+                    T.rollback(), playError(), showToast(String(C));
                   }
                 }),
               children: [
@@ -99721,7 +99726,7 @@ function AddTradeComponent({ gameState: gameState, xy: xy }) {
     s.jsxs("button", {
       className: "row w100 jcc mb5",
       onClick: () => {
-        enabled ? setShowTrade(!0) : ze();
+        enabled ? setShowTrade(!0) : playError();
       },
       disabled: !enabled || zJ,
       children: [
@@ -100175,9 +100180,9 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                                           ),
                                           t
                                         ),
-                                          Fg();
+                                          playKaching();
                                       } catch (w) {
-                                        ct(String(w)), ze();
+                                        showToast(String(w)), playError();
                                       }
                                     }),
                                   children: s.jsx(mt, {
@@ -100422,7 +100427,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
                 disabled: !c,
                 onClick: () => {
                   if (!c) {
-                    ze();
+                    playError();
                     return;
                   }
                   (t.resourceImports[e] = n), Ze(), Qt();
@@ -100842,7 +100847,7 @@ function H4({ gameState: gameState, xy: xy }) {
           s.jsx("div", {
             className: "pointer ml20",
             onClick: () => {
-              Le(),
+              playClick(),
                 (building.resourceImportOptions = toggleFlag(
                   building.resourceImportOptions,
                   mn.ExportBelowCap
@@ -100888,7 +100893,7 @@ function H4({ gameState: gameState, xy: xy }) {
           s.jsx("div", {
             className: "pointer ml20",
             onClick: () => {
-              Le(),
+              playClick(),
                 (building.resourceImportOptions = toggleFlag(
                   building.resourceImportOptions,
                   mn.ExportToSameType
@@ -100935,7 +100940,7 @@ function H4({ gameState: gameState, xy: xy }) {
             className: "pointer ml20",
             onClick: () => {
               var f;
-              Le(),
+              playClick(),
                 (building.resourceImportOptions = toggleFlag(
                   building.resourceImportOptions,
                   mn.ManagedImport
@@ -109132,7 +109137,7 @@ function lue({ gameState: t, xy: e }) {
                 s.jsx("div", {
                   className: "pointer",
                   onClick: () => {
-                    Le(),
+                    playClick(),
                       r.capacity > 0 ? (r.capacity = 0) : (r.capacity = 1),
                       Ze();
                   },
@@ -109292,9 +109297,9 @@ function due({ gameState: t, xy: e }) {
                                 onClick: () =>
                                   ae(this, null, function* () {
                                     try {
-                                      n(yield qe.voteBoosts(l)), Rk();
+                                      n(yield qe.voteBoosts(l)), playBubble();
                                     } catch (u) {
-                                      ze(), ct(String(u));
+                                      playError(), showToast(String(u));
                                     }
                                   }),
                                 children: [
@@ -109351,7 +109356,7 @@ function pue({ type: t, gameState: e }) {
         src: hue,
         className: "w100 pointer",
         onClick: () => {
-          Le(),
+          playClick(),
             (e.unlockedUpgrades.SpaceshipIdle = !0),
             Ze(),
             Xo("https://store.steampowered.com/app/3454630/Spaceship_Idle/");
@@ -109409,7 +109414,7 @@ function ns({ gameState: t, xy: e }) {
               s.jsxs("button", {
                 className: "jcc w100 row",
                 onClick: () => {
-                  Le(),
+                  playClick(),
                     (r.desiredLevel = r.level + 1),
                     (r.status = "upgrading"),
                     Ze();
@@ -109477,7 +109482,7 @@ function mue({ gameState: t, xy: e }) {
                       s.jsx("div", {
                         className: "pointer ml20",
                         onClick: () => {
-                          Le(),
+                          playClick(),
                             (r.warehouseOptions = toggleFlag(
                               r.warehouseOptions,
                               WarehouseOptions.Autopilot
@@ -109529,7 +109534,7 @@ function mue({ gameState: t, xy: e }) {
                       s.jsx("div", {
                         className: "pointer ml20",
                         onClick: () => {
-                          Le(),
+                          playClick(),
                             (r.warehouseOptions = toggleFlag(
                               r.warehouseOptions,
                               WarehouseOptions.AutopilotRespectCap
@@ -109598,7 +109603,7 @@ function fue({ gameState: t, xy: e }) {
                 className: "w100",
                 value: (u = r.greatPeople.get(a)) != null ? u : "",
                 onChange: (c) => {
-                  Le();
+                  playClick();
                   const p = c.target.value;
                   p ? r.greatPeople.set(a, p) : r.greatPeople.delete(a), Ze();
                 },
@@ -109679,7 +109684,7 @@ const gue = {
 function vue(t) {
   var o;
   const { tile: e } = t; // const { tile } = props;
-  if (e.building == null) return Singleton().routeTo(Ts, { stage: Ks.LoadSave }), null;
+  if (e.building == null) return Singleton().routeTo(LoadingPage, { stage: LoadingPageStage.LoadSave }), null;
   const r = e.building, // const building = tile.building;
     i = gi(), // const gs = useGameState();
     n = Config.Building[r.type], // const definition = Config.Building[building.type];
@@ -109955,10 +109960,10 @@ function bue({ tile: t }) {
     i = Config.Building[e.type],
     n = () => e.desiredLevel > e.level + 1,
     a = () => {
-      yr(e.type) || (Le(), e.desiredLevel++, Ze());
+      yr(e.type) || (playClick(), e.desiredLevel++, Ze());
     },
     o = () => {
-      yr(e.type) || (n() && (Le(), e.desiredLevel--, Ze()));
+      yr(e.type) || (n() && (playClick(), e.desiredLevel--, Ze()));
     };
 
   var vTile = t;
@@ -110188,7 +110193,7 @@ function Cue({ tile: t }) {
     u = getTypeBuildings(e),
     c = (m) => {
       if (!checkBuildingMax(m, e)) {
-        ze();
+        playError();
         return;
       }
       (t.building = Kl(Do({ type: m }), getGameOptions())), Ze(), yr(m) || (xm = m);
@@ -110554,15 +110559,15 @@ function Sue({ xy: t, gameState: e }) {
     var u;
     const o = e.tiles.get(t);
     if (!o || o.explored || !r || i <= 0) {
-      ze();
+      playError();
       return;
     }
     const l = r.building;
     if (!l) {
-      ze();
+      playError();
       return;
     }
-    pc(),
+    playSuccess(),
       ((u = l.resources.Explorer) != null ? u : 0) > 0 &&
         safeAdd(l.resources, "Explorer", -1),
       Rc(t, e),
@@ -111342,15 +111347,15 @@ class WorldScene extends H0 {
       o = i.tiles.get(a);
     if (o) {
       if (!(o != null && o.explored)) {
-        ze();
+        playError();
         return;
       }
       if (o != null && o.building) {
-        ze();
+        playError();
         return;
       }
       if (!checkBuildingMax(n.type, i)) {
-        ze();
+        playError();
         return;
       }
       (o.building = Kl(Do({ type: n.type }), getGameOptions())), Ze();
@@ -111665,7 +111670,7 @@ function Bue(t) {
       const u = In(new Set(["ClassicalAge"]), e.city, 4);
       u && e.greatPeopleChoicesV2.push(u),
         e.greatPeopleChoicesV2.length > 0 &&
-          (Da(), It(s.jsx(Ra, { permanent: !1 })));
+          (playAgeUp(), It(s.jsx(Ra, { permanent: !1 })));
       break;
     }
     case "TajMahal": {
@@ -111674,7 +111679,7 @@ function Bue(t) {
       const u = In(new Set(["MiddleAge"]), e.city, Yn());
       u && e.greatPeopleChoicesV2.push(u),
         e.greatPeopleChoicesV2.length > 0 &&
-          (Da(), It(s.jsx(Ra, { permanent: !1 })));
+          (playAgeUp(), It(s.jsx(Ra, { permanent: !1 })));
       break;
     }
     case "OxfordUniversity":
@@ -111732,7 +111737,7 @@ function Bue(t) {
           e.greatPeopleChoicesV2.push(c)
         ),
         e.greatPeopleChoicesV2.length > 0 &&
-          (Da(), It(s.jsx(Ra, { permanent: !1 })));
+          (playAgeUp(), It(s.jsx(Ra, { permanent: !1 })));
       break;
     }
     case "GrandBazaar": {
@@ -111786,7 +111791,7 @@ function Bue(t) {
         p && e.greatPeopleChoicesV2.push(p);
       }
       e.greatPeopleChoicesV2.length > 0 &&
-        (Da(), It(s.jsx(Ra, { permanent: !1 })));
+        (playAgeUp(), It(s.jsx(Ra, { permanent: !1 })));
       break;
     }
     case "BritishMuseum": {
@@ -111801,7 +111806,7 @@ function Eue(t, e) {
     const r = In(new Set([Sr(e)]), e.city, Yn());
     r && e.greatPeopleChoicesV2.push(r),
       e.greatPeopleChoicesV2.length > 0 &&
-        (Da(), It(s.jsx(Ra, { permanent: !1 })));
+        (playAgeUp(), It(s.jsx(Ra, { permanent: !1 })));
   }
 }
 function _ue(t) {
@@ -111814,7 +111819,7 @@ function _ue(t) {
         const n = In(new Set([Sr(e)]), e.city, 4);
         n && e.greatPeopleChoicesV2.push(n),
           e.greatPeopleChoicesV2.length > 0 &&
-            (Da(), It(s.jsx(Ra, { permanent: !1 })));
+            (playAgeUp(), It(s.jsx(Ra, { permanent: !1 })));
       }
     }
 }
@@ -113110,7 +113115,7 @@ function Due({ xy: t, offline: e }) {
         const z = In(RJ(r), r.city, Yn());
         z && (r.greatPeopleChoicesV2.push(z), (j = !0));
       }
-      j && !Bk() && (Da(), It(s.jsx(Ra, { permanent: !1 })));
+      j && !Bk() && (playAgeUp(), It(s.jsx(Ra, { permanent: !1 })));
       break;
     }
     case "EastIndiaCompany": {
@@ -113153,7 +113158,7 @@ function Rue(t) {
         const o = In(new Set([a]), e.city, Yn());
         o && e.greatPeopleChoicesV2.push(o),
           e.greatPeopleChoicesV2.length > 0 &&
-            (Da(), It(s.jsx(Ra, { permanent: !1 })));
+            (playAgeUp(), It(s.jsx(Ra, { permanent: !1 })));
         break;
       }
       case "MountTai": {
@@ -113331,7 +113336,7 @@ function postTickTiles(gs, offline) {
       Ze()),
       gs.tick % (saveFreq * u) === 0 && saveGame().catch(console.error),
       gs.tick % (heartbeatFreq * u) === 0 &&
-        (Singleton().heartbeat.update(E0()),
+        (Singleton().heartbeat.update(serializeSaveLite()),
         qe.queryRankUp().then((c) => {
           const p = getUser();
           p &&
@@ -113340,7 +113345,7 @@ function postTickTiles(gs, offline) {
             IL.emit(eligibleRank),
             !hasShownAccountRankUpModal &&
               !Bk() &&
-              ((hasShownAccountRankUpModal = !0), Dk(), It(s.jsx(B4, { rank: eligibleRank, user: p }))));
+              ((hasShownAccountRankUpModal = !0), playLevelUp(), It(s.jsx(B4, { rank: eligibleRank, user: p }))));
         }));
   }
   Tick.current.totalValue > 0 &&
@@ -113366,10 +113371,10 @@ EL.on((t) => {
   var r, i;
   const e =
     (i = (r = getBuildingsByType("Market", t)) == null ? void 0 : r.size) != null ? i : 0;
-  e > 0 && (ct(h(d.MarketRefreshMessage, { count: e })), kte());
+  e > 0 && (showToast(h(d.MarketRefreshMessage, { count: e })), playDing());
 });
 RL.on(({ permanent: t }) => {
-  Da(), It(s.jsx(Ra, { permanent: t }));
+  playAgeUp(), It(s.jsx(Ra, { permanent: t }));
 });
 const nO = makeObservableHook(vL, () => Tick.current),
   Gue = makeObservableHook(IL, () => eligibleRank);
@@ -113429,7 +113434,7 @@ function CM(t) {
         nk(10, "Connection timeout"),
       ]);
     } catch (e) {
-      ct(String(e));
+      showToast(String(e));
     }
   });
 }
@@ -113493,18 +113498,19 @@ function doSaveGame(t) {
       const compressed = yield compressSave(savedGame);
 
       if (isSteam()) {
-        yield ht.fileWriteBytes(SAVE_KEY, compressed);
+        yield SteamClient.fileWriteBytes(SAVE_KEY, compressed);
 
         try {
-          yield ht.fileWriteBytes("ModdedClientConfig.json", JSON.stringify(ModdedClientConfig,undefined,2));
+          addSystemMessage("write mod cli conf");
+          yield SteamClient.fileWriteBytes("ModdedClientConfig.json", JSON.stringify(ModdedClientConfig,undefined,2));
         }
         catch(_){}
 
         try {
-          yield ht.fileWriteBytes("last_trades.json", JSON.stringify(getTrades()));
-          yield ht.fileWriteBytes("last_savegame.json", JSON.stringify(savedGame));
-          yield ht.fileWriteBytes("last_messages.json", JSON.stringify(chatMessages));
-          yield ht.fileWriteBytes("last_tiles.json", JSON.stringify(getGameState().tiles));
+          yield SteamClient.fileWriteBytes("last_trades.json", JSON.stringify(getTrades()));
+          yield SteamClient.fileWriteBytes("last_savegame.json", JSON.stringify(savedGame));
+          yield SteamClient.fileWriteBytes("last_messages.json", JSON.stringify(chatMessages));
+          yield SteamClient.fileWriteBytes("last_tiles.json", JSON.stringify(getGameState().tiles));
           
 
         }
@@ -113531,25 +113537,19 @@ function doSaveGame(t) {
 }
 function compressSave() {
   return ae(this, arguments, function* (t = savedGame) {
-    return yield kS(new TextEncoder().encode(aQ(t)));
+    return yield kS(new TextEncoder().encode(serializeSave(t)));
   });
 }
 function decompressSave(t) {
   return ae(this, null, function* () {
-    return oQ(new TextDecoder().decode(yield Hue(t)));
+    return deserializeSave(new TextDecoder().decode(yield Hue(t)));
   });
 }
 function loadGame() {
   return ae(this, null, function* () {
     try {
       if ((console.time("Loading Save file"), isSteam())) {
-        const e = yield ht.fileReadBytes(SAVE_KEY);
-
-      try{
-          ModdedClientConfig = JSON.parse(yield ht.fileReadBytes("ModdedClientConfig.json"));
-        }
-        catch(_){}
-
+        const e = yield SteamClient.fileReadBytes(SAVE_KEY);
         return yield decompressSave(new Uint8Array(e));
       }
       if (isAndroid() || isIOS()) {
@@ -113794,7 +113794,7 @@ class Zue {
     }
     const i = Xue(this.data, e);
     kS(i).then((n) => {
-      qe.heartbeat(n, ak(e, BigInt(0)).toString(16))
+      qe.heartbeat(n, wyhash(e, BigInt(0)).toString(16))
         .then(() => {
           this.data = e;
         })
@@ -113848,7 +113848,7 @@ function Jue() {
                 ),
                   window.location.reload();
               } catch (n) {
-                ze(), ct(String(n));
+                playError(), showToast(String(n));
               }
             }),
           children: [
@@ -113957,13 +113957,13 @@ function cI() {
                                 ae(this, null, function* () {
                                   try {
                                     const l = yield qe.requestPassCode();
-                                    pc(),
-                                      ct(
+                                    playSuccess(),
+                                      showToast(
                                         h(d.PasscodeToastHTML, { code: l }),
                                         1e4
                                       );
                                   } catch (l) {
-                                    ze(), ct(String(l));
+                                    playError(), showToast(String(l));
                                   }
                                 }),
                               children: h(d.SyncToANewDevice),
@@ -113972,7 +113972,7 @@ function cI() {
                             s.jsx("button", {
                               className: "f1",
                               onClick: () => {
-                                Le(), It(s.jsx(Jue, {}));
+                                playClick(), It(s.jsx(Jue, {}));
                               },
                               children: h(d.ConnectToADevice),
                             }),
@@ -114068,17 +114068,17 @@ function cI() {
                       onClick: () =>
                         ae(this, null, function* () {
                           if (So) {
-                            ze();
+                            playError();
                             return;
                           }
                           try {
-                            Le(),
+                            playClick(),
                               (So = !0),
                               n(So),
                               yield qe.checkInSave(yield compressSave()),
                               (window.location.search = "");
                           } catch (l) {
-                            ze(), ct(String(l)), (So = !1), n(So);
+                            playError(), showToast(String(l)), (So = !1), n(So);
                           }
                         }),
                       children: h(d.CheckInCloudSave),
@@ -114090,11 +114090,11 @@ function cI() {
                       onClick: () =>
                         ae(this, null, function* () {
                           if (So) {
-                            ze();
+                            playError();
                             return;
                           }
                           try {
-                            Le(), (So = !0), n(So);
+                            playClick(), (So = !0), n(So);
                             const l = yield qe.checkOutSaveStart();
                             if (l.length <= 0)
                               throw new Error("Your cloud save is corrupted");
@@ -114104,9 +114104,9 @@ function cI() {
                               yield qe.checkOutSaveEnd(),
                               (window.location.search = "");
                           } catch (l) {
-                            ze(),
+                            playError(),
                               console.error(l),
-                              ct(String(l)),
+                              showToast(String(l)),
                               (So = !1),
                               n(So);
                           }
@@ -114268,9 +114268,9 @@ function tce() {
     uo(D0, (t) => {
       t.key === "d" && Xo(bk),
         t.key === "h" && Xo("https://cividle.com/images/recovery.png"),
-        t.key === "s" && isSteam() && ht.openMainSaveFolder(),
-        t.key === "b" && isSteam() && ht.openBackupSaveFolder(),
-        t.key === "l" && isSteam() && ht.openLogFolder();
+        t.key === "s" && isSteam() && SteamClient.openMainSaveFolder(),
+        t.key === "b" && isSteam() && SteamClient.openBackupSaveFolder(),
+        t.key === "l" && isSteam() && SteamClient.openLogFolder();
     }),
     s.jsxs("div", {
       className: "error-page",
@@ -114317,20 +114317,23 @@ class rce {
       )));
   }
 }
-function ice(t, e, r, i) {
+function startGame(t, e, r, i) {
   return ae(this, null, function* () {
     var g;
     const n = (v, y) => i.emit({ component: v, params: y });
-    console.log("CivIdle version:", Mk()), n(Ts, { stage: Ks.LoadSave });
-    let a = !1;
+    console.log("CivIdle version:", getFullVersion()), n(LoadingPage, { stage: LoadingPageStage.LoadSave });
+    let isNewPlayer = false;
     const o = yield loadGame();
+
+
+
     if (o) {
       if (!findSpecialBuilding("Headquarter", o.current)) {
-        ze(), n(tce, {});
+        playError(), n(tce, {});
         return;
       }
       if (!que(o)) {
-        ze(),
+        playError(),
           n(Que, {
             content: s.jsxs(s.Fragment, {
               children: [
@@ -114347,13 +114350,13 @@ function ice(t, e, r, i) {
           });
         return;
       }
-    } else a = !0;
-    n(Ts, { stage: Ks.CheckSave });
+    } else isNewPlayer = !0;
+    n(LoadingPage, { stage: LoadingPageStage.CheckSave });
     const l = getGameState(),
       u = getGameOptions();
-    a && pj(l, u),
+    isNewPlayer && pj(l, u),
       sce(r, l.city),
-      n(Ts, { stage: Ks.CheckSave }),
+      n(LoadingPage, { stage: LoadingPageStage.CheckSave }),
       ZL(WP[u.language]),
       uO(u),
       zue(t, u),
@@ -114364,10 +114367,10 @@ function ice(t, e, r, i) {
       sceneManager: new Bne(c),
       routeTo: n,
       ticker: new rce(t.ticker, l),
-      heartbeat: new Zue(E0()),
+      heartbeat: new Zue(serializeSaveLite()),
     }),
       ace(l),
-      n(Ts, { stage: Ks.SteamSignIn });
+      n(LoadingPage, { stage: LoadingPageStage.SteamSignIn });
     const p = 30;
     let f = !1;
     try {
@@ -114379,7 +114382,7 @@ function ice(t, e, r, i) {
       const y = v.offlineTime,
         x = ((g = u.offlineProductionPercent) != null ? g : 0) * lf,
         T = clamp(y, 0, x);
-      if ((n(Ts, { stage: Ks.OfflineProduction }), y >= 60)) {
+      if ((n(LoadingPage, { stage: LoadingPageStage.OfflineProduction }), y >= 60)) {
         const A = structuredClone(l);
         let C = T;
         for (; C > 0; ) {
@@ -114396,12 +114399,12 @@ function ice(t, e, r, i) {
         (f = !0), It(s.jsx(ece, { before: A, after: M, time: T }));
       }
     } catch (v) {
-      console.error(v), ze(), ct(String(v));
+      console.error(v), playError(), showToast(String(v));
     }
     switch (
       (nce(),
       f ||
-        (a
+        (isNewPlayer
           ? It(s.jsx(j4, {}))
           : u.greatPeopleChoicesV2.length > 0 &&
             It(s.jsx(Ra, { permanent: !0 }))),
@@ -114468,7 +114471,7 @@ function ace(t) {
 }
 function oce(t, e) {
   return new Promise((r) => {
-    e(Ts, { stage: Ks.OfflineProduction, progress: t, onload: () => pL(r) });
+    e(LoadingPage, { stage: LoadingPageStage.OfflineProduction, progress: t, onload: () => pL(r) });
   });
 }
 function sce(t, e) {
@@ -114491,11 +114494,11 @@ function sce(t, e) {
 const lce = 4941188;
 function uce({ event: t }) {
   const [{ component: e, params: r }, i] = se.useState({
-    component: Ts,
+    component: LoadingPage,
     params: {},
   });
   uo(t, (a) => {
-    a.component !== Ts && Le(), dee(), i(a);
+    a.component !== LoadingPage && playClick(), dee(), i(a);
   });
   const n = nT();
   return console.log(n), n ? null : ge.createElement(e, r);
@@ -115022,7 +115025,7 @@ function handleChatCommand(command) {
 
         try
         {
-          ht.fileWriteBytes("last_trades.json", JSON.stringify(trades));
+          SteamClient.fileWriteBytes("last_trades.json", JSON.stringify(trades));
         }
         catch(ee)
         {
@@ -115470,7 +115473,7 @@ function vce({ show: t, style: e, onClose: r }) {
                                 onClick: () => {
                                   if (i.chatChannels.has(o)) {
                                     if (i.chatChannels.size <= 1) {
-                                      ze();
+                                      playError();
                                       return;
                                     }
                                     i.chatChannels.delete(o);
@@ -115659,7 +115662,7 @@ function Tce({ onChatSend: t, channel: e }) {
           addSystemMessage(`$ ${p}`), handleChatCommand(p).catch((f) => addSystemMessage(`${p}: ${f}`));
         } else
           qe.chat(cce(i), e).catch((p) => {
-            ze(), ct(String(p));
+            playError(), showToast(String(p));
           });
         t(i), n("");
       }
@@ -115951,7 +115954,7 @@ function Sce() {
     uo(GameStateChanged, () => {
       if (!i || !n.current) return;
       const k = n.current.getBoundingClientRect();
-      ht.setSize(Math.round(k.width), Math.round(k.height));
+      SteamClient.setSize(Math.round(k.width), Math.round(k.height));
     }),
     s.jsxs("div", {
       className: classNames({ "resource-bar window": !0, "app-region-drag": i }),
@@ -115969,21 +115972,21 @@ function Sce() {
                       ae(this, null, function* () {
                         if (i)
                           Vb.emit(!1),
-                            yield ht.exitFloatingMode(),
-                            yield ht.maximize(),
-                            Singleton().routeTo(Ts, { stage: Ks.SteamSignIn }),
+                            yield SteamClient.exitFloatingMode(),
+                            yield SteamClient.maximize(),
+                            Singleton().routeTo(LoadingPage, { stage: LoadingPageStage.SteamSignIn }),
                             setTimeout(() => {
                               Singleton().sceneManager.loadScene(WorldScene);
                             }, 1e3);
                         else if (
                           (Vb.emit(!0),
                           Singleton().sceneManager.loadScene(Pce),
-                          yield ht.enterFloatingMode(),
-                          yield ht.restore(),
+                          yield SteamClient.enterFloatingMode(),
+                          yield SteamClient.restore(),
                           n.current)
                         ) {
                           const k = n.current.getBoundingClientRect();
-                          yield ht.setSize(
+                          yield SteamClient.setSize(
                             Math.round(k.width),
                             Math.round(k.height)
                           );
@@ -116010,7 +116013,7 @@ function Sce() {
                 s.jsx("div", {
                   onPointerDown: (k) => {
                     if (e.favoriteTiles.size === 0) {
-                      ze(), ct(h(d.FavoriteBuildingEmptyToast));
+                      playError(), showToast(h(d.FavoriteBuildingEmptyToast));
                       return;
                     }
                     k.nativeEvent.stopPropagation(), f(!p);
@@ -116039,7 +116042,7 @@ function Sce() {
                               className: "menu-popover-item row",
                               onPointerDown: () => {
                                 var _;
-                                Le(),
+                                playClick(),
                                   (_ = Singleton().sceneManager.getCurrent(WorldScene)) ==
                                     null || _.lookAtTile(k, Oc.Select);
                               },
@@ -116117,7 +116120,7 @@ function Sce() {
               "text-orange": e.festival,
             }),
             onClick: () => {
-              Le(), (e.festival = !e.festival), Ze();
+              playClick(), (e.festival = !e.festival), Ze();
             },
             children: [
               s.jsx("div", {
@@ -116419,7 +116422,7 @@ function wce() {
 }
 kz({
   dsn: "https://dc918a4ab59f404688ab61ea803de8c0@bugreport.fishpondstudio.com/1",
-  release: `Build.${Ej}`,
+  release: `Build.${build}`,
   autoSessionTracking: !1,
   integrations: [zU({ levels: ["warn", "error", "assert"] })],
 });
@@ -116454,7 +116457,7 @@ if (Cx) {
   Cx.appendChild(t.view),
     Vd.addBundle("main", kce),
     Mce()
-      .then(({ main: e, textures: r }) => ice(t, e, r, pO))
+      .then(({ main: e, textures: r }) => startGame(t, e, r, pO))
       .catch(console.error);
 } else console.error("Cannot find #game-canvas, check your HTML setup!");
 function Mce() {
