@@ -1,9 +1,11 @@
 
-const MODDEDCLIENT_VER = 19.1;
+const MODDEDCLIENT_VER = 19.3;
 
 var ModdedClientConfig = {
   balancedTransports: true,
   marketsDontSellLessForMore: true,
+  showTradeLogsInChat: true,
+  disableSpinners: false,
 };
 
 !(function () {
@@ -40558,12 +40560,12 @@ const NoPrice = {
         (t.getMonth() === 1 && t.getDate() <= 10),
     },
   };
-var tl = ((t) => (
+var BuildingSpecial = ((t) => (
   (t[(t.HQ = 0)] = "HQ"),
   (t[(t.WorldWonder = 1)] = "WorldWonder"),
   (t[(t.NaturalWonder = 2)] = "NaturalWonder"),
   t
-))(tl || {});
+))(BuildingSpecial || {});
 const bZ = 2;
 class oL {
   constructor() {
@@ -42359,7 +42361,7 @@ class oL {
     });
   }
 }
-const TZ = new Set([
+const BuildingShowLevel = new Set([
   "InternationalSpaceStation",
   "MarinaBaySands",
   "PalmJumeirah",
@@ -63699,7 +63701,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
         usedStoragePercentage: c / u,
       }),
     (building.status === "completed" || building.status === "upgrading") &&
-      yr(building.type) &&
+      isSpecialBuilding(building.type) &&
       Tick.next.specialBuildings.set(building.type, tile),
     building.status === "building" || building.status === "upgrading")
   ) {
@@ -63858,12 +63860,14 @@ function transportAndConsumeResources(xy, result, gs, offline) {
         return;
       }
 
+      // BOOKMARK
       // *****
-      if( sellAmount <= buyAmount)
-      {
-        return;
-        //addSystemMessage(`112 warning: trying to sell ${sellAmount}x ${sellResource} for `+
+      if( ModdedClientConfig.marketsDontSellLessForMore) {
+        if( sellAmount <= buyAmount) {
+          return;
+          //addSystemMessage(`112 warning: trying to sell ${sellAmount}x ${sellResource} for `+
           //`${buyAmount} of ${buyResource}, ignoring trade.`);
+        }
       }
 
       safeAdd(building.resources, sellResource, -sellAmount);
@@ -70593,8 +70597,8 @@ function YJ(t) {
             )} to be before ${x}`
           );
         }))
-      : y.special !== tl.HQ &&
-        y.special !== tl.NaturalWonder &&
+      : y.special !== BuildingSpecial.HQ &&
+        y.special !== BuildingSpecial.NaturalWonder &&
         console.error(`Building: ${v} is not unlocked by any tech!`);
     let T;
     const A = [];
@@ -70734,7 +70738,7 @@ function YJ(t) {
       }
     });
   forEach(Config.BuildingTier, (v) => {
-    yr(v) && (Config.BuildingTier[v] = 0);
+    isSpecialBuilding(v) && (Config.BuildingTier[v] = 0);
   }),
     (Config.BuildingTechAge.LivestockFarm = "BronzeAge"),
     (Config.BuildingTier.CloneFactory = 8),
@@ -70755,7 +70759,7 @@ function YJ(t) {
   });
   const o = new Map();
   forEach(Config.Building, (v, y) => {
-    if ((y.special === tl.NaturalWonder || y.special === tl.HQ) && y.max !== 0)
+    if ((y.special === BuildingSpecial.NaturalWonder || y.special === BuildingSpecial.HQ) && y.max !== 0)
       throw new Error(`Natural Wonder: ${v} should have max = 0`);
     if (
       (forEach(y.input, (x) => {
@@ -70870,7 +70874,7 @@ function YJ(t) {
     .sort((v, y) => Config.BuildingTier[v] - Config.BuildingTier[y])
     .forEach((v) => {
       const y = Config.Building[v];
-      if (yr(v)) return;
+      if (isSpecialBuilding(v)) return;
       if (!f.has(v)) {
         const C = jl(v),
           P = wa(C);
@@ -74808,7 +74812,9 @@ function NQ(t) {
 // TODO: make it switchable
 // obfuscated as K_
 function getCurrentPriority(t, e) {
+  // BOOKMARK
   if (!hasFeature(GameFeature.BuildingProductionPriority, e)) return rn;
+  const added = ModdedClientConfig.balancedTransports ? Math.random() - 0.5 : 0;
   switch (
     ((t.constructionPriority = clamp(t.constructionPriority, rn, vu)),
     (t.productionPriority = clamp(t.productionPriority, rn, vu)),
@@ -74816,9 +74822,9 @@ function getCurrentPriority(t, e) {
   ) {
     case "building":
     case "upgrading":
-      return t.constructionPriority + (Math.random() - 0.5);
+      return t.constructionPriority + added;
     case "completed":
-      return t.productionPriority + (Math.random() - 0.5);
+      return t.productionPriority + added;
     default:
       return rn;
   }
@@ -74853,32 +74859,32 @@ function rj(t, e) {
     { cost: n, percent: o / a, secondsLeft: Math.ceil((a - o) / i) }
   );
 }
-function UA(t) {
-  return TZ.has(t.type)
+function getBuildingLevelLabel(t) {
+  return BuildingShowLevel.has(t.type)
     ? String(t.level)
-    : Config.Building[t.type].special === tl.HQ || isWorldOrNaturalWonder(t.type)
+    : Config.Building[t.type].special === BuildingSpecial.HQ || isWorldOrNaturalWonder(t.type)
     ? ""
     : String(t.level);
 }
-function LQ(t, e) {
+function getNextLevel(t, e) {
   return (Math.floor(t / e) + 1) * e;
 }
-function jQ(t) {
-  const e = LQ(t.level, 5);
+function getUpgradeTargetLevels(t) {
+  const e = getNextLevel(t.level, 5);
   return [t.level + 1, e, e + 5, e + 10, e + 15];
 }
-function yr(t) {
+function isSpecialBuilding(t) {
   return t ? !isNullOrUndefined(Config.Building[t].special) : !1;
 }
 
 // obfuscated: Mp at bb569
 function isNaturalWonder(t) {
-  return t ? Config.Building[t].special === tl.NaturalWonder : !1;
+  return t ? Config.Building[t].special === BuildingSpecial.NaturalWonder : !1;
 }
 
 // obfuscated: on at b569
 function isWorldWonder(t) {
-  return t ? Config.Building[t].special === tl.WorldWonder : !1;
+  return t ? Config.Building[t].special === BuildingSpecial.WorldWonder : !1;
 }
 
 // obfuscated: xk at b569
@@ -74992,7 +74998,7 @@ function aj(t) {
     : Math.round(Math.pow(2, t.electrification - 1) * 10);
 }
 function Sk(t) {
-  if (yr(t)) return !1;
+  if (isSpecialBuilding(t)) return !1;
   if (
     t === "CloneFactory" ||
     (t === "CloneLab" && Tick.current.specialBuildings.has("OsakaCastle"))
@@ -75087,7 +75093,7 @@ function Kl(t, e) {
       (i.constructionPriority = e.defaultConstructionPriority),
     isNullOrUndefined(i.productionPriority) &&
       (i.productionPriority = e.defaultProductionPriority),
-    yr(t.type) || (i.desiredLevel = e.defaultBuildingLevel),
+    isSpecialBuilding(t.type) || (i.desiredLevel = e.defaultBuildingLevel),
     Object.assign(t, i)
   );
 }
@@ -75098,7 +75104,7 @@ function lj(t, e) {
   var i;
   const r = (i = e.tiles.get(t)) == null ? void 0 : i.building;
   return r
-    ? !yr(r.type) &&
+    ? !isSpecialBuilding(r.type) &&
         r.status === "completed" &&
         (!Tick.current.notProducingReasons.has(t) ||
           Tick.current.notProducingReasons.get(t) === Jt.StorageFull ||
@@ -75112,7 +75118,7 @@ function uj(t) {
 // obfus: Kn at b569
 function findSpecialBuilding(t, e) {
   var i;
-  if (!yr(t)) return null;
+  if (!isSpecialBuilding(t)) return null;
   const r = Tick.current.specialBuildings.get(t);
   if (r) return r;
   for (const n of e.tiles.values())
@@ -76309,7 +76315,7 @@ function mee(t) {
   getXyBuildings(t).forEach((x, T) => {
     var A;
     if (x.status === "completed") {
-      if (!yr(x.type)) {
+      if (!isSpecialBuilding(x.type)) {
         if (!Tick.current.notProducingReasons.has(T)) {
           const P = (A = Config.BuildingTier[x.type]) != null ? A : 0;
           P > l && (l = P);
@@ -83722,28 +83728,28 @@ function Qj(t, e, r) {
   var i;
   return (i = e[`Building_${t}_${r}`]) != null ? i : e[`Building_${t}`];
 }
-function Kte(t, e) {
+function getNotProducingTexture(t, e) {
   switch (t) {
     case Jt.NotEnoughResources:
-      return Ti("Misc_NotEnoughResources", e);
+      return getTexture("Misc_NotEnoughResources", e);
     case Jt.NotEnoughWorkers:
-      return Ti("Misc_NotEnoughWorkers", e);
+      return getTexture("Misc_NotEnoughWorkers", e);
     case Jt.StorageFull:
-      return Ti("Misc_StorageFull", e);
+      return getTexture("Misc_StorageFull", e);
     case Jt.TurnedOff:
-      return Ti("Misc_TurnedOff", e);
+      return getTexture("Misc_TurnedOff", e);
     case Jt.NotOnDeposit:
-      return Ti("Misc_NotProducingGeneral", e);
+      return getTexture("Misc_NotProducingGeneral", e);
     case Jt.NoPower:
-      return Ti("Misc_NoPower", e);
+      return getTexture("Misc_NoPower", e);
     default:
       return Fe.EMPTY;
   }
 }
 function e4(t, e) {
-  return Ti(`Tile_${t}`, e);
+  return getTexture(`Tile_${t}`, e);
 }
-function Ti(t, e) {
+function getTexture(t, e) {
   if (!e[t]) throw new Error(`Cannot find texture ${t}`);
   return e[t];
 }
@@ -86668,12 +86674,12 @@ function Lie(t, e) {
   const { textures: r } = e,
     { time: i, name: n, age: a, type: o } = Config.GreatPerson[t],
     l = new Pi();
-  l.addChild(new Nr(Ti("Misc_GreatPersonBackground", r))).position.set(10, 10);
-  const c = l.addChild(new Nr(Ti("Misc_GreatPersonFrame", r)));
+  l.addChild(new Nr(getTexture("Misc_GreatPersonBackground", r))).position.set(10, 10);
+  const c = l.addChild(new Nr(getTexture("Misc_GreatPersonFrame", r)));
   c.position.set(0, 0);
   const p = Config.TechAge[a].color;
   if (((c.tint = p), o !== ga.Normal)) {
-    const C = l.addChild(new Nr(Ti("Misc_GreatPersonRing", r)));
+    const C = l.addChild(new Nr(getTexture("Misc_GreatPersonRing", r)));
     (C.tint = p),
       C.anchor.set(1, 1),
       C.position.set(c.width, c.height),
@@ -86684,10 +86690,10 @@ function Lie(t, e) {
       P.position.set(440, 530),
       (P.alpha = 0.7);
   }
-  const f = l.addChild(new Nr(Ti("Misc_GreatPersonPhoto", r)));
+  const f = l.addChild(new Nr(getTexture("Misc_GreatPersonPhoto", r)));
   f.position.set((l.width - f.width) / 2, (l.height - f.height) / 2 - 30);
-  const m = f.addChild(new Nr(Ti(`Person_${t}`, r))),
-    g = m.addChild(new Nr(Ti("Misc_GreatPersonPhotoMask", r)));
+  const m = f.addChild(new Nr(getTexture(`Person_${t}`, r))),
+    g = m.addChild(new Nr(getTexture("Misc_GreatPersonPhotoMask", r)));
   (m.mask = g),
     m.scale.set(350 / Math.max(m.width, m.height)),
     m.position.set((f.width - m.width) / 2, (f.height - m.width) / 2),
@@ -87635,7 +87641,7 @@ function Kk({ title: t, children: e, onConfirm: r }) {
 function G0({ gameState: t, xy: e }) {
   const r = t.tiles.get(e),
     i = r == null ? void 0 : r.building;
-  if (!r || !i || yr(i.type)) return null;
+  if (!r || !i || isSpecialBuilding(i.type)) return null;
   const n = () => {
     delete r.building,
       Singleton().sceneManager.enqueue(WorldScene, (o) => o.resetTile(r.tile)),
@@ -88087,14 +88093,14 @@ function O0({ gameState: t, xy: e }) {
   )
     return null;
   const [n, a] = se.useState(new Set([e])),
-    o = jQ(i),
+    o = getUpgradeTargetLevels(i),
     l = (A) => {
       n.forEach((C) => {
         var k;
         const P = (k = t.tiles.get(C)) == null ? void 0 : k.building;
         if (!P) return;
         const M = A < 0 ? P.level + Math.abs(A) : A;
-        !yr(P.type) &&
+        !isSpecialBuilding(P.type) &&
           M > P.level &&
           ((P.desiredLevel = M), (P.status = "upgrading"));
       }),
@@ -88118,7 +88124,7 @@ function O0({ gameState: t, xy: e }) {
             B = t.tiles.get(w);
           B != null &&
             B.building &&
-            !yr(B.building.type) &&
+            !isSpecialBuilding(B.building.type) &&
             B.building.status !== "building" &&
             (!C || B.building.type === i.type) &&
             P.add(w);
@@ -88725,7 +88731,7 @@ function W0({ gameState: t, xy: e }) {
                 }),
           ],
         }),
-        yr(i.type)
+        isSpecialBuilding(i.type)
           ? null
           : s.jsxs(s.Fragment, {
               children: [
@@ -92017,7 +92023,10 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
 
             // todo: do we want it?
             // some testers liked having it in chat window, some didn't
-            // addSystemMessage(str1);
+
+            if(ModdedClientConfig.showTradeLogsInChat) {
+              addSystemMessage(str1);
+            }
 
           const X = Tick.current.specialBuildings.get("EastIndiaCompany");
           X &&
@@ -92957,7 +92966,7 @@ var R4 = ((t) => (
   (t[(t.HorizontalScroll = 2)] = "HorizontalScroll"),
   t
 ))(R4 || {});
-class H0 {
+class Scene {
   constructor(e) {
     b(this, "viewport");
     b(this, "context");
@@ -93066,7 +93075,7 @@ function Nb(t) {
 let Pd = null,
   vy = null;
 const lt = 100;
-class ap extends H0 {
+class ap extends Scene {
   constructor(r) {
     super(r);
     b(this, "_width");
@@ -93265,7 +93274,7 @@ class Ene extends Pi {
       (f.alpha = c ? 1 : 0.5),
       i > 0)
     ) {
-      const y = this.addChild(new Nr(Ti("Misc_Circle_25", a)));
+      const y = this.addChild(new Nr(getTexture("Misc_Circle_25", a)));
       y.anchor.set(0.5, 0.5),
         (y.tint = 15158332),
         y.position.set(o * lt + 0.9 * lt, l * lt + 0.12 * lt);
@@ -94662,10 +94671,10 @@ const Wne = gp(One);
 function N4(t) {
   const e = Wne({
     luminosity: "light",
-    count: reduceOf(Config.Building, (r, i) => r + (yr(i) ? 0 : 1), 0) + sizeOf(Config.Resource),
+    count: reduceOf(Config.Building, (r, i) => r + (isSpecialBuilding(i) ? 0 : 1), 0) + sizeOf(Config.Resource),
   });
   forEach(Config.Building, (r, i) => {
-    yr(r) ? delete t.buildingColors[r] : (t.buildingColors[r] = e.pop());
+    isSpecialBuilding(r) ? delete t.buildingColors[r] : (t.buildingColors[r] = e.pop());
   }),
     forEach(Config.Resource, (r, i) => {
       t.resourceColors[r] = e.pop();
@@ -95486,10 +95495,10 @@ function An() {
                     s.jsx("div", {
                       className: "menu-popover-item",
                       onPointerDown: (a) => {
-                        Singleton().sceneManager.loadScene(op), e(null);
+                        Singleton().sceneManager.loadScene(TechTreeScene), e(null);
                       },
                       children: s.jsx(Hn, {
-                        check: Singleton().sceneManager.isCurrent(op),
+                        check: Singleton().sceneManager.isCurrent(TechTreeScene),
                         children: h(d.ResearchMenu),
                       }),
                     }),
@@ -96028,7 +96037,7 @@ function oae({ id: t }) {
           ? (playAgeUp(), It(s.jsx(Ra, { permanent: !1 })))
           : playUpgrade(),
         Ze(),
-        (g = Singleton().sceneManager.getCurrent(op)) == null ||
+        (g = Singleton().sceneManager.getCurrent(TechTreeScene)) == null ||
           g.renderTechTree("animate", !0));
     };
   if (
@@ -96464,14 +96473,14 @@ const Va = class Va {
 };
 b(Va, "actions", new Map());
 let gr = Va;
-const gm = 300,
-  Sd = 100,
-  ix = 500,
-  nx = 1e3,
-  xy = 160,
-  ax = 70,
-  KD = { width: 2, cap: tn.ROUND, join: Yr.ROUND, alignment: 0.5 };
-class op extends H0 {
+const BOX_WIDTH = 300,
+  BOX_HEIGHT = 100,
+  COLUMN_WIDTH = 500,
+  PAGE_HEIGHT = 1e3,
+  HEADER_TOTAL_HEIGHT = 160,
+  HEADER_BOX_HEIGHT = 70,
+  LINE_STYLE = { width: 2, cap: tn.ROUND, join: Yr.ROUND, alignment: 0.5 };
+class TechTreeScene extends Scene {
   constructor(r) {
     super(r);
     b(this, "_selectedContainer");
@@ -96485,11 +96494,11 @@ class op extends H0 {
         ? this._layout[o.column].push(a)
         : (this._layout[o.column] = [a]);
     });
-    const n = sizeOf(this._layout) * ix;
-    this.viewport.setWorldSize(n, nx),
+    const n = sizeOf(this._layout) * COLUMN_WIDTH;
+    this.viewport.setWorldSize(n, PAGE_HEIGHT),
       (this.viewport.zoom = Math.max(
         i.screen.width / n,
-        i.screen.height / (nx * 1.05)
+        i.screen.height / (PAGE_HEIGHT * 1.05)
       )),
       this.viewport.setZoomRange(
         this.viewport.zoom * 0.5,
@@ -96544,15 +96553,15 @@ class op extends H0 {
       a = Za(getGameOptions().themeColors.ResearchLockedColor).toNumber();
     Nb(this.viewport);
     const o = new sl();
-    this.viewport.addChild(o).lineStyle(KD),
+    this.viewport.addChild(o).lineStyle(LINE_STYLE),
       (this._selectedGraphics = this.viewport.addChild(new sl())),
       (this._boxPositions = {}),
       forEach(this._layout, (l, u) => {
-        const c = (nx - xy) / u.length;
+        const c = (PAGE_HEIGHT - HEADER_TOTAL_HEIGHT) / u.length;
         u.forEach((p, f) => {
           const m = 50 + 500 * l,
-            g = c * f + xy + (c / 2 - Sd / 2 - (xy - ax) / 2),
-            v = new dt(m, g, gm, Sd);
+            g = c * f + HEADER_TOTAL_HEIGHT + (c / 2 - BOX_HEIGHT / 2 - (HEADER_TOTAL_HEIGHT - HEADER_BOX_HEIGHT) / 2),
+            v = new dt(m, g, BOX_WIDTH, BOX_HEIGHT);
           this._boxPositions[p] = v;
           const y = Config.Tech[p];
           this.drawBox(
@@ -96577,10 +96586,10 @@ class op extends H0 {
         u.requireTech.forEach((c) => {
           this.drawConnection(
             o,
-            this._boxPositions[c].x + gm,
-            this._boxPositions[c].y + Sd / 2,
+            this._boxPositions[c].x + BOX_WIDTH,
+            this._boxPositions[c].y + BOX_HEIGHT / 2,
             this._boxPositions[l].x,
-            this._boxPositions[l].y + Sd / 2,
+            this._boxPositions[l].y + BOX_HEIGHT / 2,
             this.context.gameState.unlockedTech[c] ||
               this.context.gameState.unlockedTech[l]
               ? n
@@ -96602,7 +96611,7 @@ class op extends H0 {
       .toNumber();
     (this._selectedTech = a),
       n && Singleton().routeTo(oae, { id: a }),
-      (m = this._selectedGraphics) == null || m.lineStyle(KD);
+      (m = this._selectedGraphics) == null || m.lineStyle(LINE_STYLE);
     let l = [a];
     const u = new Set(),
       c = new Set();
@@ -96630,10 +96639,10 @@ class op extends H0 {
               !this.context.gameState.unlockedTech[v] &&
               (this.drawConnection(
                 this._selectedGraphics,
-                this._boxPositions[x].x + gm,
-                this._boxPositions[x].y + Sd / 2,
+                this._boxPositions[x].x + BOX_WIDTH,
+                this._boxPositions[x].y + BOX_HEIGHT / 2,
                 this._boxPositions[v].x,
-                this._boxPositions[v].y + Sd / 2,
+                this._boxPositions[v].y + BOX_HEIGHT / 2,
                 o
               ),
               c.add(T));
@@ -96642,7 +96651,7 @@ class op extends H0 {
         (l = g);
     }
     const p = this._boxPositions[a]
-      ? this._boxPositions[a].x + gm / 2
+      ? this._boxPositions[a].x + BOX_WIDTH / 2
       : this.viewport.center.x;
     i === "animate"
       ? gr.to(this, { scrollX: p }, 0.5, aa.InOutQuad).start()
@@ -96664,7 +96673,7 @@ class op extends H0 {
   drawHeader(r, i, n, a, o) {
     this.drawBox(
       r,
-      new dt(50 + i * ix, (xy - ax) / 2, ix * (n - i) + gm, ax),
+      new dt(50 + i * COLUMN_WIDTH, (HEADER_TOTAL_HEIGHT - HEADER_BOX_HEIGHT) / 2, COLUMN_WIDTH * (n - i) + BOX_WIDTH, HEADER_BOX_HEIGHT),
       a.toUpperCase(),
       null,
       o
@@ -98123,7 +98132,7 @@ function vae({ gameState: t, xy: e, expandHappiness: r }) {
                               className: "text-link",
                               onClick: () => {
                                 var A;
-                                (A = Singleton().sceneManager.loadScene(op)) == null ||
+                                (A = Singleton().sceneManager.loadScene(TechTreeScene)) == null ||
                                   A.selectNode(x, "jump", !0);
                               },
                               children: h(d.View),
@@ -108702,7 +108711,7 @@ function BuildingTab({ gameState: t }) {
         children: s.jsx(ise, {
           data: Array.from(getXyBuildings(t))
             .filter(([o, l]) => {
-              if (Config.Building[l.type].special === tl.NaturalWonder) return !1;
+              if (Config.Building[l.type].special === BuildingSpecial.NaturalWonder) return !1;
               let u = (buildingFilter & 268435455) === 0;
               for (let p = 0; p < 12; p++)
                 hasFlag(buildingFilter, 1 << p) && (u || (u = Config.BuildingTier[l.type] === p));
@@ -109960,10 +109969,10 @@ function bue({ tile: t }) {
     i = Config.Building[e.type],
     n = () => e.desiredLevel > e.level + 1,
     a = () => {
-      yr(e.type) || (playClick(), e.desiredLevel++, Ze());
+      isSpecialBuilding(e.type) || (playClick(), e.desiredLevel++, Ze());
     },
     o = () => {
-      yr(e.type) || (n() && (playClick(), e.desiredLevel--, Ze()));
+      isSpecialBuilding(e.type) || (n() && (playClick(), e.desiredLevel--, Ze()));
     };
 
   var vTile = t;
@@ -110020,7 +110029,7 @@ function bue({ tile: t }) {
                   }),
                 })
               : null,
-            yr(e.type)
+            isSpecialBuilding(e.type)
               ? null
               : s.jsxs("fieldset", {
                   children: [
@@ -110196,7 +110205,7 @@ function Cue({ tile: t }) {
         playError();
         return;
       }
-      (t.building = Kl(Do({ type: m }), getGameOptions())), Ze(), yr(m) || (xm = m);
+      (t.building = Kl(Do({ type: m }), getGameOptions())), Ze(), isSpecialBuilding(m) || (xm = m);
     },
     p = (m) => m.deposit && DZ(t.deposit, m.deposit);
   fn(
@@ -110726,14 +110735,14 @@ class eI extends Pi {
       )),
       (this.cullable = !0);
     const { textures: o } = this._world.context;
-    (this._spinner = this.addChild(new Nr(Ti("Misc_Spinner", o)))),
+    (this._spinner = this.addChild(new Nr(getTexture("Misc_Spinner", o)))),
       this._spinner.anchor.set(0.5),
       (this._spinner.visible = !1),
       (this._spinner.alpha = 0),
       (this._building = this.addChild(new Nr())),
       this._building.anchor.set(0.5),
       this._building.scale.set(0.5),
-      (this._construction = this.addChild(new Nr(Ti("Misc_Construction", o)))),
+      (this._construction = this.addChild(new Nr(getTexture("Misc_Construction", o)))),
       this._construction.position.set(-25, -5),
       this._construction.anchor.set(0, 1),
       this._construction.scale.set(0.5),
@@ -110749,7 +110758,7 @@ class eI extends Pi {
           gr.to(this._construction, { angle: 0 }, 0.5, aa.OutSine)
         )
       )),
-      (this._upgrade = this.addChild(new Nr(Ti("Misc_Upgrade", o)))),
+      (this._upgrade = this.addChild(new Nr(getTexture("Misc_Upgrade", o)))),
       this._upgrade.position.set(-25, 10),
       this._upgrade.anchor.set(0, 1),
       this._upgrade.scale.set(0.5),
@@ -110778,7 +110787,7 @@ class eI extends Pi {
       this._bottomText.position.set(0, 35),
       (this._bottomText.visible = !0),
       (this._bottomText.cullable = !0),
-      (this._fog = this.addChild(new Nr(Ti("Misc_Cloud", o)))),
+      (this._fog = this.addChild(new Nr(getTexture("Misc_Cloud", o)))),
       this._fog.anchor.set(0.5),
       (this._fog.visible = !this._tile.explored),
       this._tile &&
@@ -110839,9 +110848,9 @@ class eI extends Pi {
       (i.y = i.y - 20),
       gr
         .sequence(
-          // gr.to(i, { y: i.y - 10, alpha: 1 }, 0.25 * r, aa.OutQuad),
-          // gr.to(i, { y: i.y - 40, alpha: 0 }, 1.25 * r, aa.InQuad),
-          gr.to(i, { y: i.y - 10, alpha: 1 }, 0.75 * r, aa.OutQuad),
+          gr.to(i, { y: i.y - 10, alpha: 1 }, 0.25 * r, aa.OutQuad),
+          gr.to(i, { y: i.y - 40, alpha: 0 }, 1.25 * r, aa.InQuad),
+          // gr.to(i, { y: i.y - 10, alpha: 1 }, 0.75 * r, aa.OutQuad),
           gr.runFunc(() => {
             this._world.tooltipPool.release(i);
           })
@@ -110883,9 +110892,9 @@ class eI extends Pi {
         1
       )));
   }
-  onTileDataChanged(r) {
+  onTileDataChanged(tileData) {
     var o, l;
-    const { textures: i, gameState: n, app: a } = this._world.context;
+    const { textures: textures, gameState: n, app: a } = this._world.context;
     if (!this._tile) {
       console.warn(`[TileVisual] Cannot find tile data for ${uL(this._grid)}`);
       return;
@@ -110902,7 +110911,7 @@ class eI extends Pi {
       switch (
         ((this._building.visible = !0),
         this._building.texture.noFrame &&
-          (this._building.texture = Qj(this._tile.building.type, i, n.city)),
+          (this._building.texture = Qj(this._tile.building.type, textures, n.city)),
         this._tile.building.status)
       ) {
         case "building": {
@@ -110913,7 +110922,7 @@ class eI extends Pi {
             (this._spinner.visible = !1),
             (this._building.alpha = 0.5),
             this.toggleConstructionTween(!0),
-            this.showTimeLeft(r, n);
+            this.showTimeLeft(tileData, n);
           return;
         }
         case "upgrading": {
@@ -110922,11 +110931,11 @@ class eI extends Pi {
             (this._upgrade.visible = !0),
             this.toggleUpgradeTween(!0),
             (this._spinner.visible = !1);
-          const u = UA(this._tile.building);
+          const u = getBuildingLevelLabel(this._tile.building);
           u.length > 0
             ? ((this._level.visible = !0), (this._level.text = u))
             : (this._level.visible = !1),
-            this.showTimeLeft(r, n);
+            this.showTimeLeft(tileData, n);
           return;
         }
         case "completed": {
@@ -110943,10 +110952,10 @@ class eI extends Pi {
             }
             case "EmpireValue": {
               const p =
-                ((o = Tick.current.buildingValueByTile.get(r.tile)) != null
+                ((o = Tick.current.buildingValueByTile.get(tileData.tile)) != null
                   ? o
                   : 0) +
-                ((l = Tick.current.resourceValueByTile.get(r.tile)) != null
+                ((l = Tick.current.resourceValueByTile.get(tileData.tile)) != null
                   ? l
                   : 0);
               p > 0
@@ -110956,27 +110965,35 @@ class eI extends Pi {
               break;
             }
             case "StoragePercentage": {
-              const p = Tick.current.storagePercentages.get(r.tile);
+              const p = Tick.current.storagePercentages.get(tileData.tile);
               p
                 ? ((this._bottomText.visible = !0),
                   (this._bottomText.text = formatPercent(p)))
                 : (this._bottomText.visible = !1);
             }
           }
-          UA(this._tile.building).length > 0
+          getBuildingLevelLabel(this._tile.building).length > 0
             ? ((this._level.visible = !0),
-              (this._level.text = UA(this._tile.building)))
+              (this._level.text = getBuildingLevelLabel(this._tile.building)))
             : (this._level.visible = !1);
-          const c = Tick.current.notProducingReasons.get(r.tile);
-          c
-            ? ((this._notProducing.texture = Kte(c, i)),
-              this.fadeInTopLeftIcon())
-            : Tick.current.electrified.has(r.tile)
-            ? ((this._notProducing.texture = Ti("Misc_Bolt", i)),
-              this.fadeInTopLeftIcon())
-            : this.fadeOutTopLeftIcon(),
-            // (this._spinner.visible = !0);
-            (this._spinner.visible = !1);
+
+
+          const reason = Tick.current.notProducingReasons.get(tileData.tile);
+          if (reason) {
+            this._notProducing.texture = getNotProducingTexture(reason, textures);
+            this.fadeInTopLeftIcon();
+          } else if (Tick.current.electrified.has(tileData.tile)) {
+            this._notProducing.texture = getTexture("Misc_Bolt", textures);
+            this.fadeInTopLeftIcon();
+          } else {
+            this.fadeOutTopLeftIcon();
+          }
+
+          // BOOKMARK
+          if(!ModdedClientConfig.disableSpinners) {
+            this._spinner.visible = true;
+          }
+
         }
       }
     }
@@ -111235,7 +111252,7 @@ let viewportCenter = null,
 const MARGIN = 200;
 
 //obfuscated: At, H0 at b569
-class WorldScene extends H0 {
+class WorldScene extends Scene {
   constructor(r) {
     super(r);
     b(this, "_width");
@@ -111267,7 +111284,7 @@ class WorldScene extends H0 {
         2
       ),
       (this._bg = this.viewport.addChild(
-        new lw(Ti("Misc_Paper", n), this._width + MARGIN * 2, this._height + MARGIN * 2)
+        new lw(getTexture("Misc_Paper", n), this._width + MARGIN * 2, this._height + MARGIN * 2)
       )),
       (this._bg.tint = Za(getGameOptions().themeColors.WorldBackground)),
       this._bg.position.set(
@@ -111291,7 +111308,7 @@ class WorldScene extends H0 {
       }),
       (this.tooltipPool = new rO(this.viewport.addChild(new Pi()))),
       (this._transportPool = new Mue(
-        Ti("Misc_Transport", n),
+        getTexture("Misc_Transport", n),
         this.viewport.addChild(
           new c$(1e5, { position: !0, rotation: !0, alpha: !0 })
         )
@@ -111523,13 +111540,6 @@ class WorldScene extends H0 {
     this._transportLines.clear();
     const n = {};
     r.transportationV2.forEach((a) => {
-
-      if(Math.random()>0.05)
-      {
-        return;
-      }
-
-      
       var c;
       if (a.fromXy !== i && a.toXy !== i) return;
       const o = tileToPoint(a.fromXy),
@@ -112195,7 +112205,7 @@ function Due({ xy: t, offline: e }) {
       for (const j of o.getNeighbors(tileToPoint(t))) {
         const z = pointToTile(j),
           K = Ei(z, r);
-        if (K && !yr(K.type)) {
+        if (K && !isSpecialBuilding(K.type)) {
           K.level < 25 && (K.level = 25);
           const ne = (_ = Config.BuildingTier[K.type]) != null ? _ : 0;
           ne > 0 &&
@@ -112414,7 +112424,7 @@ function Due({ xy: t, offline: e }) {
       for (const Ae of j.getNeighbors(tileToPoint(t))) {
         const vt = pointToTile(Ae),
           wn = (Z = Ei(vt, r)) == null ? void 0 : Z.type;
-        if (!wn || yr(wn)) continue;
+        if (!wn || isSpecialBuilding(wn)) continue;
         const Gr = (ee = Config.BuildingTier[wn]) != null ? ee : 0;
         Gr <= 0 || ((z = Math.min(z, Gr)), (K = Math.max(K, Gr)));
       }
@@ -112466,7 +112476,7 @@ function Due({ xy: t, offline: e }) {
     }
     case "MountTai": {
       forEach(Config.Building, (z, K) => {
-        !yr(z) && K.output.Science && st(z, { output: 1 }, l);
+        !isSpecialBuilding(z) && K.output.Science && st(z, { output: 1 }, l);
       });
       const j = xa("Confucius", r);
       j > 0 &&
@@ -112515,7 +112525,7 @@ function Due({ xy: t, offline: e }) {
     case "GreatWall": {
       for (const j of o.getRange(tileToPoint(t), hj(t, r))) {
         const z = Ei(pointToTile(j), r);
-        if (!z || yr(z.type)) continue;
+        if (!z || isSpecialBuilding(z.type)) continue;
         let K = Math.abs(Config.TechAge[Sr(r)].idx - Config.TechAge[H_(z.type)].idx);
         r.festival && (K *= 2),
           mapSafePush(Tick.next.tileMultipliers, pointToTile(j), {
@@ -112818,7 +112828,7 @@ function Due({ xy: t, offline: e }) {
           Math.floor((Config.TechAge[z].idx + 1) / 2)
         );
         (r.festival ? keysOf(Config.BuildingTechAge) : U_(Sr(r))).forEach((Ae) => {
-          !yr(Ae) &&
+          !isSpecialBuilding(Ae) &&
             !Config.Building[Ae].output.Worker &&
             st(Ae, { output: K, unstable: !0 }, l);
         });
@@ -112892,7 +112902,7 @@ function Due({ xy: t, offline: e }) {
       if (Number.isFinite(ne) && ne > 0) {
         const vt = clamp(ne, 1, Math.floor((Config.TechAge[Ae].idx + 1) / 2));
         (r.festival ? keysOf(Config.BuildingTechAge) : U_(Sr(r))).forEach((Gr) => {
-          !yr(Gr) &&
+          !isSpecialBuilding(Gr) &&
             !Config.Building[Gr].output.Worker &&
             st(Gr, { output: vt, unstable: !0 }, l);
         });
@@ -113038,7 +113048,7 @@ function Due({ xy: t, offline: e }) {
         for (const Ae of o.getNeighbors(j)) {
           const vt = Ei(pointToTile(Ae), r);
           vt &&
-            !yr(vt.type) &&
+            !isSpecialBuilding(vt.type) &&
             Config.BuildingTier[K.type] !== Config.BuildingTier[vt.type] &&
             ++ne;
         }
@@ -113048,13 +113058,13 @@ function Due({ xy: t, offline: e }) {
     }
     case "CologneCathedral": {
       forEach(Config.Building, (j, z) => {
-        !yr(j) && z.output.Science && st(j, { output: n.level }, l);
+        !isSpecialBuilding(j) && z.output.Science && st(j, { output: n.level }, l);
       });
       break;
     }
     case "BlackForest": {
       forEach(Config.Building, (j, z) => {
-        !yr(j) && (z.input.Wood || z.input.Lumber) && st(j, { output: 5 }, l);
+        !isSpecialBuilding(j) && (z.input.Wood || z.input.Lumber) && st(j, { output: 5 }, l);
       });
       break;
     }
@@ -113145,7 +113155,7 @@ function Rue(t) {
     switch (r == null ? void 0 : r.type) {
       case "GrottaAzzurra": {
         getXyBuildings(e).forEach((a) => {
-          yr(a.type) ||
+          isSpecialBuilding(a.type) ||
             (a.status === "completed" &&
               Config.BuildingTier[a.type] === 1 &&
               (a.level += 5));
@@ -113500,11 +113510,7 @@ function doSaveGame(t) {
       if (isSteam()) {
         yield SteamClient.fileWriteBytes(SAVE_KEY, compressed);
 
-        try {
-          addSystemMessage("write mod cli conf");
-          yield SteamClient.fileWriteBytes("ModdedClientConfig.json", JSON.stringify(ModdedClientConfig,undefined,2));
-        }
-        catch(_){}
+        saveModdedClientConfig();
 
         try {
           yield SteamClient.fileWriteBytes("last_trades.json", JSON.stringify(getTrades()));
@@ -114417,7 +114423,7 @@ function startGame(t, e, r, i) {
         break;
       }
       case "Tech": {
-        Singleton().sceneManager.loadScene(op);
+        Singleton().sceneManager.loadScene(TechTreeScene);
         break;
       }
       case "Trade": {
@@ -114429,6 +114435,9 @@ function startGame(t, e, r, i) {
         break;
       }
     }
+
+    loadModdedClientConfig();
+
     Ze(), Singleton().ticker.start();
   });
 }
@@ -114989,6 +114998,26 @@ function handleChatCommand(command) {
 
       case "modver": {
         addSystemMessage(`${MODDEDCLIENT_VER}`);
+        break;
+      }
+      case "togglebalancedtransports": {
+        ModdedClientConfig.balancedTransports = !ModdedClientConfig.balancedTransports;
+        addSystemMessage(`balancedTransports is now ${ModdedClientConfig.balancedTransports}`);
+        break;
+      }
+      case "togglemarketsdontselllessformore": {
+        ModdedClientConfig.marketsDontSellLessForMore = !ModdedClientConfig.marketsDontSellLessForMore;
+        addSystemMessage(`marketsDontSellLessForMore is now ${ModdedClientConfig.marketsDontSellLessForMore}`);
+        break;
+      }
+      case "toggleshowtradelogsinchat": {
+        ModdedClientConfig.showTradeLogsInChat = !ModdedClientConfig.showTradeLogsInChat;
+        addSystemMessage(`showTradeLogsInChat is now ${ModdedClientConfig.showTradeLogsInChat}`);
+        break;
+      }
+      case "toggledisablespinners": {
+        ModdedClientConfig.disableSpinners = !ModdedClientConfig.disableSpinners;
+        addSystemMessage(`disableSpinners is now ${ModdedClientConfig.disableSpinners}`);
         break;
       }
 
@@ -115896,7 +115925,7 @@ const Cce = se.memo(
   },
   (t, e) => t.chat === e.chat && t.onImageLoaded === e.onImageLoaded
 );
-class Pce extends H0 {
+class Pce extends Scene {
   backgroundColor() {
     return 16777215;
   }
@@ -116051,7 +116080,7 @@ function Sce() {
                                   className: "f1",
                                   children: Config.Building[w.type].name(),
                                 }),
-                                yr(w.type)
+                                isSpecialBuilding(w.type)
                                   ? null
                                   : s.jsx("span", {
                                       className: "ml10 text-small text-desc",
@@ -116219,7 +116248,7 @@ function Sce() {
           : null,
         s.jsxs("div", {
           className: "section pointer",
-          onClick: () => Singleton().sceneManager.loadScene(op),
+          onClick: () => Singleton().sceneManager.loadScene(TechTreeScene),
           children: [
             s.jsx("div", {
               className: classNames({ "m-icon": !0 }),
@@ -116512,3 +116541,27 @@ export { vj as W };
 //# sourceMappingURL=index-ecbe5e3b.js.map
 
 //# debugId=7e6cd4a6-4c38-5eec-a575-2cf718262301
+
+
+async function loadModdedClientConfig() {
+  try {
+    const fileData = await SteamClient.fileReadBytes("ModdedClientConfig.json");
+    const jsonString = new TextDecoder("utf-8").decode(fileData);
+    ModdedClientConfig = JSON.parse(jsonString);
+    ModdedClientConfig.loadedTime = new Date().toISOString();
+  }
+  catch(e) {
+    addSystemMessage("Error while trying to load ModdedClientConfig.json: "+e);
+  }
+}
+
+function saveModdedClientConfig() {
+  try {
+    ModdedClientConfig.savedTime = new Date().toISOString();
+    SteamClient.fileWriteBytes("ModdedClientConfig.json", JSON.stringify(ModdedClientConfig, undefined, 2));
+  }
+  catch(e) {
+    addSystemMessage("Error while trying to save ModdedClientConfig.json: "+e);
+  }
+}
+
