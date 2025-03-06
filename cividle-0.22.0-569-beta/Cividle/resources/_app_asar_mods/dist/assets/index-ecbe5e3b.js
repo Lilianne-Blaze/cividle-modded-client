@@ -1,5 +1,5 @@
 
-const MODDEDCLIENT_VER = 19.4;
+const MODDEDCLIENT_VER = 19.9;
 
 var ModdedClientConfig = {
   balancedTransports: true,
@@ -63773,7 +63773,7 @@ function transportAndConsumeResources(xy, result, gs, offline) {
       let L = 0;
       for (const F of getGrid(gs).getRange(tileToPoint(xy), B0)) {
         const W = pointToTile(F);
-        Ei(W, gs) &&
+        getWorkingBuilding(W, gs) &&
           forEach(filterTransportable(getBuildingIO(W, "output", br.Capacity | br.Multiplier, gs)), ($, X) => {
             mapSafeAdd(I, $, X), (L += X);
           });
@@ -75041,7 +75041,8 @@ function sj(t, e, r) {
   for (n in t) if (!HQ(n, i, r)) return !1;
   return !0;
 }
-function Z_(t, e, r, i) {
+
+function hasEnoughResource(t, e, r, i) {
   var a, o, l;
   const n =
     (o = (a = i.tiles.get(t)) == null ? void 0 : a.building) == null
@@ -75049,11 +75050,13 @@ function Z_(t, e, r, i) {
       : o.resources;
   return n ? ((l = n[e]) != null ? l : 0) >= r : !1;
 }
+
 function hasEnoughStorage(t, e, r) {
   const i = getStorageFor(t, r);
   return clamp(i.total - i.used, 0, Number.POSITIVE_INFINITY) >= e;
 }
-function Ei(t, e) {
+
+function getWorkingBuilding(t, e) {
   const r = e.tiles.get(t);
   return !r ||
     !r.building ||
@@ -75161,7 +75164,7 @@ function hj(t, e) {
   const r = (i = e.tiles.get(t)) == null ? void 0 : i.building;
   if ((r == null ? void 0 : r.type) !== "GreatWall") return 0;
   for (const a of getGrid(e).getNeighbors(tileToPoint(t)))
-    if (((n = Ei(pointToTile(a), e)) == null ? void 0 : n.type) === "ForbiddenCity")
+    if (((n = getWorkingBuilding(pointToTile(a), e)) == null ? void 0 : n.type) === "ForbiddenCity")
       return 2;
   return 1;
 }
@@ -79441,7 +79444,11 @@ const Bj = [
       ],
     },
   ],
-  build = 569;
+
+// BOOKMARK
+// not really, but merged all changes 569->571 manually
+build = 571;
+
 function getFullVersion() {
   return `${getVersion()} Build ${getBuildNumber()}`;
 }
@@ -91783,7 +91790,7 @@ function _4({ xy: t }) {
 // SOURCE src/scripts/ui/FillPlayerTradeModal.tsx
 
 // export function FillPlayerTradeModal({ tradeId, xy }: { tradeId: string; xy?: Tile }): React.ReactNode
-function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
+function FillPlayerTradeModal({ tradeId: tradeId, xy: xy, execNow = false }) {
   const [tiles, setTiles] = se.useState([]),
     map = usePlayerMap(),
     gs = gi(),
@@ -91796,6 +91803,10 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
     allTradeBuildingsSorted = new Map(),
 
     [fills, setFills] = se.useState(new Map());
+
+//addSystemMessage(`tradeId=${tradeId} xy=${xy} execNow=${execNow}`);
+
+
 
   se.useEffect(() => {
     if (!trade) return;
@@ -91827,14 +91838,15 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
   }
 
 
-  const hasValidPath = () => tiles.length > 0,
-    fillsHaveEnoughResource = (D) => {
-      for (const [I, L] of D) if (!Z_(I, trade.buyResource, L, gs)) return !1;
-      return !0;
-    };
+  const hasValidPath = () => tiles.length > 0;
 
-  const calculateMaxFill = () => {
-    const result = new Map();
+  const fillsHaveEnoughResource = (D) => {
+    for (const [I, L] of D) if (!hasEnoughResource(I, trade.buyResource, L, gs)) return !1;
+    return !0;
+  };
+
+  const calculateMaxFill = (errorTolerance = 0.05) => {
+    const resultFills = new Map();
     let amountLeft = trade.buyAmount;
 
     // of the goods we're sending to them. first is alias, second is calculated later
@@ -91851,19 +91863,23 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
     //   `totalAmountTheyWant=${formatNumber(totalAmountTheyWant)}`);
 
     for (const xy of allTradeBuildings.keys()) {
-      const amount = getMaxFill(xy);
-      if (amount <= 0) {
+      // const partialAmount = getMaxFill(xy);
+      const partialAmount = getMaxFill(xy) * (1 - errorTolerance);
+      if (partialAmount <= 0) {
         // Do nothing
-      } else if (amountLeft > amount) {
-        result.set(xy, amount);
-        amountLeft -= amount;
+      } else if (amountLeft > partialAmount) {
+        resultFills.set(xy, partialAmount);
+        amountLeft -= partialAmount;
       } else {
-        result.set(xy, amountLeft);
+        resultFills.set(xy, amountLeft);
         amountLeft = 0;
         break;
       }
     }
-    return result;
+
+    fillsHaveEnoughStorage(resultFills, true);
+
+    return resultFills;
   };
 
   // BOOKMARK 2025-03-06 
@@ -91874,7 +91890,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
       // split error checking - trust me, it helps
 
       if (!hasValidPath()) {
-        addSystemMessage("hasValidPath=false");
+        //addSystemMessage("hasValidPath=false");
         showToast(h(d.OperationNotAllowedError));
         playError();
         return;
@@ -91914,7 +91930,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
   
   
       // let user know we're actually doing something
-      showToast("Filling trades, please wait 5-20 sec...");
+      showToast("Filling trades, please wait ~5...");
 
         let total = 0,
           success = 0,
@@ -91987,13 +92003,27 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
   getStorageRequired = (D) =>
     clamp((trade.sellAmount * D) / trade.buyAmount - D, 0, Number.POSITIVE_INFINITY),
 
-  fillsHaveEnoughStorage = (fills) => {
-    if (!k()) return !0;
+  fillsHaveEnoughStorage = (fills, showErrsInChat=false) => {
+    if (!requireExtraStorage()) return !0;
     for (const [tile, amount] of fills) {
-      const F = getStorageRequired(amount);
-      if (!hasEnoughStorage(tile, F, gs)) return !1;
+      const storageRequired = getStorageRequired(amount);
+      if (!hasEnoughStorage(tile, storageRequired, gs)) {
+
+        if(showErrsInChat) {
+          const storageAvailable = getStorageFor(tile, gs);
+          const storageAvailableNum = clamp(storageAvailable.total - storageAvailable.used, 0, Number.POSITIVE_INFINITY);
+          const xy = tileToPoint(tile);
+          const xyStr = JSON.stringify(xy);
+          const storageDiff = storageAvailableNum - storageRequired;
+
+          addSystemMessage(`[fillsHaveEnoughStorage] result=false xy=${xyStr} storageRequired=${storageRequired}`+
+          ` storageAvailable=${storageAvailableNum} diff=${storageAvailableNum-storageRequired}`);
+        }
+        
+        return false;
+      }
     }
-    return !0;
+    return true;
   },
     
   getTotalFillAmount = (fills) => {
@@ -92002,13 +92032,13 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
     return total;
   },
   
-  M = (D) => {
+  getTotalStorageRequired = (D) => {
     let I = 0;
     for (const [L, F] of D) I += getStorageRequired(F);
     return I;
   },
   
-  k = () => trade.sellAmount > trade.buyAmount,
+  requireExtraStorage = () => trade.sellAmount > trade.buyAmount,
     
   getMaxFill = (D) => {
     var L, F, W;
@@ -92052,9 +92082,43 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
 
   // ***** isFillValid
   _ = (D, I) => {
-    Z_(D, trade.buyResource, I, gs) && (!k() || hasEnoughStorage(D, getStorageRequired(I), gs));
+    hasEnoughResource(D, trade.buyResource, I, gs) && (!requireExtraStorage() || hasEnoughStorage(D, getStorageRequired(I), gs));
   }
 
+  if(hasValidPath && execNow) {
+
+// addSystemMessage("1");
+
+    se.useEffect(() => {
+      // addSystemMessage("11 bef calculateMaxFill");
+      const fills2 = calculateMaxFill();
+      // addSystemMessage("111 bef fills2.size > 0 ");
+      if( fills2.size > 0 ) {
+        // addSystemMessage("111 1 bef doFill");
+        doFill(fills2);
+      }
+      else {
+        // addSystemMessage("111 11 if false");
+        showToast(h(d.PlayerTradeNoFillBecauseOfResources));
+        hideModal();
+      }
+      // addSystemMessage("111 111 bef hide modal");
+      hideModal();
+      // return;
+    // }, [trade, myXy]);
+  }, [tiles, myXy]);
+
+    // const fills = calculateMaxFill();
+    // if( fills.size > 0 ) {
+    //   doFill(fills);
+    // }
+    // else {
+    //   showToast(h(d.PlayerTradeNoFillBecauseOfResources));
+    // }
+    // addSystemMessage("111 111 1");
+    // hideModal();
+    // return;
+  }
 
   return s.jsxs("div", {
     className: "window",
@@ -92223,13 +92287,13 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
               s.jsx("div", {
                 // className: "text-strong text-link",
                 className: "text-strong text-link mr20",
-                onClick: () => setFills(calculateMaxFill("greedy")),
+                onClick: () => setFills(calculateMaxFill()),
 //                children: h(d.PlayerTradeMaxAll),
                   children: "Fill greedy"
               }),
               s.jsx("div", {
                 className: "text-strong text-link",
-                onClick: () => setFills(calculateMaxFill("fast")),
+                onClick: () => setFills(calculateMaxFill()),
 //                children: h(d.PlayerTradeMaxAll),
                   children: "Fill fast"
               }),
@@ -92381,7 +92445,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
                               children: h(d.PlayerTradeStorageRequired),
                             }),
                             s.jsx("div", {
-                              children: s.jsx(te, { value: M(fills) }),
+                              children: s.jsx(te, { value: getTotalStorageRequired(fills) }),
                             }),
                           ],
                         }),
@@ -92405,9 +92469,9 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
                 // x is calculateMaxFill
                 // T is doFill
                 onClick: () => {
-                  const D = calculateMaxFill("fast",0.03);
+                  const D = calculateMaxFill();
                   D.size > 0
-                    ? doFill(D,"fast",0.03)
+                    ? doFill(D)
                     : (playError(),
                       showToast(h(d.PlayerTradeNoFillBecauseOfResources)),
                       hideModal());
@@ -92419,9 +92483,9 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
                 // x is calculateMaxFill
                 // T is doFill
                 onClick: () => {
-                  const D = calculateMaxFill("greedy",0.03);
+                  const D = calculateMaxFill();
                   D.size > 0
-                    ? doFill(D,"greedy",0.03)
+                    ? doFill(D)
                     : (playError(),
                       showToast(h(d.PlayerTradeNoFillBecauseOfResources)),
                       hideModal());
@@ -92432,7 +92496,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
               s.jsx("button", {
                 className: "text-strong",
                 disabled: !fillsAreValid(fills),
-                onClick: () => doFill(fills,"auto",0.03),
+                onClick: () => doFill(fills),
                 // children: h(d.PlayerTradeFillTradeButton),
                 children: "Trade Selected",
               }),
@@ -99740,8 +99804,8 @@ const playerTradesSortingState = { column: 0, asc: !0 };
 function PlayerTradeComponent({ gameState: t, xy: e }) {
   var T;
   const building = (T = t.tiles.get(e)) == null ? void 0 : T.building,
-    [i, n] = se.useState(savedResourceWantFilters),
-    [a, o] = se.useState(savedResourceOfferFilters),
+    [resourceWantFilters, n] = se.useState(savedResourceWantFilters),
+    [resourceOfferFilters, o] = se.useState(savedResourceOfferFilters),
     [l, u] = se.useState(!1),
     [playerNameFilter, setPlayerNameFilter] = se.useState(savedPlayerNameFilter),
     [f, m] = se.useState(savedMaxTradeAmountFilter);
@@ -99941,7 +100005,7 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                 children: [
                   h(d.PlayerTradeFilters),
                   " (",
-                  i.size + a.size + (playerNameFilter.length > 0 ? 1 : 0),
+                  resourceWantFilters.size + resourceOfferFilters.size + (playerNameFilter.length > 0 ? 1 : 0),
                   ")",
                 ],
               }),
@@ -99959,18 +100023,27 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
 
         // ***** 2025-02-24 important, filtering trades
         data: trades.filter(
-          (A) =>
-            ((i.size === 0 && a.size === 0) ||
-              i.has(A.buyResource) ||
-              a.has(A.sellResource)) &&
+          (trade) => {
+            // BOOKMARK
+            if(resourceWantFilters.size != 0 && resourceOfferFilters.size != 0)
+            {
+              if( !(resourceWantFilters.has(trade.buyResource) && resourceOfferFilters.has(trade.sellResource)) )
+              {
+                return false;
+              }
+            }
+
+            return ((resourceWantFilters.size === 0 && resourceOfferFilters.size === 0) ||
+              resourceWantFilters.has(trade.buyResource) ||
+              resourceOfferFilters.has(trade.sellResource)) &&
             
               //A.from.toLowerCase().includes(playerNameFilter.toLowerCase()) &&
               (
                 !playerNameFilter || playerNameFilter.trim() === "" ||
-                nameMatchesAnyFragments(A.from.toLowerCase(), playerNameFilter.toLowerCase())
+                nameMatchesAnyFragments(trade.from.toLowerCase(), playerNameFilter.toLowerCase())
               ) &&
 
-            (f === 0 || (f > 0 && A.buyAmount <= f))
+            (f === 0 || (f > 0 && trade.buyAmount <= f))}
         ),
         compareFunc: (A, C, P, M) => {
           if (
@@ -100002,7 +100075,7 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
         },
         // ***** important
         renderRow: (A) => {
-          const C = user === null || A.fromId === user.userId,
+          const disableFill = user === null || A.fromId === user.userId,
             P = WA(A);
           return s.jsxs(
             "tr",
@@ -100140,17 +100213,36 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                           },
                           children: "delete",
                         })
-                      : s.jsx("div", {
+                      : [s.jsx("div", {
                           className: classNames({
-                            "text-link": !C,
+                            "text-link": !disableFill,
                             "text-strong": !0,
-                            "text-desc": C,
+                            "text-desc": disableFill,
                           }),
                           onClick: () => {
-                            C || It(s.jsx(FillPlayerTradeModal, { tradeId: A.id, xy: e }));
+                            disableFill || It(s.jsx(FillPlayerTradeModal, { tradeId: A.id, xy: e }));
                           },
-                          children: h(d.PlayerTradeFill),
+                          children: "Trade...",
                         }),
+
+                        s.jsx("div", {
+                          className: classNames({
+                            "text-link": !disableFill,
+                            "text-strong": !0,
+                            "text-desc": disableFill,
+                          }),
+                          onClick: () => {
+
+
+                            disableFill || It(s.jsx(FillPlayerTradeModal, { tradeId: A.id, xy: e, execNow: true, percent: 100 }));
+                          },
+                          children: "TrdMax",
+                        }),
+                      
+           
+
+                      ]
+
                 }),
               ],
             },
@@ -111937,7 +112029,7 @@ function Due({ xy: t, offline: e }) {
     case "GrandBazaar": {
       for (const j of o.getNeighbors(tileToPoint(t))) {
         const z = pointToTile(j),
-          K = Ei(z, r);
+          K = getWorkingBuilding(z, r);
         (K == null ? void 0 : K.type) === "Caravansary" &&
           mapSafePush(Tick.next.tileMultipliers, z, { output: 5, storage: 5, source: l });
       }
@@ -111946,7 +112038,7 @@ function Due({ xy: t, offline: e }) {
     case "ColossusOfRhodes": {
       let j = 0;
       for (const z of o.getNeighbors(tileToPoint(t))) {
-        const K = Ei(pointToTile(z), r);
+        const K = getWorkingBuilding(pointToTile(z), r);
         K && !Config.Building[K.type].output.Worker && j++;
       }
       Tick.next.globalMultipliers.happiness.push({ value: j, source: l });
@@ -112104,7 +112196,7 @@ function Due({ xy: t, offline: e }) {
     case "SaintBasilsCathedral": {
       for (const j of o.getNeighbors(tileToPoint(t))) {
         const z = pointToTile(j),
-          K = Ei(z, r);
+          K = getWorkingBuilding(z, r);
         K &&
           Config.BuildingTier[K.type] === 1 &&
           mapSafePush(Tick.next.tileMultipliers, z, {
@@ -112136,7 +112228,7 @@ function Due({ xy: t, offline: e }) {
     case "Poseidon": {
       for (const j of o.getNeighbors(tileToPoint(t))) {
         const z = pointToTile(j),
-          K = Ei(z, r);
+          K = getWorkingBuilding(z, r);
         if (K && !isSpecialBuilding(K.type)) {
           K.level < 25 && (K.level = 25);
           const ne = (_ = Config.BuildingTier[K.type]) != null ? _ : 0;
@@ -112172,7 +112264,7 @@ function Due({ xy: t, offline: e }) {
       let z = 0;
       for (const K of o.getNeighbors(tileToPoint(t))) {
         const ne = pointToTile(K);
-        ((I = Ei(ne, r)) == null ? void 0 : I.type) === "SteelMill" &&
+        ((I = getWorkingBuilding(ne, r)) == null ? void 0 : I.type) === "SteelMill" &&
           (j.push(ne), ++z);
       }
       for (const K of j)
@@ -112199,7 +112291,7 @@ function Due({ xy: t, offline: e }) {
       });
       for (const j of o.getNeighbors(tileToPoint(t))) {
         const z = pointToTile(j),
-          K = Ei(z, r);
+          K = getWorkingBuilding(z, r);
         K &&
           (Config.Building[K.type].input.Gunpowder ||
             Config.Building[K.type].output.Gunpowder) &&
@@ -112212,7 +112304,7 @@ function Due({ xy: t, offline: e }) {
         K = j === 0 ? 0 : Math.floor((10 * z) / j);
       for (const ne of o.getNeighbors(tileToPoint(t))) {
         const Ae = pointToTile(ne),
-          vt = (L = Ei(Ae, r)) == null ? void 0 : L.type;
+          vt = (L = getWorkingBuilding(Ae, r)) == null ? void 0 : L.type;
         vt && Config.Building[vt].output.Faith && Tick.next.happinessExemptions.add(Ae);
       }
       Tick.next.globalMultipliers.happiness.push({ value: K, source: l });
@@ -112234,7 +112326,7 @@ function Due({ xy: t, offline: e }) {
           const ne = K.type;
           let Ae = 0;
           for (const vt of o.getNeighbors(j))
-            ((W = Ei(pointToTile(vt), r)) == null ? void 0 : W.type) === ne && ++Ae;
+            ((W = getWorkingBuilding(pointToTile(vt), r)) == null ? void 0 : W.type) === ne && ++Ae;
           mapSafePush(Tick.next.tileMultipliers, z, {
             worker: Ae,
             storage: Ae,
@@ -112276,7 +112368,7 @@ function Due({ xy: t, offline: e }) {
       st("WheatFarm", { output: 1, storage: 1 }, l);
       for (const z of o.getNeighbors(tileToPoint(t))) {
         const K = pointToTile(z),
-          ne = Ei(K, r);
+          ne = getWorkingBuilding(K, r);
         (ne == null ? void 0 : ne.type) === "WheatFarm" &&
           mapSafePush(Tick.next.tileMultipliers, K, { storage: 5, output: 5, source: l });
       }
@@ -112294,7 +112386,7 @@ function Due({ xy: t, offline: e }) {
       let j = 0;
       for (const K of o.getNeighbors(tileToPoint(t))) {
         const ne = pointToTile(K);
-        isWorldWonder(($ = Ei(ne, r)) == null ? void 0 : $.type) && ++j;
+        isWorldWonder(($ = getWorkingBuilding(ne, r)) == null ? void 0 : $.type) && ++j;
       }
       Tick.next.globalMultipliers.happiness.push({ value: j, source: l });
       const z = xa("RamessesII", r);
@@ -112313,7 +112405,7 @@ function Due({ xy: t, offline: e }) {
           const ne = K.type;
           let Ae = 0;
           for (const vt of o.getNeighbors(j))
-            ((re = Ei(pointToTile(vt), r)) == null ? void 0 : re.type) === ne && ++Ae;
+            ((re = getWorkingBuilding(pointToTile(vt), r)) == null ? void 0 : re.type) === ne && ++Ae;
           mapSafePush(Tick.next.tileMultipliers, z, {
             input: r.festival ? 0 : Ae,
             output: Ae,
@@ -112355,7 +112447,7 @@ function Due({ xy: t, offline: e }) {
         K = 0;
       for (const Ae of j.getNeighbors(tileToPoint(t))) {
         const vt = pointToTile(Ae),
-          wn = (Z = Ei(vt, r)) == null ? void 0 : Z.type;
+          wn = (Z = getWorkingBuilding(vt, r)) == null ? void 0 : Z.type;
         if (!wn || isSpecialBuilding(wn)) continue;
         const Gr = (ee = Config.BuildingTier[wn]) != null ? ee : 0;
         Gr <= 0 || ((z = Math.min(z, Gr)), (K = Math.max(K, Gr)));
@@ -112456,7 +112548,7 @@ function Due({ xy: t, offline: e }) {
     }
     case "GreatWall": {
       for (const j of o.getRange(tileToPoint(t), hj(t, r))) {
-        const z = Ei(pointToTile(j), r);
+        const z = getWorkingBuilding(pointToTile(j), r);
         if (!z || isSpecialBuilding(z.type)) continue;
         let K = Math.abs(Config.TechAge[Sr(r)].idx - Config.TechAge[H_(z.type)].idx);
         r.festival && (K *= 2),
@@ -112507,7 +112599,7 @@ function Due({ xy: t, offline: e }) {
         const ne = pointToTile(K);
         if (ne !== t) {
           j += (et = Tick.current.scienceProduced.get(ne)) != null ? et : 0;
-          const Ae = Ei(ne, r);
+          const Ae = getWorkingBuilding(ne, r);
           Ae &&
             Config.Building[Ae.type].output.Science &&
             mapSafePush(Tick.next.tileMultipliers, ne, { output: 5, source: l });
@@ -112563,7 +112655,7 @@ function Due({ xy: t, offline: e }) {
         let ne = 0;
         for (const vt of o.getNeighbors(tileToPoint(K))) {
           const wn = pointToTile(vt);
-          ((Ae = Ei(wn, r)) == null ? void 0 : Ae.type) === "RocketFactory" &&
+          ((Ae = getWorkingBuilding(wn, r)) == null ? void 0 : Ae.type) === "RocketFactory" &&
             ++ne;
         }
         ne > 0 && mapSafePush(Tick.next.tileMultipliers, K, { output: ne, source: l });
@@ -112771,7 +112863,7 @@ function Due({ xy: t, offline: e }) {
       const j = new Set();
       for (const z of o.getRange(tileToPoint(t), 1)) {
         const K = pointToTile(z),
-          ne = Ei(K, r);
+          ne = getWorkingBuilding(K, r);
         ne && !Tick.current.notProducingReasons.has(K) && j.add(ne.type);
       }
       j.forEach((z) => {
@@ -112974,11 +113066,11 @@ function Due({ xy: t, offline: e }) {
     case "Elbphilharmonie": {
       for (const j of o.getRange(tileToPoint(t), 3)) {
         const z = pointToTile(j),
-          K = Ei(z, r);
+          K = getWorkingBuilding(z, r);
         if (!K) continue;
         let ne = 0;
         for (const Ae of o.getNeighbors(j)) {
-          const vt = Ei(pointToTile(Ae), r);
+          const vt = getWorkingBuilding(pointToTile(Ae), r);
           vt &&
             !isSpecialBuilding(vt.type) &&
             Config.BuildingTier[K.type] !== Config.BuildingTier[vt.type] &&
@@ -116483,7 +116575,13 @@ async function loadModdedClientConfig() {
     ModdedClientConfig.loadedTime = new Date().toISOString();
   }
   catch(e) {
-    addSystemMessage("Error while trying to load ModdedClientConfig.json: "+e);
+    const eStr = ""+e;
+    if( eStr.includes("ENOENT")) {
+      addSystemMessage("Can't load ModdedClientConfig.json, it's normal on first run, it will be created later.");
+    }
+    else {
+      addSystemMessage("Error while trying to load ModdedClientConfig.json: " + eStr);
+    }
   }
 }
 
