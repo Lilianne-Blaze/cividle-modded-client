@@ -1,5 +1,5 @@
 
-const MODDEDCLIENT_VER = 19.3;
+const MODDEDCLIENT_VER = 19.4;
 
 var ModdedClientConfig = {
   balancedTransports: true,
@@ -63177,14 +63177,14 @@ const sJ = 4 * HOUR,
     es: "Español",
     pt: "Português",
   };
-var it = ((t) => (
+var AccountLevel = ((t) => (
     (t[(t.Tribune = 0)] = "Tribune"),
     (t[(t.Quaestor = 1)] = "Quaestor"),
     (t[(t.Aedile = 2)] = "Aedile"),
     (t[(t.Praetor = 3)] = "Praetor"),
     (t[(t.Consul = 4)] = "Consul"),
     t
-  ))(it || {}),
+  ))(AccountLevel || {}),
   $s = ((t) => (
     (t[(t.None = 0)] = "None"),
     (t[(t.Steam = 1)] = "Steam"),
@@ -63609,7 +63609,7 @@ function gJ(t, e, r) {
         lu(j_).subtractSelf(r).lengthSqr() <= 200 * 200 &&
           (t.fuelCurrentTick = 0)),
       getAvailableWorkers(t.fuel) >= t.fuelCurrentTick
-        ? (cf(t.fuel, t.fuelCurrentTick, null),
+        ? (useWorkers(t.fuel, t.fuelCurrentTick, null),
           mapSafeAdd(getFuelByTarget(), t.toXy, t.fuelCurrentTick),
           t.ticksSpent++,
           (t.hasEnoughFuel = !0))
@@ -63933,11 +63933,11 @@ if(Math.random()<1.10)
     Tick.next.notProducingReasons.set(xy, Jt.NotEnoughResources);
     return;
   }
-  if (!(isEmpty(p) || c + Y_(p) + Y_(m) * getStockpileCapacity(building) <= u)) {
+  if (!(isEmpty(p) || c + getStorageRequired(p) + getStorageRequired(m) * getStockpileCapacity(building) <= u)) {
     const B = filterNonTransportable(p);
     if (sizeOf(B) > 0) {
       const _ = getWorkersFor(xy, gs);
-      cf("Worker", _.output, xy),
+      useWorkers("Worker", _.output, xy),
         deductResources(building.resources, m),
         forEach(B, (D, I) => {
           var L;
@@ -63963,7 +63963,7 @@ if(Math.random()<1.10)
     gs.unlockedUpgrades.Liberalism5 && (B *= 2);
     const _ = aj(building);
     getAvailableWorkers("Power") >= _ &&
-      (cf("Power", _, xy),
+      (useWorkers("Power", _, xy),
       mapSafePush(Tick.next.tileMultipliers, xy, {
         source: h(d.Electrification),
         input: B * uj(building.type),
@@ -63972,7 +63972,7 @@ if(Math.random()<1.10)
       }),
       Tick.next.electrified.add(xy));
   }
-  cf("Worker", g.output, xy),
+  useWorkers("Worker", g.output, xy),
     deductResources(building.resources, m),
     forEach(p, (B, _) => {
       var D;
@@ -64224,7 +64224,7 @@ function G_(t, e) {
 function xJ(t) {
   return reduceOf(t, (e, r, i) => e + (NoPrice[r] ? 0 : Config.ResourcePrice[r] * i), 0);
 }
-function FL(t, e, r, i) {
+function deductResourceFrom(t, e, r, i) {
   var o, l;
   const n = [];
   let a = e;
@@ -64255,7 +64255,7 @@ function FL(t, e, r, i) {
     rollback: () => n.forEach((u) => u()),
   };
 }
-function LL(t, e, r, i) {
+function addResourceTo(t, e, r, i) {
   var o, l;
   const n = [];
   let a = e;
@@ -64288,7 +64288,7 @@ function LL(t, e, r, i) {
     rollback: () => n.forEach((u) => u()),
   };
 }
-function jL(t, e) {
+function getAvailableStorage(t, e) {
   let r = 0;
   for (const i of t) {
     const { total: n, used: a } = getStorageFor(i, e);
@@ -64296,7 +64296,7 @@ function jL(t, e) {
   }
   return r;
 }
-function Ng(t) {
+function getBuildingsThatProduce(t) {
   const e = [];
   return (
     forEach(Config.Building, (r, i) => {
@@ -64305,7 +64305,7 @@ function Ng(t) {
     e
   );
 }
-function CJ(t) {
+function getRevealedDeposits(t) {
   const e = [];
   return (
     forEach(t.unlockedTech, (r) => {
@@ -70259,13 +70259,13 @@ const k0 = {
 function getUserTradePriceRange(t) {
   if (!t) return 0.05;
   switch (t.level) {
-    case it.Quaestor:
+    case AccountLevel.Quaestor:
       return 0.1;
-    case it.Aedile:
+    case AccountLevel.Aedile:
       return 0.15;
-    case it.Praetor:
+    case AccountLevel.Praetor:
       return 0.2;
-    case it.Consul:
+    case AccountLevel.Consul:
       return 0.25;
     default:
       return 0.05;
@@ -70273,13 +70273,13 @@ function getUserTradePriceRange(t) {
 }
 function wJ(t) {
   switch (t.level) {
-    case it.Quaestor:
+    case AccountLevel.Quaestor:
       return 4;
-    case it.Aedile:
+    case AccountLevel.Aedile:
       return 6;
-    case it.Praetor:
+    case AccountLevel.Praetor:
       return 8;
-    case it.Consul:
+    case AccountLevel.Consul:
       return 10;
     default:
       return 2;
@@ -70313,7 +70313,7 @@ const MJ = 0,
   WL = 0.005,
   HL = 0.001,
   u1 = { Capitalism: HL, Optics: WL, Geography: OL };
-function LP(t) {
+function getSeaTileCost(t) {
   return t.unlockedTech.Capitalism
     ? u1.Capitalism
     : t.unlockedTech.Optics
@@ -70322,7 +70322,7 @@ function LP(t) {
     ? u1.Geography
     : -1;
 }
-function BJ(t, e) {
+function getTotalSeaTileCost(t, e) {
   const r = t.reduce((i, n) => i + (SJ[n] ? 0 : 1), 0);
   if (r > 0 && e < 0) throw new Error("You cannot trade across the sea");
   return r * e;
@@ -70939,7 +70939,7 @@ function jl(t) {
   return n ? n.tech : null;
 }
 function z_(t) {
-  return Ng(t)
+  return getBuildingsThatProduce(t)
     .flatMap((r) => {
       const i = jl(r);
       return i ? [i] : [];
@@ -70956,7 +70956,7 @@ function $J(t) {
   );
 }
 function KJ(t) {
-  const e = Ng(t).flatMap((i) => {
+  const e = getBuildingsThatProduce(t).flatMap((i) => {
     const n = jl(i);
     return n ? [n] : [];
   });
@@ -74566,7 +74566,7 @@ function getStorageFor(xy, gs) {
     }
     case "StPetersBasilica": {
       let c = 0;
-      Ng("Faith").forEach((p) => {
+      getBuildingsThatProduce("Faith").forEach((p) => {
         var f;
         (f = getBuildingsByType(p, gs)) == null ||
           f.forEach((m, g) => {
@@ -74586,7 +74586,7 @@ function getStorageFor(xy, gs) {
   }
   return { base: o, multiplier: a, total: o * a, used: n };
 }
-function Y_(t) {
+function getStorageRequired(t) {
   let e = 0;
   return (
     forEach(t, (r, i) => {
@@ -74595,7 +74595,7 @@ function Y_(t) {
     e
   );
 }
-function cf(t, e, r) {
+function useWorkers(t, e, r) {
   if (isTransportable(t)) {
     console.error(
       "`useWorkers` can only be called with non-transportable resource!"
@@ -74669,7 +74669,7 @@ function addTransportation(t, e, r, i, n, a, o) {
   const l = getGrid(o),
     u = l.xyToPosition(n),
     c = l.xyToPosition(a);
-  cf(r, i, null),
+  useWorkers(r, i, null),
     o.transportationV2.push({
       id: ++o.transportId,
       fromXy: n,
@@ -75049,7 +75049,7 @@ function Z_(t, e, r, i) {
       : o.resources;
   return n ? ((l = n[e]) != null ? l : 0) >= r : !1;
 }
-function J_(t, e, r) {
+function hasEnoughStorage(t, e, r) {
   const i = getStorageFor(t, r);
   return clamp(i.total - i.used, 0, Number.POSITIVE_INFINITY) >= e;
 }
@@ -79520,7 +79520,7 @@ const Dj = new TypedEvent(),
 function It(t) {
   Dj.emit(t);
 }
-function Qt() {
+function hideModal() {
   Rj.emit();
 }
 function Bk() {
@@ -81095,27 +81095,31 @@ const OnUserChanged = new TypedEvent(),
   Mte = Bp("PlayGames"),
   Bte = Bp("GameCenter");
 let chatMessages = [];
-const tS = new Map(),
+
+const trades = new Map(),
   playerMap = new Map();
-function Xl() {
+
+function getPlayerMap() {
   return playerMap;
 }
-let pn = null;
-const qe = rpcClient({
+
+let ws = null;
+
+const client = rpcClient({
   request: (t, e) =>
     new Promise((r, i) => {
-      if (!pn || pn.readyState !== WebSocket.OPEN)
+      if (!ws || ws.readyState !== WebSocket.OPEN)
         return i("WebSocket is not ready yet");
       const n = ++Dte,
         a = { jsonrpc: "2.0", id: n, method: t, params: Mj(e) };
-      pn.send(Hee(a)), (d1[n] = { resolve: r, reject: i, time: Date.now() });
+      ws.send(Hee(a)), (d1[n] = { resolve: r, reject: i, time: Date.now() });
     }),
 });
-function cy() {
+function getServerAddress() {
   return "wss://de.cividle.com";
 }
 function getTrades() {
-  return Array.from(tS.values()).filter(
+  return Array.from(trades.values()).filter(
     (t) => !!(Config.Resource[t.buyResource] && Config.Resource[t.sellResource])
   );
 }
@@ -81133,15 +81137,15 @@ function getPlatformInfo() {
 function isOnlineUser() {
   var t;
   return (
-    ((t = user == null ? void 0 : user.level) != null ? t : it.Tribune) > it.Tribune
+    ((t = user == null ? void 0 : user.level) != null ? t : AccountLevel.Tribune) > AccountLevel.Tribune
   );
 }
 function canEarnGreatPeopleFromReborn() {
   return isOnlineUser() ? (getGameState().isOffline = !1) : (getGameState().isOffline = !0), !0;
 }
-let iS = 0;
+let chatId = 0;
 function addSystemMessage(t) {
-  chatMessages.push({ id: ++iS, message: t }), OnChatMessage.emit(chatMessages);
+  chatMessages.push({ id: ++chatId, message: t }), OnChatMessage.emit(chatMessages);
 }
 function clearSystemMessages() {
   (chatMessages = chatMessages.filter((t) => "channel" in t)), OnChatMessage.emit(chatMessages);
@@ -81172,7 +81176,7 @@ function $j() {
         `gameId=${getGameState().id}`,
         `checksum=${checksum.expected}${checksum.actual}`,
       ];
-      pn = new WebSocket(`${cy()}/?${o.join("&")}`);
+      ws = new WebSocket(`${getServerAddress()}/?${o.join("&")}`);
     } else if (t === "android") {
       const o = [
         `ticket=${
@@ -81185,7 +81189,7 @@ function $j() {
         `gameId=${getGameState().id}`,
         `checksum=${checksum.expected}${checksum.actual}`,
       ];
-      pn = new WebSocket(`${cy()}/?${o.join("&")}`);
+      ws = new WebSocket(`${getServerAddress()}/?${o.join("&")}`);
     } else if (t === "ios") {
       const o = [
         `ticket=${(yield Bte.getAuthTicket()).ticket}`,
@@ -81196,7 +81200,7 @@ function $j() {
         `gameId=${getGameState().id}`,
         `checksum=${checksum.expected}${checksum.actual}`,
       ];
-      pn = new WebSocket(`${cy()}/?${o.join("&")}`);
+      ws = new WebSocket(`${getServerAddress()}/?${o.join("&")}`);
     } else {
       getGameOptions().userId || (getGameOptions().userId = `web:${pb()}`);
       let a = yield Ek(sD);
@@ -81210,16 +81214,16 @@ function $j() {
         `gameId=${getGameState().id}`,
         `checksum=${checksum.expected}${checksum.actual}`,
       ];
-      pn = new WebSocket(`${cy()}/?${o.join("&")}`);
+      ws = new WebSocket(`${getServerAddress()}/?${o.join("&")}`);
     }
-    if (!pn) return Promise.reject("Failed to initialize WebSocket");
-    pn.binaryType = "arraybuffer";
+    if (!ws) return Promise.reject("Failed to initialize WebSocket");
+    ws.binaryType = "arraybuffer";
     let e = null;
     const r = new Promise((a) => {
       e = a;
     });
     return (
-      (pn.onmessage = (a) => {
+      (ws.onmessage = (a) => {
         const o = Qee(a.data);
         switch (o.type) {
           case Uu.Chat: {
@@ -81230,7 +81234,7 @@ function $j() {
             console.log("[ChatMessageAsJson]",JSON.stringify(u));
 
             u.flush
-              ? (chatMessages = u.chat.map((c) => Ie(U({}, c), { id: ++iS })))
+              ? (chatMessages = u.chat.map((c) => Ie(U({}, c), { id: ++chatId })))
               : u.chat.forEach((c) => {
                   const p =
                       user &&
@@ -81239,7 +81243,7 @@ function $j() {
                         .includes(` @${user.handle.toLowerCase()}`),
                     f = hasFlag(c.attr, Ul.Announce);
                   (p || f) && (playBubble(), showToast(`${c.name}: ${c.message}`)),
-                    chatMessages.push(Ie(U({}, c), { id: ++iS }));
+                    chatMessages.push(Ie(U({}, c), { id: ++chatId }));
                 }),
               (chatMessages = KQ(chatMessages)),
               OnChatMessage.emit(chatMessages);
@@ -81280,11 +81284,11 @@ function $j() {
             const u = o;
             u.upsert &&
               u.upsert.forEach((c) => {
-                tS.set(c.id, c);
+                trades.set(c.id, c);
               }),
               u.remove &&
                 u.remove.forEach((c) => {
-                  tS.delete(c);
+                  trades.delete(c);
                 }),
               OnTradeChanged.emit(getTrades());
             break;
@@ -81320,12 +81324,12 @@ function $j() {
           }
         }
       }),
-      (pn.onopen = () => {
+      (ws.onopen = () => {
         Fk = 0;
       }),
-      (pn.onclose = (a) => {
+      (ws.onclose = (a) => {
         switch (
-          ((pn = null),
+          ((ws = null),
           (user = null),
           OnUserChanged.emit(null),
           console.log("WebSocket connection closed. Code:", a.code),
@@ -81348,10 +81352,10 @@ function $j() {
   });
 }
 function Rte() {
-  pn == null || pn.close(nh.Background), (Fk = 0);
+  ws == null || ws.close(nh.Background), (Fk = 0);
 }
 function Kj() {
-  pn || $j().then(Ite);
+  ws || $j().then(Ite);
 }
 function uD() {
   setTimeout(Kj, Math.min(Math.pow(2, Fk++) * SECOND, 16 * SECOND));
@@ -87199,7 +87203,7 @@ function Vie({ gameState: t, xy: e }) {
               children: s.jsx(mt, {
                 html: h(d.CloneFactoryInputDescHTML, {
                   res: Config.Resource[n.inputResource].name(),
-                  buildings: Ng(n.inputResource)
+                  buildings: getBuildingsThatProduce(n.inputResource)
                     .map((o) => Config.Building[o].name())
                     .join(", "),
                 }),
@@ -87619,7 +87623,7 @@ function Kk({ title: t, children: e, onConfirm: r }) {
               s.jsx("button", {
                 style: { width: "80px", fontWeight: "bold" },
                 onClick: () => {
-                  playClick(), r(), Qt();
+                  playClick(), r(), hideModal();
                 },
                 children: h(d.ConfirmYes),
               }),
@@ -87627,7 +87631,7 @@ function Kk({ title: t, children: e, onConfirm: r }) {
               s.jsx("button", {
                 style: { width: "80px" },
                 onClick: () => {
-                  playClick(), Qt();
+                  playClick(), hideModal();
                 },
                 children: h(d.ConfirmNo),
               }),
@@ -87888,7 +87892,7 @@ function $ie({ building: t, resource: e }) {
                   ),
                     Ze(),
                     playClick(),
-                    Qt();
+                    hideModal();
                 },
                 children: h(d.ConfirmYes),
               }),
@@ -87896,7 +87900,7 @@ function $ie({ building: t, resource: e }) {
               s.jsx("button", {
                 style: { width: "80px" },
                 onClick: () => {
-                  playClick(), Qt();
+                  playClick(), hideModal();
                 },
                 children: h(d.ConfirmNo),
               }),
@@ -89436,7 +89440,7 @@ function tne({ gameState: t, xy: e }) {
   const [i, n] = se.useState([]);
   return (
     se.useEffect(() => {
-      qe.getSupporters(3).then((o) => {
+      client.getSupporters(3).then((o) => {
         n(o);
       });
     }, []),
@@ -89582,7 +89586,7 @@ function w4() {
           }),
           s.jsx("div", {
             className: "title-bar-controls",
-            children: s.jsx("button", { onClick: Qt, "aria-label": "Close" }),
+            children: s.jsx("button", { onClick: hideModal, "aria-label": "Close" }),
           }),
         ],
       }),
@@ -89721,7 +89725,7 @@ function Xk() {
           }),
           s.jsx("div", {
             className: "title-bar-controls",
-            children: s.jsx("button", { onClick: Qt, "aria-label": "Close" }),
+            children: s.jsx("button", { onClick: hideModal, "aria-label": "Close" }),
           }),
         ],
       }),
@@ -90261,7 +90265,7 @@ function Ra({ permanent: t }) {
           e.greatPeopleChoicesV2.splice(c, 1),
           safeAdd(e.greatPeople, u, l.amount),
           Ze(),
-          e.greatPeopleChoicesV2.length <= 0 && Qt();
+          e.greatPeopleChoicesV2.length <= 0 && hideModal();
       });
   }
   return i === null || a === null
@@ -90576,7 +90580,7 @@ const Db = [],
   Rb = [];
 function k4() {
   var e, r;
-  const t = LP(getGameState());
+  const t = getSeaTileCost(getGameState());
   for (let i = 0; i < a1; i++)
     for (let n = 0; n < ao; n++) {
       const a = `${n},${i}`,
@@ -90587,7 +90591,7 @@ function k4() {
         continue;
       }
       const c =
-        (r = (e = Xl().get(a)) == null ? void 0 : e.tariffRate) != null
+        (r = (e = getPlayerMap().get(a)) == null ? void 0 : e.tariffRate) != null
           ? r
           : MJ;
       (Db[o] = c), (Rb[l] = c);
@@ -90610,13 +90614,13 @@ function M4(t, e) {
   return HD(n, Rb) < i ? n.map((o) => ({ x: l1(o.x), y: o.y })) : r;
 }
 function dne(t) {
-  const e = Xl();
+  const e = getPlayerMap();
   for (const [r, i] of e) if ((i == null ? void 0 : i.userId) === t) return r;
   return null;
 }
 function Lc() {
   var r;
-  const t = Xl(),
+  const t = getPlayerMap(),
     e = (r = getUser()) == null ? void 0 : r.userId;
   if (!e) return null;
   for (const [i, n] of t) if (n.userId === e) return i;
@@ -90631,18 +90635,18 @@ const lg = "" + new URL("Supporter-a22f37c6.png", import.meta.url).href,
   techpriest2_100px = "" + new URL("techpriest2_100px.png", import.meta.url).href,
   admech3_100px = "" + new URL("admech3_100px.png", import.meta.url).href,
   la = {
-    [it.Tribune]: () => h(d.AccountLevelTribune),
-    [it.Quaestor]: () => h(d.AccountLevelQuaestor),
-    [it.Aedile]: () => h(d.AccountLevelAedile),
-    [it.Praetor]: () => h(d.AccountLevelPraetor),
-    [it.Consul]: () => h(d.AccountLevelConsul),
+    [AccountLevel.Tribune]: () => h(d.AccountLevelTribune),
+    [AccountLevel.Quaestor]: () => h(d.AccountLevelQuaestor),
+    [AccountLevel.Aedile]: () => h(d.AccountLevelAedile),
+    [AccountLevel.Praetor]: () => h(d.AccountLevelPraetor),
+    [AccountLevel.Consul]: () => h(d.AccountLevelConsul),
   },
   ka = {
-    [it.Tribune]: hne,
-    [it.Quaestor]: pne,
-    [it.Aedile]: mne,
-    [it.Praetor]: fne,
-    [it.Consul]: gne,
+    [AccountLevel.Tribune]: hne,
+    [AccountLevel.Quaestor]: pne,
+    [AccountLevel.Aedile]: mne,
+    [AccountLevel.Praetor]: fne,
+    [AccountLevel.Consul]: gne,
   },
   Ib = {
     EARTH: "Earth",
@@ -90887,7 +90891,7 @@ function B4({ rank: t, user: e }) {
           }),
           s.jsx("div", {
             className: "title-bar-controls",
-            children: s.jsx("button", { onClick: Qt, "aria-label": "Close" }),
+            children: s.jsx("button", { onClick: hideModal, "aria-label": "Close" }),
           }),
         ],
       }),
@@ -90930,7 +90934,7 @@ function B4({ rank: t, user: e }) {
             onClick: () =>
               ae(this, null, function* () {
                 try {
-                  playClick(), yield qe.rankUp(), yield saveGame(), window.location.reload();
+                  playClick(), yield client.rankUp(), yield saveGame(), window.location.reload();
                 } catch (r) {
                   playError(), showToast(String(r));
                 }
@@ -90964,7 +90968,7 @@ function yne({ title: t, children: e }) {
             children: s.jsx("button", {
               style: { width: "80px" },
               onClick: () => {
-                playClick(), Qt();
+                playClick(), hideModal();
               },
               children: h(d.Ok),
             }),
@@ -90992,7 +90996,7 @@ function bne() {
           }),
           s.jsx("div", {
             className: "title-bar-controls",
-            children: s.jsx("button", { onClick: Qt, "aria-label": "Close" }),
+            children: s.jsx("button", { onClick: hideModal, "aria-label": "Close" }),
           }),
         ],
       }),
@@ -91065,11 +91069,11 @@ function bne() {
                 onClick: () =>
                   ae(this, null, function* () {
                     try {
-                      yield qe.changeHandle(e, i),
+                      yield client.changeHandle(e, i),
                         (t.handle = e),
                         (t.flag = i),
                         OnUserChanged.emit(U({}, t)),
-                        Qt();
+                        hideModal();
                     } catch (o) {
                       playError(), showToast(String(o));
                     }
@@ -91078,7 +91082,7 @@ function bne() {
               }),
               s.jsx("div", { style: { width: "10px" } }),
               s.jsx("button", {
-                onClick: Qt,
+                onClick: hideModal,
                 children: h(d.ChangePlayerHandleCancel),
               }),
             ],
@@ -91093,7 +91097,7 @@ function E4() {
   const t = useUser(),
     e = Gue(),
     [r, i] = se.useState(!1),
-    n = (a = t == null ? void 0 : t.level) != null ? a : it.Tribune;
+    n = (a = t == null ? void 0 : t.level) != null ? a : AccountLevel.Tribune;
   return s.jsxs("fieldset", {
     children: [
       s.jsx("legend", { children: h(d.PlayerHandle) }),
@@ -91196,7 +91200,7 @@ function E4() {
                               const u = safeParseInt(l.target.value, 0);
                               (t.color = u),
                                 OnUserChanged.emit(U({}, t)),
-                                OnUserChanged.emit(yield qe.changeColor(u));
+                                OnUserChanged.emit(yield client.changeColor(u));
                             } catch (u) {
                               showToast(String(u)), playError();
                             }
@@ -91238,11 +91242,11 @@ function Tne() {
     r = useUser();
   se.useEffect(() => {
     ae(this, null, function* () {
-      (r == null ? void 0 : r.level) === it.Tribune &&
-        e(yield qe.getPlayTime());
+      (r == null ? void 0 : r.level) === AccountLevel.Tribune &&
+        e(yield client.getPlayTime());
     });
   }, [r]);
-  const i = t * 1e3 > xd[it.Quaestor],
+  const i = t * 1e3 > xd[AccountLevel.Quaestor],
     n = hasFlag((o = r == null ? void 0 : r.attr) != null ? o : 0, Ir.DLC1),
     a = () =>
       wp() +
@@ -91263,51 +91267,51 @@ function Tne() {
                   s.jsx("th", {}),
                   s.jsx("th", {
                     children: s.jsx(Kt, {
-                      content: la[it.Tribune](),
+                      content: la[AccountLevel.Tribune](),
                       noStyle: !0,
                       children: s.jsx("img", {
                         className: "player-level",
-                        src: ka[it.Tribune],
+                        src: ka[AccountLevel.Tribune],
                       }),
                     }),
                   }),
                   s.jsx("th", {
                     children: s.jsx(Kt, {
-                      content: la[it.Quaestor](),
+                      content: la[AccountLevel.Quaestor](),
                       noStyle: !0,
                       children: s.jsx("img", {
                         className: "player-level",
-                        src: ka[it.Quaestor],
+                        src: ka[AccountLevel.Quaestor],
                       }),
                     }),
                   }),
                   s.jsx("th", {
                     children: s.jsx(Kt, {
-                      content: la[it.Aedile](),
+                      content: la[AccountLevel.Aedile](),
                       noStyle: !0,
                       children: s.jsx("img", {
                         className: "player-level",
-                        src: ka[it.Aedile],
+                        src: ka[AccountLevel.Aedile],
                       }),
                     }),
                   }),
                   s.jsx("th", {
                     children: s.jsx(Kt, {
-                      content: la[it.Praetor](),
+                      content: la[AccountLevel.Praetor](),
                       noStyle: !0,
                       children: s.jsx("img", {
                         className: "player-level",
-                        src: ka[it.Praetor],
+                        src: ka[AccountLevel.Praetor],
                       }),
                     }),
                   }),
                   s.jsx("th", {
                     children: s.jsx(Kt, {
-                      content: la[it.Consul](),
+                      content: la[AccountLevel.Consul](),
                       noStyle: !0,
                       children: s.jsx("img", {
                         className: "player-level",
-                        src: ka[it.Consul],
+                        src: ka[AccountLevel.Consul],
                       }),
                     }),
                   }),
@@ -91386,11 +91390,11 @@ function Tne() {
                       children: h(d.AccountTradeTileReservationTime),
                     }),
                   }),
-                  s.jsxs("td", { children: [Ld[it.Tribune], "d"] }),
-                  s.jsxs("td", { children: [Ld[it.Quaestor], "d"] }),
-                  s.jsxs("td", { children: [Ld[it.Aedile], "d"] }),
-                  s.jsxs("td", { children: [Ld[it.Praetor], "d"] }),
-                  s.jsxs("td", { children: [Ld[it.Consul], "d"] }),
+                  s.jsxs("td", { children: [Ld[AccountLevel.Tribune], "d"] }),
+                  s.jsxs("td", { children: [Ld[AccountLevel.Quaestor], "d"] }),
+                  s.jsxs("td", { children: [Ld[AccountLevel.Aedile], "d"] }),
+                  s.jsxs("td", { children: [Ld[AccountLevel.Praetor], "d"] }),
+                  s.jsxs("td", { children: [Ld[AccountLevel.Consul], "d"] }),
                 ],
               }),
               " ",
@@ -91398,10 +91402,10 @@ function Tne() {
                 children: [
                   s.jsx("td", { children: h(d.AccountPlayTimeRequirement) }),
                   s.jsx("td", { children: "-" }),
-                  s.jsxs("td", { children: [xd[it.Quaestor] / HOUR, "h"] }),
-                  s.jsxs("td", { children: [xd[it.Aedile] / HOUR, "h"] }),
-                  s.jsxs("td", { children: [xd[it.Praetor] / HOUR, "h"] }),
-                  s.jsxs("td", { children: [xd[it.Consul] / HOUR, "h"] }),
+                  s.jsxs("td", { children: [xd[AccountLevel.Quaestor] / HOUR, "h"] }),
+                  s.jsxs("td", { children: [xd[AccountLevel.Aedile] / HOUR, "h"] }),
+                  s.jsxs("td", { children: [xd[AccountLevel.Praetor] / HOUR, "h"] }),
+                  s.jsxs("td", { children: [xd[AccountLevel.Consul] / HOUR, "h"] }),
                 ],
               }),
               " ",
@@ -91411,10 +91415,10 @@ function Tne() {
                     children: h(d.AccountGreatPeopleLevelRequirement),
                   }),
                   s.jsx("td", { children: "-" }),
-                  s.jsx("td", { children: ty[it.Quaestor] }),
-                  s.jsx("td", { children: ty[it.Aedile] }),
-                  s.jsx("td", { children: ty[it.Praetor] }),
-                  s.jsx("td", { children: ty[it.Consul] }),
+                  s.jsx("td", { children: ty[AccountLevel.Quaestor] }),
+                  s.jsx("td", { children: ty[AccountLevel.Aedile] }),
+                  s.jsx("td", { children: ty[AccountLevel.Praetor] }),
+                  s.jsx("td", { children: ty[AccountLevel.Consul] }),
                 ],
               }),
             ],
@@ -91422,7 +91426,7 @@ function Tne() {
         }),
       }),
       s.jsx("div", { className: "sep5" }),
-      (r == null ? void 0 : r.level) === it.Tribune
+      (r == null ? void 0 : r.level) === AccountLevel.Tribune
         ? s.jsxs(s.Fragment, {
             children: [
               s.jsx("div", { className: "separator" }),
@@ -91442,7 +91446,7 @@ function Tne() {
                   s.jsx("div", {
                     className: "f1",
                     children: h(d.AccountLevelPlayTime, {
-                      requiredTime: formatHM(xd[it.Quaestor]),
+                      requiredTime: formatHM(xd[AccountLevel.Quaestor]),
                       actualTime: formatHM(t * 1e3),
                     }),
                   }),
@@ -91499,7 +91503,7 @@ function Tne() {
                       onConfirm: () =>
                         ae(this, null, function* () {
                           try {
-                            yield qe.upgrade(), playLevelUp(), yield CM(getGameState().city);
+                            yield client.upgrade(), playLevelUp(), yield CM(getGameState().city);
                             const l = getGameOptions();
                             (l.greatPeopleChoicesV2 = []),
                               hJ(l),
@@ -91640,7 +91644,7 @@ function Ane({ xy: t }) {
                 onClick: () =>
                   ae(this, null, function* () {
                     try {
-                      yield qe.setTariffRate(r);
+                      yield client.setTariffRate(r);
                     } catch (l) {
                       showToast(String(l));
                     }
@@ -91756,7 +91760,7 @@ function _4({ xy: t }) {
         onClick: () =>
           ae(this, null, function* () {
             try {
-              yield qe.claimTile(t);
+              yield client.claimTile(t);
             } catch (n) {
               playError(), showToast(String(n));
             }
@@ -91792,6 +91796,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
     allTradeBuildingsSorted = new Map(),
 
     [fills, setFills] = se.useState(new Map());
+
   se.useEffect(() => {
     if (!trade) return;
     const targetXy = dne(trade.fromId);
@@ -91799,329 +91804,256 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
     const path = M4(xyToPoint(myXy), xyToPoint(targetXy));
     setTiles(path.map((L) => uL(L)));
   }, [trade, myXy]);
-  const seaTileCost = BJ(tiles, LP(gs)),
-    totalTariff =
-      seaTileCost +
-      tiles.reduce((D, I, L) => {
-        const F = map.get(I);
-        return !F || L === 0 || L === tiles.length - 1 ? D : D + F.tariffRate;
-      }, 0);
-  if (!trade) return Qt(), playError(), null;
-  if (!myXy) return Qt(), playError(), showToast(h(d.PlayerTradeClaimTileFirstWarning)), null;
+
+  const seaTileCost = getTotalSeaTileCost(tiles, getSeaTileCost(gs));
+
+  const totalTariff =
+    seaTileCost +
+    tiles.reduce((D, I, L) => {
+      const F = map.get(I);
+      return !F || L === 0 || L === tiles.length - 1 ? D : D + F.tariffRate;
+    }, 0);
+
+  if (!trade) {
+    hideModal();
+    playError();
+    return null;
+  }
+  if (!myXy) {
+    hideModal();
+    playError();
+    showToast(h(d.PlayerTradeClaimTileFirstWarning));
+    null;
+  }
+
+
   const hasValidPath = () => tiles.length > 0,
     fillsHaveEnoughResource = (D) => {
       for (const [I, L] of D) if (!Z_(I, trade.buyResource, L, gs)) return !1;
       return !0;
-    },
+    };
 
-    // IMPORTANT 2025-02-xx
-    // param "hint" can be "greedy" or "fast" to tweak some limits
-    // param "maxError" reserved for future use, to set tolerance for fluctuating, erronous or invalid values
-    calculateMaxFill = (hint = "auto", maxError = 0.03) => {
-      const result = new Map();
+  const calculateMaxFill = () => {
+    const result = new Map();
+    let amountLeft = trade.buyAmount;
 
-      // enable some tweaks only in large trades
-      let isLargeTrade = trade.buyAmount >= 10000000; // 10 million
+    // of the goods we're sending to them. first is alias, second is calculated later
+    let totalAmountTheyWant = trade.buyAmount;
+    let totalAmountWeHave = 0;
 
-      let amountLeft = trade.buyAmount;
+    // precalculate some things
+    for (const xy of allTradeBuildings.keys()) {
+      // at this moment, in trade buildings
+      totalAmountWeHave += getMaxFill(xy);
+    }
 
-      // does it really help?
-      // no, no longer needed with later tweaks as of 2025-02-xx
-      // if(isLargeTrade) {
-      //   amountLeft = amountLeft * 0.90;
-      // }
+    // addSystemMessage(`totalAmountWeHave=${formatNumber(totalAmountWeHave)} / `+
+    //   `totalAmountTheyWant=${formatNumber(totalAmountTheyWant)}`);
 
-      // of the goods we're sending to them. first is alias, second is calculated later
-      let totalAmountTheyWant = trade.buyAmount;
-      let totalAmountWeHave = 0;
-
-      // manual index for loop
-      var currentSubtrade = 0;
-
-      // don't ignore subtrades below that number
-      var minSubtrades = 10;
-
-      // max number of subtrades allowed
-      var maxSubtrades = 200;
-
-      if (typeof hint === "string" && hint.includes("fast")) {
-        maxSubtrades = 20;
+    for (const xy of allTradeBuildings.keys()) {
+      const amount = getMaxFill(xy);
+      if (amount <= 0) {
+        // Do nothing
+      } else if (amountLeft > amount) {
+        result.set(xy, amount);
+        amountLeft -= amount;
+      } else {
+        result.set(xy, amountLeft);
+        amountLeft = 0;
+        break;
       }
+    }
+    return result;
+  };
 
-      // precalculate some things
-      for (const xy of allTradeBuildingsSorted.keys()) {
-        // at this moment, in trade buildings
-        totalAmountWeHave += getMaxFill(xy);
+  // BOOKMARK 2025-03-06 
+  const doFill = (fills) =>
+    ae(this, null, function* () {
+      var $;
+
+      // split error checking - trust me, it helps
+
+      if (!hasValidPath()) {
+        addSystemMessage("hasValidPath=false");
+        showToast(h(d.OperationNotAllowedError));
+        playError();
+        return;
       }
-
-      // addSystemMessage(`totalAmountWeHave=${formatNumber(totalAmountWeHave)} / `+
-      //   `totalAmountTheyWant=${formatNumber(totalAmountTheyWant)}`);
-
-
-      // main loop
-      for (const xy of allTradeBuildingsSorted.keys()) {
-
-        // hard limit, ignore further possible subtrades
-        if( currentSubtrade >= maxSubtrades )
-		    {
-			    break;
-		    }
-
-		    currentSubtrade++; // 1-based
-
-        // IMPORTANT
-        // do only partial fills
-        // does not affect the total amount as long as there is some free space
-        // TODO: allow tweaking with errMargin
-        let partialAmount = getMaxFill(xy) * 0.9;
-
-        // we want to ignore trades that are zero or close to zero,
-        // as they introduce needless delays in client and load on server
-        var isSubtradeTooSmall = partialAmount < (totalAmountWeHave / 1000);
-
-        // addSystemMessage(`cS=${currentSubtrade} / maxS=${maxSubtrades}, `+
-        //   `pA=${formatNumber(partialAmount)} / aL=${formatNumber(amountLeft)} / `+
-        //   ` tAWH=${formatNumber(totalAmountWeHave)} / tATW=${formatNumber(totalAmountTheyWant)}, `+
-        // `subtradeTooSmall=${subtradeTooSmall}`);
-
-        // use 2nd subtrade to expose mod's version
-        // this 'wastes' a single subtrade but is the easiest way to
-        // advertise which version is used with no additions elsewhere
-        if(currentSubtrade == 2) {
-          if( partialAmount > MODDEDCLIENT_VER) {
-            partialAmount = MODDEDCLIENT_VER;
-          }
-        }
-
-        // tweaks that should run only between minSubtrades to maxSubtrades
-        if(currentSubtrade > minSubtrades) {
-
-          if(isSubtradeTooSmall)
-          {
-            // ignore - prevent from sending to the server - tiny subtrades,
-            // greatly reduces waste both on client and server
-            // during testing often 50-80% of subtrades were these near-zero ones
-            continue;
-          }
-        }
-
-
-        if (partialAmount > 0)
-        {
-          if (amountLeft > partialAmount) result.set(xy, partialAmount), (amountLeft -= partialAmount);
-          else {
-            result.set(xy, amountLeft), (amountLeft = 0);
-            break;
-          }
-        }
-
+      if(!fillsHaveEnoughResource(fills)) {
+        addSystemMessage("fillsHaveEnoughResource=false");
+        showToast(h(d.OperationNotAllowedError));
+        playError();
+        return;
       }
-      return result;
-    },
-
-
-    // IMPORTANT 2025-02-xx
-    // param "hint" can be "greedy" or "fast" to tweak some limits
-    // param "maxError" reserved for future use, to set tolerance for fluctuating, erronous or invalid values
-    doFill = (fills, hint = "auto", maxError = 0.03) =>
-      ae(this, null, function* () {
-        var $;
-
-        // split error checking - trust me, it helps
-
-        if (!hasValidPath()) {
-          addSystemMessage("hasValidPath=false");
-          showToast(h(d.OperationNotAllowedError));
-          playError();
-          return;
-        }
-        if(!fillsHaveEnoughResource(fills)) {
-          addSystemMessage("fillsHaveEnoughResource=false");
-          showToast(h(d.OperationNotAllowedError));
-          playError();
-          return;
-        }
-        if(!fillsHaveEnoughStorage(fills)) {
-          addSystemMessage("fillsHaveEnoughStorage=false");
-          showToast(h(d.OperationNotAllowedError));
-          playError();
-          return;
-        }
+      if(!fillsHaveEnoughStorage(fills)) {
+        addSystemMessage("fillsHaveEnoughStorage=false");
+        showToast(h(d.OperationNotAllowedError));
+        playError();
+        return;
+      }
   
-        const totalFillAmount = getTotalFillAmount(fills);
-        if(!(totalFillAmount > 0)) {
-          // happens rarely, but usually no less than once / 15 minutes during aggressive trading
-          addSystemMessage("totalFillAmount=" + totalFillAmount + " is negative."+
-            " This shouldn't happen. Trying to proceed anyway.");
+      const totalFillAmount = getTotalFillAmount(fills);
+      if(!(totalFillAmount > 0)) {
+        // happens rarely, but usually no less than once / 15 minutes during aggressive trading
+        addSystemMessage("totalFillAmount=" + totalFillAmount + " is negative."+
+          " This shouldn't happen. Trying to proceed anyway.");
 
-          // this is partially recoverable, we do not want to fail here
-          //return;
-        }
-        if(!(totalFillAmount <= trade.buyAmount)) {
-          // needs more testing
-          addSystemMessage("totalFillAmount=" + totalFillAmount +
-            " is greater than trade.buyAmount="+trade.buyAmount+"."+
-            " This shouldn't happen. Trying to proceed anyway.");
+        // this is partially recoverable, we do not want to fail here
+        //return;
+      }
+      if(!(totalFillAmount <= trade.buyAmount)) {
+        // needs more testing
+        addSystemMessage("totalFillAmount=" + totalFillAmount +
+          " is greater than trade.buyAmount="+trade.buyAmount+"."+
+          " This shouldn't happen. Trying to proceed anyway.");
 
-          // // seems partially recoverable. needs more testing.
-          //ct(h(d.OperationNotAllowedError)), ze();
-          //return;
-        }
+        // // seems partially recoverable. needs more testing.
+        //ct(h(d.OperationNotAllowedError)), ze();
+        //return;
+      }
   
   
-        // let user know we're actually doing something
-        showToast("Filling trades, please wait 5-20 sec...");
+      // let user know we're actually doing something
+      showToast("Filling trades, please wait 5-20 sec...");
 
         let total = 0,
           success = 0,
           fillAmount = 0,
           receivedAmount = 0;
-        const errors = [];
+      const errors = [];
 
-        let fillsSize = fills.size;
 
-        for (const [tile, amount] of fills) {
-          if (amount <= 0) continue;
-          ++total;
-          const re = FL(trade.buyResource, amount, [tile], gs);
-          try {
+      // new algorithm from build 571
+      let totalAmount = 0;
+      const queue = [];
+      for (const [tile, amount] of fills) {
+        if (amount <= 0) continue;
+        // We reserve the amount first, otherwise resource might go negative if a player
+        // clicks really fast
+        const r = deductResourceFrom(trade.buyResource, amount, [tile], gs);
+        queue.push({ amount: r.amount, rollback: r.rollback, tile });
+        totalAmount += r.amount;
+      }
 
-            // todo: localize
-            let tradeStr = `${total} / ${fillsSize}`;
-            let resourceStr = `${formatNumber(fillAmount)} ${trade.buyResource}`;
-            showToast("Filling trades " + tradeStr + `, sending: ${resourceStr}...`);
-
-            const V = yield qe.fillTrade({
-              id: trade.id,
-              amount: re.amount,
-              path: tiles,
-              seaTileCost: LP(gs),
-            });
-            forEach(V, (Z, ee) => {
-              ee > 0 && (receivedAmount += ee),
-                ee < 0 && (fillAmount += Math.abs(ee)),
-                safeAdd(allTradeBuildings.get(tile).resources, Z, ee);
-            }),
-              ++success;
-          } catch (V) {
-            addSystemMessage(`Error at trade ${tradeStr}": `+v);
-            errors.push(String(V));
-          } finally {
-            re.rollback();
+      try {
+        const result = yield client.fillTrade({
+          id: trade.id,
+          amount: totalAmount,
+          path: tiles,
+          seaTileCost: getSeaTileCost(gs),
+        });
+        const receivedAmount = result[trade.sellResource] ?? 0;
+        for (const r of queue) {
+          const building = allTradeBuildings.get(r.tile);
+          if (building) {
+            safeAdd(building.resources, trade.sellResource,
+              (receivedAmount * r.amount) / totalAmount);
           }
         }
-        if (success > 0) {
-          var str1 = h(d.PlayerTradeFillSuccessV2, {
-            success: success,
-            total: total,
-            fillAmount: formatNumber(fillAmount),
-            fillResource: Config.Resource[trade.buyResource].name(),
-            receivedAmount: formatNumber(receivedAmount),
-            receivedResource: Config.Resource[trade.sellResource].name(),
-          });
-            errors.unshift(str1);
 
-            // todo: do we want it?
-            // some testers liked having it in chat window, some didn't
+        const eic = Tick.current.specialBuildings.get("EastIndiaCompany");
+        if (eic) {
+          safeAdd(
+            eic.building.resources,
+            "TradeValue",
+            receivedAmount * (Config.ResourcePrice[trade.sellResource] ?? 0),
+          );
+        }
 
-            if(ModdedClientConfig.showTradeLogsInChat) {
-              addSystemMessage(str1);
-            }
+        playKaching();
+        const str1 = h(d.PlayerTradeFillSuccessV2, {
+          success: queue.length,
+          total: queue.length,
+          fillAmount: formatNumber(totalAmount),
+          fillResource: Config.Resource[trade.buyResource].name(),
+          receivedAmount: formatNumber(receivedAmount),
+          receivedResource: Config.Resource[trade.sellResource].name(),
+        });
 
-          const X = Tick.current.specialBuildings.get("EastIndiaCompany");
-          X &&
-            safeAdd(
-              X.building.resources,
-              "TradeValue",
-              fillAmount * (($ = Config.ResourcePrice[trade.buyResource]) != null ? $ : 0)
-            ),
-            showToast(errors.join("<br />")),
-            Qt();
-        } else playError(), showToast(errors.join("<br />"));
-      }),
+        showToast(str1);
+        if(ModdedClientConfig.showTradeLogsInChat) {
+          addSystemMessage(str1);
+        }
+        hideModal();
 
-    getStorageRequired = (D) =>
-      clamp((trade.sellAmount * D) / trade.buyAmount - D, 0, Number.POSITIVE_INFINITY),
-
-    fillsHaveEnoughStorage = (D) => {
-      if (!k()) return !0;
-      for (const [I, L] of D) {
-        const F = getStorageRequired(L);
-        if (!J_(I, F, gs)) return !1;
+      } catch (error) {
+        for (const r of queue) {
+          r.rollback();
+        }
+        showToast(String(error));
       }
-      return !0;
-    },
+    }),
+      
+  getStorageRequired = (D) =>
+    clamp((trade.sellAmount * D) / trade.buyAmount - D, 0, Number.POSITIVE_INFINITY),
+
+  fillsHaveEnoughStorage = (fills) => {
+    if (!k()) return !0;
+    for (const [tile, amount] of fills) {
+      const F = getStorageRequired(amount);
+      if (!hasEnoughStorage(tile, F, gs)) return !1;
+    }
+    return !0;
+  },
     
-    getTotalFillAmount = (fills) => {
-      let total = 0;
-      for (const [tile, amount] of fills) total += amount;
-      return total;
-    },
-    M = (D) => {
-      let I = 0;
-      for (const [L, F] of D) I += getStorageRequired(F);
-      return I;
-    },
-    k = () => trade.sellAmount > trade.buyAmount,
+  getTotalFillAmount = (fills) => {
+    let total = 0;
+    for (const [tile, amount] of fills) total += amount;
+    return total;
+  },
+  
+  M = (D) => {
+    let I = 0;
+    for (const [L, F] of D) I += getStorageRequired(F);
+    return I;
+  },
+  
+  k = () => trade.sellAmount > trade.buyAmount,
     
-    getMaxFill = (D) => {
-      var L, F, W;
-      let amountLeft = trade.buyAmount;
-      if (
-        ((amountLeft = clamp(
-          amountLeft,
-          0,
-          (W =
-            (F = (L = gs.tiles.get(D)) == null ? void 0 : L.building) == null
-              ? void 0
-              : F.resources[trade.buyResource]) != null
-            ? W
-            : 0
+  getMaxFill = (D) => {
+    var L, F, W;
+    let amountLeft = trade.buyAmount;
+    if (
+      ((amountLeft = clamp(
+        amountLeft,
+        0,
+        (W =
+          (F = (L = gs.tiles.get(D)) == null ? void 0 : L.building) == null
+            ? void 0
+            : F.resources[trade.buyResource]) != null
+          ? W
+          : 0
         )),
         trade.sellAmount > trade.buyAmount)
       ) {
-        const H = getStorageFor(D, gs),
-          $ = clamp(H.total - H.used, 0, Number.POSITIVE_INFINITY);
-        amountLeft = clamp(amountLeft, 0, ($ * trade.buyAmount) / (trade.sellAmount - trade.buyAmount));
-      }
-      return amountLeft;
-    },
+      const H = getStorageFor(D, gs),
+      $ = clamp(H.total - H.used, 0, Number.POSITIVE_INFINITY);
+      amountLeft = clamp(amountLeft, 0, ($ * trade.buyAmount) / (trade.sellAmount - trade.buyAmount));
+    }
+    return amountLeft;
+  },
+  
 
-    // ***** fillsAreValid
-    // B = (fills) => {
-    fillsAreValid = (fills) => {
-            const fillAmount = getTotalFillAmount(fills);
-      const fillsHaveEnoughResourceOk = fillsHaveEnoughResource(fills);
-      const fillsHaveEnoughStorageOk = fillsHaveEnoughStorage(fills);
-      const fillAmountPositive = fillAmount > 0;
-      const fillAmountBelowBuyAmount = fillAmount <= trade.buyAmount;
+  // ***** fillsAreValid
+  // B = (fills) => {
+  fillsAreValid = (fills) => {
+    const fillAmount = getTotalFillAmount(fills);
+    const fillsHaveEnoughResourceOk = fillsHaveEnoughResource(fills);
+    const fillsHaveEnoughStorageOk = fillsHaveEnoughStorage(fills);
+    const fillAmountPositive = fillAmount > 0;
+    const fillAmountBelowBuyAmount = fillAmount <= trade.buyAmount;
 
-      if(fillsHaveEnoughResourceOk && fillsHaveEnoughStorageOk && fillAmountPositive && fillAmountBelowBuyAmount) {
-        return true;
-      }
+    if(fillsHaveEnoughResourceOk && fillsHaveEnoughStorageOk && fillAmountPositive && fillAmountBelowBuyAmount) {
+      return true;
+    }
 
-      /*
-      Lt("fillsAreValid() failed, enoughRes=" + fillsHaveEnoughResourceOk +
-        ", enoughStor=" + fillsHaveEnoughStorageOk +
-        ", amountPositive=" + fillAmountPositive +
-        ", amountBelowBuy=" + fillAmountBelowBuyAmount
-      );
-      */
+    return false;
+  },
 
-      return false;
-      /*
-      const fillAmount = getTotalFillAmount(fills);
-      return (
-         fillsHaveEnoughResource(fills) &&
-         fillsHaveEnoughStorage(fills) &&
-         fillAmount > 0 &&
-         fillAmount <= trade.buyAmount
-      );
-      */
-    },
-
-    // ***** isFillValid
-    _ = (D, I) => Z_(D, trade.buyResource, I, gs) && (!k() || J_(D, getStorageRequired(I), gs));
+  // ***** isFillValid
+  _ = (D, I) => {
+    Z_(D, trade.buyResource, I, gs) && (!k() || hasEnoughStorage(D, getStorageRequired(I), gs));
+  }
 
 
   return s.jsxs("div", {
@@ -92137,7 +92069,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
           }),
           s.jsx("div", {
             className: "title-bar-controls",
-            children: s.jsx("button", { onClick: Qt, "aria-label": "Close" }),
+            children: s.jsx("button", { onClick: hideModal, "aria-label": "Close" }),
           }),
         ],
       }),
@@ -92465,7 +92397,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
             className: "row",
             children: [
               s.jsx("button", {
-                onClick: Qt,
+                onClick: hideModal,
                 children: h(d.ChangePlayerHandleCancel),
               }),
               s.jsx("div", { className: "f1" }),
@@ -92478,7 +92410,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
                     ? doFill(D,"fast",0.03)
                     : (playError(),
                       showToast(h(d.PlayerTradeNoFillBecauseOfResources)),
-                      Qt());
+                      hideModal());
                 },
                 children: "Trade Max Fast",
               }),
@@ -92492,7 +92424,7 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy }) {
                     ? doFill(D,"greedy",0.03)
                     : (playError(),
                       showToast(h(d.PlayerTradeNoFillBecauseOfResources)),
-                      Qt());
+                      hideModal());
                 },
                 children: "Trade Max Greedy",
               }),
@@ -93120,7 +93052,7 @@ class ap extends Scene {
     for (let l = 0; l <= a1; l++)
       o.moveTo(0, l * lt), o.lineTo(ao * lt, l * lt);
     (this._selectedGraphics = this.viewport.addChild(new sl())),
-      Xl().forEach((l, u) => {
+      getPlayerMap().forEach((l, u) => {
         this.addOrReplaceTile(u, l);
       }),
       zj.on((l) => {
@@ -93163,7 +93095,7 @@ class ap extends Scene {
         this._idToTradeCount.has(n) || this.markDirtyById(n);
       }),
       this._dirtyTiles.forEach((n) => {
-        const a = Xl().get(n);
+        const a = getPlayerMap().get(n);
         a && this.addOrReplaceTile(n, a);
       }),
       this._dirtyTiles.clear();
@@ -93229,7 +93161,7 @@ class ap extends Scene {
         .lineTo(n, a + lt)
         .lineTo(n, a);
     const o = Lc(),
-      l = Xl(),
+      l = getPlayerMap(),
       u = `${r},${i}`;
     if (o && l.has(u) && u !== o) {
       const c = M4(xyToPoint(o), { x: r, y: i });
@@ -93248,7 +93180,7 @@ class ap extends Scene {
   }
   removeTile(r) {
     var n, a;
-    const i = (n = Xl().get(r)) == null ? void 0 : n.userId;
+    const i = (n = getPlayerMap().get(r)) == null ? void 0 : n.userId;
     i && this._idToTile.delete(i),
       (a = this._tiles.get(r)) == null || a.destroy({ children: !0 }),
       this._tiles.delete(r);
@@ -93403,7 +93335,7 @@ function Dne() {
               s.jsx("button", {
                 style: { padding: "0 30px" },
                 onClick: () => {
-                  playClick(), Qt();
+                  playClick(), hideModal();
                 },
                 children: h(d.Ok),
               }),
@@ -94013,7 +93945,7 @@ function Fne() {
   const [t, e] = se.useState();
   return (
     se.useEffect(() => {
-      qe.getHallOfFame().then((r) => {
+      client.getHallOfFame().then((r) => {
         forEach(r, (i, n) => {
           shuffle(n);
         }),
@@ -94033,7 +93965,7 @@ function Fne() {
             }),
             s.jsx("div", {
               className: "title-bar-controls",
-              children: s.jsx("button", { onClick: Qt, "aria-label": "Close" }),
+              children: s.jsx("button", { onClick: hideModal, "aria-label": "Close" }),
             }),
           ],
         }),
@@ -94041,7 +93973,7 @@ function Fne() {
           style: { overflowY: "auto", height: 600, maxHeight: "80vh" },
           children: s.jsx("div", {
             className: "window-body",
-            children: [it.Consul, it.Praetor, it.Aedile].map((r) => {
+            children: [AccountLevel.Consul, AccountLevel.Praetor, AccountLevel.Aedile].map((r) => {
               var i, n, a;
               return s.jsxs(
                 "fieldset",
@@ -94169,7 +94101,7 @@ function jne({ action: t }) {
           s.jsx("div", { className: "title-bar-text", children: n.name() }),
           s.jsx("div", {
             className: "title-bar-controls",
-            children: s.jsx("button", { onClick: Qt, "aria-label": "Close" }),
+            children: s.jsx("button", { onClick: hideModal, "aria-label": "Close" }),
           }),
         ],
       }),
@@ -94196,7 +94128,7 @@ function jne({ action: t }) {
             children: [
               s.jsx("button", {
                 onClick: () => {
-                  delete e.shortcuts[t], ut(e), Qt();
+                  delete e.shortcuts[t], ut(e), hideModal();
                 },
                 children: h(d.ShortcutClear),
               }),
@@ -94218,7 +94150,7 @@ function jne({ action: t }) {
                       }),
                       (e.shortcuts[t] = r),
                       ut(e),
-                      Qt());
+                      hideModal());
                   } catch (a) {
                     playError(), console.error(a), showToast(String(a));
                   }
@@ -94682,7 +94614,7 @@ function N4(t) {
 }
 function Hne(t) {
   forEach(Config.Resource, (e) => {
-    const r = Ng(e);
+    const r = getBuildingsThatProduce(e);
     for (const i of r)
       if (t.buildingColors[i]) {
         t.resourceColors[e] = t.buildingColors[i];
@@ -95103,7 +95035,7 @@ function L4({ advisor: t }) {
           s.jsx("div", { className: "title-bar-text", children: e.title() }),
           s.jsx("div", {
             className: "title-bar-controls",
-            children: s.jsx("button", { onClick: Qt, "aria-label": "Close" }),
+            children: s.jsx("button", { onClick: hideModal, "aria-label": "Close" }),
           }),
         ],
       }),
@@ -95116,7 +95048,7 @@ function L4({ advisor: t }) {
               className: "text-desc text-small",
               onClick: () => {
                 playClick(),
-                  Qt(),
+                  hideModal(),
                   forEach(tg, (r) => {
                     getGameOptions().disabledTutorials.add(r);
                   });
@@ -95127,7 +95059,7 @@ function L4({ advisor: t }) {
             s.jsx("button", {
               className: "text-strong",
               onClick: () => {
-                playClick(), Qt();
+                playClick(), hideModal();
               },
               children: h(d.AdvisorOkay),
             }),
@@ -95264,7 +95196,7 @@ function rae({ submitEvent: t }) {
         try {
           e
             ? (playClick(),
-              yield qe.changeHandle(r, n),
+              yield client.changeHandle(r, n),
               (e.handle = r),
               (e.flag = n),
               OnUserChanged.emit(U({}, e)))
@@ -95272,7 +95204,7 @@ function rae({ submitEvent: t }) {
         } catch (c) {
           playError(), showToast(String(c));
         } finally {
-          Qt();
+          hideModal();
         }
       })
     ),
@@ -95698,7 +95630,7 @@ function An() {
                             ae(this, null, function* () {
                               try {
                                 yield saveGame(),
-                                  yield qe.checkInSave(yield compressSave()),
+                                  yield client.checkInSave(yield compressSave()),
                                   SteamClient.quit();
                               } catch (a) {
                                 playError(), showToast(String(a));
@@ -97043,7 +96975,7 @@ function mae() {
       t.filter((y) => y.fromId === (e == null ? void 0 : e.userId)).length
     );
   se.useEffect(() => {
-    qe.getPendingClaims().then((y) => i((x) => x + y.length));
+    client.getPendingClaims().then((y) => i((x) => x + y.length));
   }, []);
   const n = gi(),
     [a, o] = se.useState(n.city),
@@ -97422,7 +97354,7 @@ function mae() {
               s.jsx("button", {
                 style: { padding: "0 15px" },
                 onClick: () => {
-                  playClick(), Qt();
+                  playClick(), hideModal();
                 },
                 children: h(d.Cancel),
               }),
@@ -97438,7 +97370,7 @@ function mae() {
                       return;
                     }
                     try {
-                      yield Promise.race([qe.rebirth(), nk(10)]);
+                      yield Promise.race([client.rebirth(), nk(10)]);
                     } catch (x) {
                       if ((console.error(x), isOnlineUser())) {
                         playError(), showToast(h(d.RebornOfflineWarning));
@@ -97481,8 +97413,8 @@ function fae() {
     [r, i] = se.useState(new Set());
   return (
     se.useEffect(() => {
-      qe.getAllAchievements().then((n) => e(n)),
-        qe.getAchievedAchievements().then((n) => i(new Set(n)));
+      client.getAllAchievements().then((n) => e(n)),
+        client.getAchievedAchievements().then((n) => i(new Set(n)));
     }, []),
     s.jsxs("div", {
       className: "window",
@@ -99296,10 +99228,10 @@ function wae({ gameState: t, xy: e }) {
     n = r.filter((o) => o.resource in Config.Resource);
   if (
     (se.useEffect(() => {
-      qe.getPendingClaims().then(i);
+      client.getPendingClaims().then(i);
     }, []),
     uo(Vj, () => {
-      qe.getPendingClaims().then(i);
+      client.getPendingClaims().then(i);
     }),
     n.length === 0)
   )
@@ -99308,7 +99240,7 @@ function wae({ gameState: t, xy: e }) {
     ae(this, null, function* () {
       try {
         const l = Array.from(Tick.current.playerTradeBuildings.keys()),
-          u = jL(l, t),
+          u = getAvailableStorage(l, t),
           c = {};
         let p = 0;
         for (const g of o) {
@@ -99318,11 +99250,11 @@ function wae({ gameState: t, xy: e }) {
           }
           (c[g.id] = g.amount), (p += g.amount);
         }
-        const { pendingClaims: f, resources: m } = yield qe.claimTradesV2(c);
+        const { pendingClaims: f, resources: m } = yield client.claimTradesV2(c);
         if (
           (i(f),
           forEach(m, (g, v) => {
-            const y = LL(g, v, l, t);
+            const y = addResourceTo(g, v, l, t);
             console.assert(y.amount === v);
           }),
           sizeOf(m) > 0)
@@ -99689,7 +99621,7 @@ function AddTradeComponent({ gameState: gameState, xy: xy }) {
                     playError(), showToast(h(d.OperationNotAllowedError));
                     return;
                   }
-                  const T = FL(
+                  const T = deductResourceFrom(
                     trade.sellResource,
                     trade.sellAmount,
                     Array.from(Tick.current.playerTradeBuildings.keys()),
@@ -99699,7 +99631,7 @@ function AddTradeComponent({ gameState: gameState, xy: xy }) {
                     const C = T.amount / trade.sellAmount;
                     (trade.sellAmount *= C),
                       (trade.buyAmount *= C),
-                      yield qe.addTrade(trade),
+                      yield client.addTrade(trade),
                       playKaching(),
                       showToast(h(d.PlayerTradeAddSuccess));
                   } catch (C) {
@@ -100168,7 +100100,7 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                       ? s.jsx("div", {
                           className: "m-icon small text-link",
                           onClick: () => {
-                            const M = jL(
+                            const M = getAvailableStorage(
                               Array.from(Tick.current.playerTradeBuildings.keys()),
                               t
                             );
@@ -100180,8 +100112,8 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
                                   onConfirm: () =>
                                     ae(this, null, function* () {
                                       try {
-                                        const w = yield qe.cancelTrade(A.id);
-                                        LL(
+                                        const w = yield client.cancelTrade(A.id);
+                                        addResourceTo(
                                           w.sellResource,
                                           w.sellAmount * ry,
                                           Array.from(
@@ -100254,7 +100186,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
           }),
           s.jsx("div", {
             className: "title-bar-controls",
-            children: s.jsx("button", { onClick: Qt, "aria-label": "Close" }),
+            children: s.jsx("button", { onClick: hideModal, "aria-label": "Close" }),
           }),
         ],
       }),
@@ -100439,13 +100371,13 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
                     playError();
                     return;
                   }
-                  (t.resourceImports[e] = n), Ze(), Qt();
+                  (t.resourceImports[e] = n), Ze(), hideModal();
                 },
                 children: h(d.ChangePlayerHandle),
               }),
               s.jsx("div", { style: { width: "10px" } }),
               s.jsx("button", {
-                onClick: Qt,
+                onClick: hideModal,
                 children: h(d.ChangePlayerHandleCancel),
               }),
             ],
@@ -109264,7 +109196,7 @@ function due({ gameState: t, xy: e }) {
     [i, n] = se.useState(null);
   return r
     ? (se.useEffect(() => {
-        qe.getVotedBoosts().then(n);
+        client.getVotedBoosts().then(n);
       }, []),
       s.jsxs("div", {
         className: "window-body",
@@ -109306,7 +109238,7 @@ function due({ gameState: t, xy: e }) {
                                 onClick: () =>
                                   ae(this, null, function* () {
                                     try {
-                                      n(yield qe.voteBoosts(l)), playBubble();
+                                      n(yield client.voteBoosts(l)), playBubble();
                                     } catch (u) {
                                       playError(), showToast(String(u));
                                     }
@@ -111715,7 +111647,7 @@ function Bue(t) {
     case "StatueOfZeus": {
       let l = [];
       for (const u of i.getNeighbors(tileToPoint(t))) {
-        l.length <= 0 && (l = shuffle(CJ(e)));
+        l.length <= 0 && (l = shuffle(getRevealedDeposits(e)));
         const c = pointToTile(u);
         if (isEmpty(e.tiles.get(c).deposit)) {
           const p = l.pop();
@@ -112457,7 +112389,7 @@ function Due({ xy: t, offline: e }) {
         Date.now() - rI > MINUTE &&
           ((rI = Date.now()),
           (Md === null || zL() !== Md.id) &&
-            qe.getVotedBoosts().then((j) => {
+            client.getVotedBoosts().then((j) => {
               Md = j;
             })),
         Md)
@@ -113312,7 +113244,7 @@ function checkForAdvisors(t) {
 
 let lastTickTime = Date.now(),
   hasShownAccountRankUpModal = false,
-  eligibleRank = it.Tribune;
+  eligibleRank = AccountLevel.Tribune;
 
 function postTickTiles(gs, offline) {
   var a, o, l;
@@ -113347,7 +113279,7 @@ function postTickTiles(gs, offline) {
       gs.tick % (saveFreq * u) === 0 && saveGame().catch(console.error),
       gs.tick % (heartbeatFreq * u) === 0 &&
         (Singleton().heartbeat.update(serializeSaveLite()),
-        qe.queryRankUp().then((c) => {
+        client.queryRankUp().then((c) => {
           const p = getUser();
           p &&
             c > p.level &&
@@ -113440,7 +113372,7 @@ function CM(t) {
     (savedGame.current = new $L()), (savedGame.current.city = t), pj(savedGame.current, savedGame.options);
     try {
       yield Promise.race([
-        qe.tickV2(savedGame.current.id, savedGame.current.tick),
+        client.tickV2(savedGame.current.id, savedGame.current.tick),
         nk(10, "Connection timeout"),
       ]);
     } catch (e) {
@@ -113787,7 +113719,7 @@ class Zue {
     this.data = e;
   }
   init() {
-    this.shouldSendBytes() && kS(this.data).then((e) => qe.fullHeartbeat(e));
+    this.shouldSendBytes() && kS(this.data).then((e) => client.fullHeartbeat(e));
   }
   shouldSendBytes() {
     return !(getGameState().isOffline || !isOnlineUser());
@@ -113795,12 +113727,12 @@ class Zue {
   update(e) {
     const r = getGameState();
     if (!this.shouldSendBytes()) {
-      qe.tickV2(r.id, r.tick);
+      client.tickV2(r.id, r.tick);
       return;
     }
     const i = Xue(this.data, e);
     kS(i).then((n) => {
-      qe.heartbeat(n, wyhash(e, BigInt(0)).toString(16))
+      client.heartbeat(n, wyhash(e, BigInt(0)).toString(16))
         .then(() => {
           this.data = e;
         })
@@ -113834,7 +113766,7 @@ function Jue() {
           }),
           s.jsx("div", {
             className: "title-bar-controls",
-            children: s.jsx("button", { onClick: Qt, "aria-label": "Close" }),
+            children: s.jsx("button", { onClick: hideModal, "aria-label": "Close" }),
           }),
         ],
       }),
@@ -113848,7 +113780,7 @@ function Jue() {
               t.preventDefault();
               const e = new FormData(t.target);
               try {
-                yield qe.verifyPassCode(
+                yield client.verifyPassCode(
                   String((r = e.get("handle")) != null ? r : ""),
                   String((i = e.get("passcode")) != null ? i : "")
                 ),
@@ -113962,7 +113894,7 @@ function cI() {
                               onClick: () =>
                                 ae(this, null, function* () {
                                   try {
-                                    const l = yield qe.requestPassCode();
+                                    const l = yield client.requestPassCode();
                                     playSuccess(),
                                       showToast(
                                         h(d.PasscodeToastHTML, { code: l }),
@@ -114081,7 +114013,7 @@ function cI() {
                             playClick(),
                               (So = !0),
                               n(So),
-                              yield qe.checkInSave(yield compressSave()),
+                              yield client.checkInSave(yield compressSave()),
                               (window.location.search = "");
                           } catch (l) {
                             playError(), showToast(String(l)), (So = !1), n(So);
@@ -114101,13 +114033,13 @@ function cI() {
                           }
                           try {
                             playClick(), (So = !0), n(So);
-                            const l = yield qe.checkOutSaveStart();
+                            const l = yield client.checkOutSaveStart();
                             if (l.length <= 0)
                               throw new Error("Your cloud save is corrupted");
                             const u = yield decompressSave(l);
                             sO(u),
                               yield saveGame(),
-                              yield qe.checkOutSaveEnd(),
+                              yield client.checkOutSaveEnd(),
                               (window.location.search = "");
                           } catch (l) {
                             playError(),
@@ -114156,7 +114088,7 @@ function ece({ before: t, after: e, time: r }) {
           }),
           s.jsx("div", {
             className: "title-bar-controls",
-            children: s.jsx("button", { onClick: Qt, "aria-label": "Close" }),
+            children: s.jsx("button", { onClick: hideModal, "aria-label": "Close" }),
           }),
         ],
       }),
@@ -115103,7 +115035,7 @@ function handleChatCommand(command) {
         break;
       }
       case "playtime": {
-        const a = yield qe.getPlayTime();
+        const a = yield client.getPlayTime();
         addSystemMessage(`You have played actively and online for ${formatHM(a * 1e3)}`);
         break;
       }
@@ -115112,14 +115044,14 @@ function handleChatCommand(command) {
         break;
       }
       case "playercount": {
-        const a = yield qe.getOnlinePlayerCount(),
-          o = yield qe.getTotalPlayerCount();
+        const a = yield client.getOnlinePlayerCount(),
+          o = yield client.getTotalPlayerCount();
         addSystemMessage(`There are ${o} players, ${a} of them are current online`);
         break;
       }
       case "recoverprogress": {
         if (parts[1] === "confirm") {
-          const o = yield qe.doGreatPeopleRecovery();
+          const o = yield client.doGreatPeopleRecovery();
           (getGameOptions().greatPeople = {}),
             (getGameOptions().greatPeopleChoicesV2 = uk(
               o,
@@ -115132,7 +115064,7 @@ function handleChatCommand(command) {
             yield saveGame(),
             window.location.reload();
         }
-        const a = yield qe.getGreatPeopleRecovery();
+        const a = yield client.getGreatPeopleRecovery();
         addSystemMessage(
           `Your pending progress recovery request will grant you ${a} great people. Type "/recoverprogress confirm" to claim them. Your current progress (this run and permanent great people) will be reset`
         );
@@ -115178,7 +115110,7 @@ function handleChatCommand(command) {
         // Xl is getPlayerMap()
 
         loops: {
-          for (const [xy, tile] of Xl()) {
+          for (const [xy, tile] of getPlayerMap()) {
             let handleLc = tile.handle.toLowerCase();
             if (handleLc == queryLc) {
               matches.push({ xy, handle: tile.handle });
@@ -115187,7 +115119,7 @@ function handleChatCommand(command) {
             }
           }
 
-          for (const [xy, tile] of Xl()) {
+          for (const [xy, tile] of getPlayerMap()) {
             let handleLc = tile.handle.toLowerCase();
             if (handleLc.includes(queryLc)) {
               matches.push({ xy, handle: tile.handle });
@@ -115224,7 +115156,7 @@ function handleChatCommand(command) {
       }
       case "changelevel": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
-        yield qe.changePlayerLevel(parts[1], Number.parseInt(parts[2], 10)),
+        yield client.changePlayerLevel(parts[1], Number.parseInt(parts[2], 10)),
           addSystemMessage("Player level has been changed");
         break;
       }
@@ -115232,29 +115164,29 @@ function handleChatCommand(command) {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
         const a = Number.parseInt(parts[2], 10);
         addSystemMessage(`Play time has been changed to ${a}h`),
-          yield qe.setPlayTime(parts[1], a * 60 * 60);
+          yield client.setPlayTime(parts[1], a * 60 * 60);
         break;
       }
       case "makemod": {
         if (!parts[1]) throw new Error("Invalid command format");
-        yield qe.makeMod(parts[1], !0), addSystemMessage(`${parts[1]} is now a mod`);
+        yield client.makeMod(parts[1], !0), addSystemMessage(`${parts[1]} is now a mod`);
         break;
       }
       case "tabulate": {
-        const a = yield qe.tabulateVotedBoost();
+        const a = yield client.tabulateVotedBoost();
         addSystemMessage(JSON.stringify(a));
         break;
       }
       case "queryplayer": {
         if (!parts[1]) throw new Error("Invalid command format");
-        const a = yield qe.queryPlayer(parts[1]);
+        const a = yield client.queryPlayer(parts[1]);
         addSystemMessage(JSON.stringify(a));
         break;
       }
       case "playersave": {
         if (!parts[1]) throw new Error("Invalid command format");
         try {
-          const a = yield qe.queryPlayerSave(parts[1]),
+          const a = yield client.queryPlayerSave(parts[1]),
             l = yield (yield window.showSaveFilePicker({
               suggestedName: parts[1],
             })).createWritable();
@@ -115266,7 +115198,7 @@ function handleChatCommand(command) {
       }
       case "getplayerattr": {
         if (!parts[1]) throw new Error("Invalid command format");
-        const a = yield qe.getPlayerAttr(parts[1]);
+        const a = yield client.getPlayerAttr(parts[1]);
         addSystemMessage(
           [
             `Flag=${a.toString(2)}`,
@@ -115282,7 +115214,7 @@ function handleChatCommand(command) {
       }
       case "setplayerattr": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
-        const a = yield qe.setPlayerAttr(parts[1], Number.parseInt(parts[2], 2));
+        const a = yield client.setPlayerAttr(parts[1], Number.parseInt(parts[2], 2));
         addSystemMessage(
           [
             `Flag=${a.toString(2)}`,
@@ -115299,17 +115231,17 @@ function handleChatCommand(command) {
       case "announce": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
         if (!(parts[1] in Ig)) throw new Error("Invalid chat channel");
-        yield qe.announce(parts[1], parts.slice(2).join(" "));
+        yield client.announce(parts[1], parts.slice(2).join(" "));
         break;
       }
       case "unmakemod": {
         if (!parts[1]) throw new Error("Invalid command format");
-        yield qe.makeMod(parts[1], !1), addSystemMessage(`${parts[1]} is no longer a mod`);
+        yield client.makeMod(parts[1], !1), addSystemMessage(`${parts[1]} is no longer a mod`);
         break;
       }
       case "gprank": {
         if (!parts[1]) throw new Error("Invalid command format");
-        const a = yield qe.getGreatPeopleLevelRank(safeParseInt(parts[1], 10)),
+        const a = yield client.getGreatPeopleLevelRank(safeParseInt(parts[1], 10)),
           o = JSON.stringify(a);
         navigator.clipboard.writeText(o),
           addSystemMessage(o),
@@ -115334,7 +115266,7 @@ function handleChatCommand(command) {
       }
       case "evrank": {
         if (!parts[1]) throw new Error("Invalid command format");
-        const a = yield qe.getEmpireValueRank(safeParseInt(parts[1], 10)),
+        const a = yield client.getEmpireValueRank(safeParseInt(parts[1], 10)),
           o = JSON.stringify(a);
         navigator.clipboard.writeText(o),
           addSystemMessage(o),
@@ -115358,13 +115290,13 @@ function handleChatCommand(command) {
         break;
       }
       case "modlist": {
-        const a = yield qe.getMods();
+        const a = yield client.getMods();
         addSystemMessage(`Current moderators: ${a.join(", ")}`);
         break;
       }
       case "muteplayer": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
-        const a = yield qe.mutePlayer(parts[1], Number.parseInt(parts[2], 10) * MINUTE);
+        const a = yield client.mutePlayer(parts[1], Number.parseInt(parts[2], 10) * MINUTE);
         addSystemMessage(
           `Player ${parts[1]} has been muted until ${new Date(a).toLocaleString()}`
         );
@@ -115372,7 +115304,7 @@ function handleChatCommand(command) {
       }
       case "slowplayer": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
-        const a = yield qe.slowPlayer(
+        const a = yield client.slowPlayer(
           parts[1],
           Number.parseInt(parts[2], 10) * HOUR,
           Number.parseInt((n = parts[3]) != null ? n : 0, 10) * SECOND
@@ -115385,19 +115317,19 @@ function handleChatCommand(command) {
         break;
       }
       case "mutelist": {
-        (yield qe.getMutedPlayers()).forEach((o) => {
+        (yield client.getMutedPlayers()).forEach((o) => {
           addSystemMessage(`${o.handle} muted until ${new Date(o.time).toLocaleString()}`);
         });
         break;
       }
       case "removetrade": {
         if (!parts[1]) throw new Error("Invalid command format");
-        const a = yield qe.removeTrade(parts[1]);
+        const a = yield client.removeTrade(parts[1]);
         addSystemMessage(`${a} trades has been removed`);
         break;
       }
       case "slowlist": {
-        (yield qe.getSlowedPlayer()).forEach((o) => {
+        (yield client.getSlowedPlayer()).forEach((o) => {
           const l = new Date(o.time).toLocaleString(),
             u = Math.ceil(o.interval / SECOND);
           addSystemMessage(`${o.handle} slowed for ${u}s until ${l}`);
@@ -115406,33 +115338,33 @@ function handleChatCommand(command) {
       }
       case "rename": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
-        const a = yield qe.renamePlayer(parts[1], parts[2]);
+        const a = yield client.renamePlayer(parts[1], parts[2]);
         addSystemMessage(`Player ${parts[1]} renamed to ${a}`);
         break;
       }
       case "setgprec": {
         if (!parts[1] || !parts[2]) throw new Error("Invalid command format");
         const a = Number.parseInt(parts[2], 10),
-          o = yield qe.setGreatPeopleRecovery(parts[1], a);
+          o = yield client.setGreatPeopleRecovery(parts[1], a);
         addSystemMessage(`Will grant Player ${parts[1]} ${o} great people`);
         break;
       }
       case "getgprec": {
         if (!parts[1]) throw new Error("Invalid command format");
-        const a = yield qe.queryGreatPeopleRecovery(parts[1]);
+        const a = yield client.queryGreatPeopleRecovery(parts[1]);
         addSystemMessage(`Player ${parts[1]} will receive ${a} great people`);
         break;
       }
       case "clearconnection": {
         if (!parts[1]) throw new Error("Invalid command format");
-        yield qe.clearConnection(parts[1]),
+        yield client.clearConnection(parts[1]),
           addSystemMessage("Cross Platform connections have been cleared");
         break;
       }
       case "cloudsave": {
         if (!parts[1]) throw new Error("Invalid command format");
         try {
-          const a = yield qe.queryCloudSave(parts[1]),
+          const a = yield client.queryCloudSave(parts[1]),
             l = yield (yield window.showSaveFilePicker({
               suggestedName: parts[1],
             })).createWritable();
@@ -115690,7 +115622,7 @@ function Tce({ onChatSend: t, channel: e }) {
           const p = i.substring(1);
           addSystemMessage(`$ ${p}`), handleChatCommand(p).catch((f) => addSystemMessage(`${p}: ${f}`));
         } else
-          qe.chat(cce(i), e).catch((p) => {
+          client.chat(cce(i), e).catch((p) => {
             playError(), showToast(String(p));
           });
         t(i), n("");
@@ -115730,7 +115662,7 @@ function Tce({ onChatSend: t, channel: e }) {
           n(p.currentTarget.value);
         },
         maxLength:
-          lJ[(c = r == null ? void 0 : r.level) != null ? c : it.Tribune],
+          lJ[(c = r == null ? void 0 : r.level) != null ? c : AccountLevel.Tribune],
         onKeyDown: (p) => {
           p.key === "Enter" && o();
         },
@@ -115906,7 +115838,7 @@ function xce({ messages: t }) {
 const Cce = se.memo(
   function ({ chat: e, onImageLoaded: r }) {
     const i = e.message;
-    if (e.level <= it.Tribune && !hasFlag(e.attr, Ul.Mod)) return i;
+    if (e.level <= AccountLevel.Tribune && !hasFlag(e.attr, Ul.Mod)) return i;
     const n =
         i.startsWith("https://i.imgur.com/") ||
         i.startsWith("https://i.gyazo.com/") ||
