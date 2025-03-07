@@ -86437,7 +86437,7 @@ function FD({ resource: t, buildingColor: e }) {
   var a;
   const r = Config.Resource[t],
     i = ki(),
-    n = gi();
+    n = useGameState();
   return NoStorage[t]
     ? null
     : s.jsxs("div", {
@@ -89891,7 +89891,7 @@ function nne({ greatPerson: t }) {
 function ane({ greatPerson: t }) {
   var u, c, p;
   const e = ki(),
-    i = gi().greatPeople[t],
+    i = useGameState().greatPeople[t],
     n = e.greatPeople[t],
     a = Config.GreatPerson[t],
     o = n ? $f(t, n.level + 1) : 0,
@@ -89999,7 +89999,7 @@ function ane({ greatPerson: t }) {
 function one({ greatPerson: t }) {
   const e = ki(),
     r = e.greatPeople[t],
-    n = gi().greatPeople[t];
+    n = useGameState().greatPeople[t];
   e.greatPeople[t] || (e.greatPeople[t] = { amount: 0, level: 0 });
   const a = Config.GreatPerson[t],
     o = keysOf(Config.GreatPerson)
@@ -90089,7 +90089,7 @@ function sne({ greatPerson: t }) {
   const e = ki();
   e.greatPeople[t] || (e.greatPeople[t] = { amount: 0, level: 0 });
   const r = e.greatPeople[t],
-    n = gi().greatPeople[t],
+    n = useGameState().greatPeople[t],
     a = Config.GreatPerson[t],
     o = keysOf(Config.GreatPerson)
       .filter((g) => Config.GreatPerson[g].age === a.age)
@@ -90225,7 +90225,7 @@ function sne({ greatPerson: t }) {
   });
 }
 function Ra({ permanent: t }) {
-  const e = gi(),
+  const e = useGameState(),
     r = ki();
   let i = null,
     n = 1,
@@ -90375,7 +90375,7 @@ function Ra({ permanent: t }) {
 function lne({ greatPerson: t, permanent: e }) {
   var u, c, p, f, m;
   const r = ki(),
-    i = gi(),
+    i = useGameState(),
     n = Config.GreatPerson[t].type === ga.Normal,
     a = P0(t),
     o = r.greatPeople[t],
@@ -90536,7 +90536,7 @@ class cne {
     }
   }
 }
-function WD(t, e, r, i) {
+function dijkstra(t, e, r, i) {
   const n = new une({ comparator: (y, x) => y.priority - x.priority }),
     a = new Map(),
     o = new Map(),
@@ -90606,7 +90606,7 @@ function k4() {
 }
 OnPlayerMapChanged.on(k4);
 UL.on(k4);
-function HD(t, e) {
+function getTotalCost(t, e) {
   return t.length === 0
     ? Number.POSITIVE_INFINITY
     : t.reduce((r, i) => {
@@ -90614,18 +90614,21 @@ function HD(t, e) {
         return e[n] > 0 ? r + e[n] : r + 0.001;
       }, 0);
 }
-function M4(t, e) {
-  const r = WD(Db, ao, t, e),
-    i = HD(r, Db),
-    n = WD(Rb, ao, { x: l1(t.x), y: t.y }, { x: l1(e.x), y: e.y });
-  return HD(n, Rb) < i ? n.map((o) => ({ x: l1(o.x), y: o.y })) : r;
+
+function findPath(t, e) {
+  const result1 = dijkstra(Db, ao, t, e),
+    cost1 = getTotalCost(result1, Db),
+    result2 = dijkstra(Rb, ao, { x: l1(t.x), y: t.y }, { x: l1(e.x), y: e.y });
+  return getTotalCost(result2, Rb) < cost1 ? result2.map((o) => ({ x: l1(o.x), y: o.y })) : result1;
 }
-function dne(t) {
+
+function findUserOnMap(t) {
   const e = getPlayerMap();
   for (const [r, i] of e) if ((i == null ? void 0 : i.userId) === t) return r;
   return null;
 }
-function Lc() {
+
+function getMyMapXy() {
   var r;
   const t = getPlayerMap(),
     e = (r = getUser()) == null ? void 0 : r.userId;
@@ -91695,7 +91698,7 @@ function Cne({ xy: t }) {
 function _4({ xy: t }) {
   _j(GameStateChanged);
   const e = usePlayerMap(),
-    r = Lc();
+    r = getMyMapXy();
   let i = sJ;
   if (!r) i = 0;
   else {
@@ -91791,29 +91794,33 @@ function _4({ xy: t }) {
 
 // export function FillPlayerTradeModal({ tradeId, xy }: { tradeId: string; xy?: Tile }): React.ReactNode
 function FillPlayerTradeModal({ tradeId: tradeId, xy: xy, execNow = false }) {
-  const [tiles, setTiles] = se.useState([]),
-    map = usePlayerMap(),
-    gs = gi(),
-    trade = useTrades().find((D) => D.id === tradeId),
-    myXy = Lc(),
-    allTradeBuildings = Tick.current.playerTradeBuildings,
+  var [tiles, setTiles] = se.useState([]);
+  const map = usePlayerMap();
+  const gs = useGameState();
+  const trade = useTrades().find((t) => t.id === tradeId);
+  const myXy = getMyMapXy();
+  const allTradeBuildings = Tick.current.playerTradeBuildings;
 
     // added, to keep buildings in the order of best-ish subtrade candidates
     // filled later a few lines below "Array.from(allTradeBuildings.entries())"
-    allTradeBuildingsSorted = new Map(),
+  const allTradeBuildingsSorted = new Map();
 
-    [fills, setFills] = se.useState(new Map());
+  const [fills, setFills] = se.useState(new Map());
 
 //addSystemMessage(`tradeId=${tradeId} xy=${xy} execNow=${execNow}`);
 
 
 
-  se.useEffect(() => {
+// var tempTiles;
+  se.useLayoutEffect(() => {
     if (!trade) return;
-    const targetXy = dne(trade.fromId);
+    const targetXy = findUserOnMap(trade.fromId);
     if (!myXy || !targetXy) return;
-    const path = M4(xyToPoint(myXy), xyToPoint(targetXy));
-    setTiles(path.map((L) => uL(L)));
+    const path = findPath(xyToPoint(myXy), xyToPoint(targetXy));
+    tiles = path.map((L) => uL(L));
+    // tiles = tempTiles;
+    // setTiles(path.map((L) => uL(L)));
+    setTiles(tiles);
   }, [trade, myXy]);
 
   const seaTileCost = getTotalSeaTileCost(tiles, getSeaTileCost(gs));
@@ -92085,40 +92092,28 @@ function FillPlayerTradeModal({ tradeId: tradeId, xy: xy, execNow = false }) {
     hasEnoughResource(D, trade.buyResource, I, gs) && (!requireExtraStorage() || hasEnoughStorage(D, getStorageRequired(I), gs));
   }
 
-  if(hasValidPath && execNow) {
 
-// addSystemMessage("1");
 
-    se.useEffect(() => {
-      // addSystemMessage("11 bef calculateMaxFill");
+  se.useLayoutEffect(() => {
+    //addSystemMessage(`2 trade=${trade} myXy=${myXy} tilesLen=${tiles.length}`);
+
+    if(hasValidPath && execNow) {
+      // addSystemMessage("calling calculateMaxFill()");
       const fills2 = calculateMaxFill();
-      // addSystemMessage("111 bef fills2.size > 0 ");
       if( fills2.size > 0 ) {
-        // addSystemMessage("111 1 bef doFill");
         doFill(fills2);
-      }
-      else {
-        // addSystemMessage("111 11 if false");
+        hideModal();
+      } else {
         showToast(h(d.PlayerTradeNoFillBecauseOfResources));
         hideModal();
       }
-      // addSystemMessage("111 111 bef hide modal");
-      hideModal();
-      // return;
-    // }, [trade, myXy]);
-  }, [tiles, myXy]);
 
-    // const fills = calculateMaxFill();
-    // if( fills.size > 0 ) {
-    //   doFill(fills);
-    // }
-    // else {
-    //   showToast(h(d.PlayerTradeNoFillBecauseOfResources));
-    // }
-    // addSystemMessage("111 111 1");
-    // hideModal();
-    // return;
-  }
+    }
+
+  }, [hasValidPath, execNow, myXy, tiles]);
+
+
+
 
   return s.jsxs("div", {
     className: "window",
@@ -92694,7 +92689,7 @@ function Sne({ xy: t }) {
 }
 function wne({ xy: t }) {
   const e = usePlayerMap(),
-    r = Lc();
+    r = getMyMapXy();
   return (
     fn(
       "PlayerMapPageGoBackToCity",
@@ -93140,7 +93135,7 @@ class ap extends Scene {
       const i = this.viewport.getZoomRange();
       vy = (i[0] + i[1]) * 0.5;
     }
-    const r = Lc();
+    const r = getMyMapXy();
     if (r) {
       const i = xyToPoint(r);
       this.selectTile(i.x, i.y), Pd || (Pd = this.tileToPosition(i));
@@ -93224,11 +93219,11 @@ class ap extends Scene {
         .lineTo(n + lt, a + lt)
         .lineTo(n, a + lt)
         .lineTo(n, a);
-    const o = Lc(),
+    const o = getMyMapXy(),
       l = getPlayerMap(),
       u = `${r},${i}`;
     if (o && l.has(u) && u !== o) {
-      const c = M4(xyToPoint(o), { x: r, y: i });
+      const c = findPath(xyToPoint(o), { x: r, y: i });
       this.drawPath(c);
     } else this.clearPath();
     Singleton().routeTo(wne, { xy: u });
@@ -93457,7 +93452,7 @@ function Ine({ className: t }) {
 function Nne() {
   const t = ki();
   return (
-    gi(),
+    useGameState(),
     s.jsxs("div", {
       className: "window",
       children: [
@@ -95991,7 +95986,7 @@ function aae({ definition: t, gameState: e }) {
   });
 }
 function oae({ id: t }) {
-  const e = gi(),
+  const e = useGameState(),
     r = Config.Tech[t],
     i = () => Singleton().sceneManager.loadScene(WorldScene),
     n = () => r.column <= fQ,
@@ -96716,8 +96711,8 @@ class TechTreeScene extends Scene {
 function pae({ open: t }) {
   var o, l, u;
   const e = nO().happiness,
-    { workersBeforeHappiness: r, workersAfterHappiness: i } = getScienceFromWorkers(gi()),
-    n = gi(),
+    { workersBeforeHappiness: r, workersAfterHappiness: i } = getScienceFromWorkers(useGameState()),
+    n = useGameState(),
     a =
       (u =
         (l =
@@ -97041,7 +97036,7 @@ function mae() {
   se.useEffect(() => {
     client.getPendingClaims().then((y) => i((x) => x + y.length));
   }, []);
-  const n = gi(),
+  const n = useGameState(),
     [a, o] = se.useState(n.city),
     l = Xf(getGameOptions()),
     u = wp(),
@@ -97472,7 +97467,7 @@ function mae() {
   });
 }
 function fae() {
-  gi();
+  useGameState();
   const [t, e] = se.useState({}),
     [r, i] = se.useState(new Set());
   return (
@@ -97555,7 +97550,7 @@ function fae() {
 function G4() {
   var n, a, o;
   const t = Tick.current.specialBuildings.get("Headquarter"),
-    e = gi();
+    e = useGameState();
   if (!t) return null;
   const r = VP(e),
     i = getMaxWarpStorage(e);
@@ -97620,7 +97615,7 @@ function G4() {
   });
 }
 function gae() {
-  const t = gi(),
+  const t = useGameState(),
     e = {};
   return (
     getXyBuildings(t).forEach((r) => {
@@ -99432,7 +99427,7 @@ function wae({ gameState: t, xy: e }) {
 function kae({ gameState: t, xy: e }) {
   var n;
   return ((n = t.tiles.get(e)) == null ? void 0 : n.building)
-    ? Lc()
+    ? getMyMapXy()
       ? s.jsx("article", {
           role: "tabpanel",
           style: { padding: "8px" },
@@ -99813,7 +99808,7 @@ function PlayerTradeComponent({ gameState: t, xy: e }) {
   const trades = useTrades(), // useTrades()
     user = useUser(); // useUser()
 
-  if (!Lc()) // getMyMapXy()
+  if (!getMyMapXy()) // getMyMapXy()
     return s.jsx("article", {
       role: "tabpanel",
       style: { padding: "8px" },
@@ -100259,7 +100254,7 @@ function _ae({ building: t, resource: e, storage: r, capacity: i }) {
   const [n, a] = se.useState(
       (p = t.resourceImports[e]) != null ? p : { cap: 0, perCycle: 0 }
     ),
-    o = gi(),
+    o = useGameState(),
     l = reduceOf(t.resourceImports, (f, m, g) => (m === e ? f : f + g.perCycle), 0),
     u = clamp(i - l, 0, i),
     c = n.perCycle >= 0 && n.perCycle <= u;
@@ -109719,7 +109714,7 @@ function vue(t) {
   const { tile: e } = t; // const { tile } = props;
   if (e.building == null) return Singleton().routeTo(LoadingPage, { stage: LoadingPageStage.LoadSave }), null;
   const r = e.building, // const building = tile.building;
-    i = gi(), // const gs = useGameState();
+    i = useGameState(), // const gs = useGameState();
     n = Config.Building[r.type], // const definition = Config.Building[building.type];
     a = (o = gue[r.type]) != null ? o : Kie;
     
@@ -109989,7 +109984,7 @@ function yue({ gameState: t, xy: e }) {
 function bue({ tile: t }) {
   const e = t.building; // const building = tile.building;
   if (e == null) return null;
-  const r = gi(),
+  const r = useGameState(),
     i = Config.Building[e.type],
     n = () => e.desiredLevel > e.level + 1,
     a = () => {
@@ -110216,7 +110211,7 @@ let xm = null,
   Cm = du.None;
 const xue = { column: 0, asc: !0 };
 function Cue({ tile: t }) {
-  const e = gi(),
+  const e = useGameState(),
     [, r] = se.useState(null),
     [i, n] = se.useState(Cm),
     a = (m) => {
@@ -110666,7 +110661,7 @@ function Sue({ xy: t, gameState: e }) {
 // SOURCE src/scripts/ui/TilePage.tsx
 
 function TilePage(t) {
-  const gameState = gi(),
+  const gameState = useGameState(),
     { xy: r } = t;
   if (isNullOrUndefined(r) || !isSingletonReady()) return null;
   const tile = gameState.tiles.get(r);
@@ -113608,7 +113603,7 @@ function que(t) {
       Object.assign(savedGame.options, t.options),
       !0);
 }
-const gi = makeObservableHook(GameStateChanged, getGameState),
+const useGameState = makeObservableHook(GameStateChanged, getGameState),
   ki = makeObservableHook(GameOptionsChanged, getGameOptions);
 let dO = !1;
 const Vb = new TypedEvent();
@@ -115957,7 +115952,7 @@ class Pce extends Scene {
 function Sce() {
   var v, y, x, T, A, C, P, M;
   const t = nO(),
-    e = gi(),
+    e = useGameState(),
     r = ki(),
     i = nT(),
     n = se.useRef(null),
@@ -116399,7 +116394,7 @@ function Sce() {
   );
 }
 function wce() {
-  const t = gi();
+  const t = useGameState();
   if (!Tick.current.specialBuildings.has("Statistics")) return null;
   const e = new Map(),
     { theoreticalInput: r, theoreticalOutput: i } = getResourceIO(t);
